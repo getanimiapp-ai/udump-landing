@@ -190,7 +190,7 @@ Phases MUST be completed in order. The ROADMAP has detailed agent prompts and co
 
 ## Phase 13: Polish + Animations
 
-- [ ] **13.1 — Animation Pass**
+- [x] **13.1 — Animation Pass**
   - All animations from ROADMAP Phase 13 (home stagger, session pulse, results spring, achievement unlock, tab bounce)
   - Skeleton loaders (no spinners)
   - Personality-driven empty/error states

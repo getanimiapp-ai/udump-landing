@@ -1,8 +1,14 @@
 import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+} from 'react-native-reanimated';
 import { Colors } from '../../constants/colors';
 import { Type } from '../../constants/typography';
 
@@ -13,9 +19,29 @@ interface TabIconProps {
 }
 
 function TabIcon({ icon, label, focused }: TabIconProps) {
+  const scale = useSharedValue(1);
+  const prevFocused = React.useRef(false);
+
+  useEffect(() => {
+    if (focused && !prevFocused.current) {
+      scale.value = withSequence(
+        withSpring(1.18, { damping: 8, stiffness: 200 }),
+        withSpring(1, { damping: 12, stiffness: 180 }),
+      );
+    }
+    prevFocused.current = focused;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focused]);
+
+  const iconStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
   return (
     <View style={styles.tabItem}>
-      <Text style={[styles.tabIcon, focused && styles.tabIconFocused]}>{icon}</Text>
+      <Animated.Text style={[styles.tabIcon, focused && styles.tabIconFocused, iconStyle]}>
+        {icon}
+      </Animated.Text>
       <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>{label}</Text>
     </View>
   );

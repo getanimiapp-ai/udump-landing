@@ -29,6 +29,70 @@ function formatDuration(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+const PARTICLE_COUNT = 12;
+const PARTICLE_ANGLES = Array.from({ length: PARTICLE_COUNT }, (_, i) => (i * 360) / PARTICLE_COUNT);
+
+function GoldParticleBloom({ visible }: { visible: boolean }) {
+  const particles = PARTICLE_ANGLES.map((angle) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const distance = useSharedValue(0);
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const opacity = useSharedValue(0);
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useEffect(() => {
+      if (visible) {
+        distance.value = withTiming(60, { duration: 800 });
+        opacity.value = withTiming(1, { duration: 200 });
+        setTimeout(() => { opacity.value = withTiming(0, { duration: 400 }); }, 400);
+      }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [visible]);
+
+    const rad = (angle * Math.PI) / 180;
+    const dx = Math.cos(rad);
+    const dy = Math.sin(rad);
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const style = useAnimatedStyle(() => ({
+      transform: [
+        { translateX: dx * distance.value },
+        { translateY: dy * distance.value },
+      ],
+      opacity: opacity.value,
+    }));
+
+    return { style, angle };
+  });
+
+  if (!visible) return null;
+
+  return (
+    <View style={particleStyles.container} pointerEvents="none">
+      {particles.map(({ style }, i) => (
+        <Animated.View key={i} style={[particleStyles.dot, style]} />
+      ))}
+    </View>
+  );
+}
+
+const particleStyles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    alignSelf: 'center',
+    top: '30%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dot: {
+    position: 'absolute',
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.goldBright,
+  },
+});
+
 interface AchievementOverlayProps {
   achievementKey: string;
   onDismiss: () => void;
@@ -134,10 +198,12 @@ export default function ResultsScreen() {
 
   const [achievementQueue, setAchievementQueue] = useState<string[]>([]);
   const [currentAchievement, setCurrentAchievement] = useState<string | null>(null);
+  const [displayWeight, setDisplayWeight] = useState(0);
 
   const crownScale = useSharedValue(0);
   const crownOpacity = useSharedValue(0);
   const contentOpacity = useSharedValue(0);
+  const contentTranslateY = useSharedValue(60);
 
   useEffect(() => {
     if (isPersonalRecord) {
@@ -151,7 +217,21 @@ export default function ResultsScreen() {
 
     crownScale.value = withSpring(1, { damping: 10, stiffness: 150 });
     crownOpacity.value = withTiming(1, { duration: 400 });
-    contentOpacity.value = withDelay(300, withTiming(1, { duration: 500 }));
+    contentOpacity.value = withDelay(300, withTiming(1, { duration: 400 }));
+    contentTranslateY.value = withDelay(300, withSpring(0, { damping: 14, stiffness: 120 }));
+
+    // Weight count-up
+    if (weightDelta != null && weightDelta > 0) {
+      const target = weightDelta;
+      const duration = 600;
+      const startTime = performance.now();
+      const tick = (now: number) => {
+        const progress = Math.min((now - startTime) / duration, 1);
+        setDisplayWeight(parseFloat((target * progress).toFixed(2)));
+        if (progress < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
 
     if (newAchievementKeys.length > 0) {
       setTimeout(() => {
@@ -181,6 +261,7 @@ export default function ResultsScreen() {
 
   const contentStyle = useAnimatedStyle(() => ({
     opacity: contentOpacity.value,
+    transform: [{ translateY: contentTranslateY.value }],
   }));
 
   const getHeaderContent = () => {
@@ -219,7 +300,7 @@ export default function ResultsScreen() {
           {title && <Text style={styles.resultTitle}>{title}</Text>}
 
           {weightDelta != null && (
-            <Text style={styles.weightBig}>{weightDelta.toFixed(2)}</Text>
+            <Text style={styles.weightBig}>{displayWeight.toFixed(2)}</Text>
           )}
           <Text style={styles.statsLine}>
             {formatDuration(durationSeconds)}
@@ -264,6 +345,8 @@ export default function ResultsScreen() {
           </TouchableOpacity>
         </Animated.View>
       </View>
+
+      <GoldParticleBloom visible={isPersonalRecord || throneClaimed} />
 
       {currentAchievement && (
         <AchievementUnlockOverlay

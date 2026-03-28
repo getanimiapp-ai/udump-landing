@@ -15,6 +15,7 @@ import {
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
+  withDelay,
   withRepeat,
   withSequence,
   withTiming,
@@ -54,6 +55,10 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const pulseOpacity = useSharedValue(1);
+  const greetingOpacity = useSharedValue(0);
+  const stat0Opacity = useSharedValue(0);
+  const stat1Opacity = useSharedValue(0);
+  const stat2Opacity = useSharedValue(0);
 
   useEffect(() => {
     pulseOpacity.value = withRepeat(
@@ -64,12 +69,20 @@ export default function HomeScreen() {
       -1,
       true
     );
+    // Greeting fade
+    greetingOpacity.value = withTiming(1, { duration: 500 });
+    // Stats stagger
+    stat0Opacity.value = withDelay(0, withTiming(1, { duration: 400 }));
+    stat1Opacity.value = withDelay(100, withTiming(1, { duration: 400 }));
+    stat2Opacity.value = withDelay(200, withTiming(1, { duration: 400 }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const pulseStyle = useAnimatedStyle(() => ({
-    opacity: pulseOpacity.value,
-  }));
+  const pulseStyle = useAnimatedStyle(() => ({ opacity: pulseOpacity.value }));
+  const greetingStyle = useAnimatedStyle(() => ({ opacity: greetingOpacity.value }));
+  const stat0Style = useAnimatedStyle(() => ({ opacity: stat0Opacity.value }));
+  const stat1Style = useAnimatedStyle(() => ({ opacity: stat1Opacity.value }));
+  const stat2Style = useAnimatedStyle(() => ({ opacity: stat2Opacity.value }));
 
   const fetchStats = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -141,13 +154,13 @@ export default function HomeScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Greeting */}
-          <View style={styles.greeting}>
+          <Animated.View style={[styles.greeting, greetingStyle]}>
             <Text style={styles.greetingLabel}>{getGreeting()}</Text>
             <Text style={styles.greetingName}>{profile?.display_name ?? 'Friend'}.</Text>
             <Text style={styles.dumpScore}>
               Dump Score™ {profile?.dump_score.toFixed(1) ?? '—'}
             </Text>
-          </View>
+          </Animated.View>
 
           {/* START SESSION Button */}
           <Animated.View style={[styles.startButtonWrapper, pulseStyle]}>
@@ -176,17 +189,23 @@ export default function HomeScreen() {
 
           {/* Stats Row */}
           <View style={styles.statsRow}>
-            <StatCard label="TODAY" value={todayStats.sessionCount} />
-            <StatCard
-              label="WEIGHT"
-              value={todayStats.totalWeight.toFixed(1)}
-              unit="lbs"
-              highlight
-            />
-            <StatCard
-              label="STREAK"
-              value={`${todayStats.streakDays}d`}
-            />
+            <Animated.View style={[styles.statFlex, stat0Style]}>
+              <StatCard label="TODAY" value={todayStats.sessionCount} />
+            </Animated.View>
+            <Animated.View style={[styles.statFlex, stat1Style]}>
+              <StatCard
+                label="WEIGHT"
+                value={todayStats.totalWeight.toFixed(1)}
+                unit="lbs"
+                highlight
+              />
+            </Animated.View>
+            <Animated.View style={[styles.statFlex, stat2Style]}>
+              <StatCard
+                label="STREAK"
+                value={`${todayStats.streakDays}d`}
+              />
+            </Animated.View>
           </View>
 
           {/* Last Session Card */}
@@ -309,6 +328,9 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: 'row',
     gap: 10,
+  },
+  statFlex: {
+    flex: 1,
   },
   lastSessionCard: {
     marginTop: 4,

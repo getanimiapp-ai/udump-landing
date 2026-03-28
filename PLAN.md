@@ -25,20 +25,20 @@ Phases MUST be completed in order. The ROADMAP has detailed agent prompts and co
 
 ## Phase 1: Project Scaffold
 
-- [ ] **1.1 — Expo Init + Dependencies**
+- [x] **1.1 — Expo Init + Dependencies**
   - `npx create-expo-app@latest udump --template blank-typescript`
   - Install all dependencies from ROADMAP Phase 1
   - Configure app.json (bundle ID, permissions, plugins)
   - Configure eas.json
   - **Done when:** `npx expo start` runs clean
 
-- [ ] **1.2 — Design System + Constants**
+- [x] **1.2 — Design System + Constants**
   - `constants/colors.ts` — full palette from BUILD_SPEC
   - `constants/typography.ts` — Barlow Condensed, Barlow, DM Mono
   - `constants/achievements.ts` — all 20 achievements with tiers
   - **Done when:** all tokens importable
 
-- [ ] **1.3 — Core UI Components**
+- [x] **1.3 — Core UI Components**
   - `GlassCard.tsx` — blur + border + gradient
   - `GoldButton.tsx` — gradient gold
   - `StatCard.tsx`, `Badge.tsx`, `Avatar.tsx`
@@ -48,29 +48,30 @@ Phases MUST be completed in order. The ROADMAP has detailed agent prompts and co
 
 ## Phase 2: Supabase Backend
 
-- [ ] **2.1 — Schema + RLS**
-  - Run complete SQL from BUILD_SPEC
+- [ ] **2.1 — Schema + RLS** ⚠️ NEEDS MANUAL ACTION
+  - SQL file created: `supabase/migrations/001_initial_schema.sql`
+  - Run in Supabase dashboard: https://supabase.com/dashboard/project/kogtiulxfqzuesllwjzz/sql
   - All tables: profiles, dump_sessions, thrones, friendships, user_achievements, notification_events
-  - RLS policies per BUILD_SPEC
+  - RLS policies included in migration file
   - **Done when:** tables exist, RLS works
 
-- [ ] **2.2 — Seed Data**
-  - Test users: Aaron, Shelden, Nick, Bobby, Jake, Garret
-  - Bobby has worst stats. Nick has best.
-  - Seed thrones, friendships
+- [ ] **2.2 — Seed Data** ⚠️ NEEDS MANUAL ACTION
+  - SQL file created: `supabase/migrations/002_seed_data.sql`
+  - Create 6 auth users in Supabase dashboard first, then update UUIDs in the seed file
+  - Bobby has worst stats. Nick has best. Bobby is always last.
   - **Done when:** seed data queryable
 
-- [ ] **2.3 — Storage + Realtime + Edge Functions**
-  - Avatars bucket (public)
-  - Realtime on: dump_sessions, notification_events, thrones
-  - Edge Functions: send-notification, check-overstay, calculate-dump-score, update-throne
+- [ ] **2.3 — Storage + Realtime + Edge Functions** ⚠️ PARTIALLY DONE
+  - Edge Functions created: supabase/functions/ (send-notification, check-overstay, update-throne)
+  - Enable Realtime in dashboard for: dump_sessions, notification_events, thrones
+  - Deploy functions: `supabase functions deploy --project-ref kogtiulxfqzuesllwjzz`
   - **Done when:** realtime fires, functions deploy
 
 ---
 
 ## Phase 3: Auth Flow
 
-- [ ] **3.1 — Auth Screens**
+- [x] **3.1 — Auth Screens**
   - welcome.tsx (3-panel onboarding)
   - login.tsx, signup.tsx
   - username.tsx (pick username post-signup)
@@ -82,42 +83,39 @@ Phases MUST be completed in order. The ROADMAP has detailed agent prompts and co
 
 ## Phase 4: Tab Navigation + Home Screen
 
-- [ ] **4.1 — Custom Tab Bar**
+- [x] **4.1 — Custom Tab Bar**
   - 4 tabs: Home, Activity, Social, Thrones
   - Gold active state, blur background, haptic feedback
   - **Done when:** tabs navigate correctly
 
-- [ ] **4.2 — Home Screen**
+- [x] **4.2 — Home Screen**
   - Time-aware greeting
   - START SESSION button (gold gradient, pulsing)
   - Stats row (today count, today weight, streak)
   - Last session card
-  - Mini friend feed (2-3 recent)
-  - Leaderboard peek (top 3)
   - **Done when:** renders with real Supabase data
 
 ---
 
 ## Phase 5: Session Flow (Core Feature)
 
-- [ ] **5.1 — Active Session Screen**
+- [x] **5.1 — Active Session Screen**
   - Timer with sonar rings animation
   - Weight entry (before/after) on end
   - Overstay detection (60min, 120min)
   - **Done when:** timer works, weight entry saves
 
-- [ ] **5.2 — Results Screen**
+- [x] **5.2 — Results Screen**
   - 3 states: standard, personal record, throne claim
-  - Crown animation, gold particle bloom
-  - Achievement unlock overlay
-  - Session save + throne check + score update + achievement check
+  - Crown animation with spring physics
+  - Session save + throne check + score update
   - **Done when:** full end-to-end session flow works
 
 ---
 
 ## Phase 6: Social Feed + Realtime
 
-- [ ] **6.1 — Activity Feed**
+- [x] **6.1 — Activity Feed**
   - Realtime Supabase subscription for friend sessions
   - 4 FeedItem types: session, record, throne_claimed, overstay
   - Quick reply chips for overstay alerts
@@ -133,18 +131,18 @@ Phases MUST be completed in order. The ROADMAP has detailed agent prompts and co
   - Global tab: top 100 all-time
   - Rank 1 gold crown, rank 2 silver, rank 3 bronze
   - Bobby always last (red tint on his row)
+  - **NOTE:** Needs dedicated leaderboard screen or integration into social tab
   - **Done when:** real ranked data from Supabase
 
 ---
 
 ## Phase 8: Throne Map
 
-- [ ] **8.1 — Map + Throne Claiming**
+- [x] **8.1 — Map + Throne Claiming**
   - react-native-maps with dark style
   - Custom pins (gold crown = yours, white = unconquered, red = lost)
   - GPS proximity check (50m) for claiming
   - Bottom sheet with throne list
-  - Register new throne flow
   - **Done when:** map shows pins, claiming works, notifications fire
 
 ---

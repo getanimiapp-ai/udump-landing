@@ -619,6 +619,137 @@ footer{
 .foot-brand span{color:var(--gold);}
 .foot-copy{font-family:'DM Mono',monospace;font-size:11px;color:var(--t3);}
 .foot-egg{font-family:'DM Mono',monospace;font-size:10px;color:#1E1E28;}
+
+/* ─── 3D TOILET SCROLL SECTION ─── */
+#scene3d-section {
+  position: relative;
+  height: 500vh;
+  background: var(--void);
+}
+#scene3d-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#toiletCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+.scene3d-panel {
+  position: absolute;
+  left: 7vw;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  max-width: 360px;
+  pointer-events: none;
+  opacity: 0;
+  transition: none;
+}
+.scene3d-eyebrow {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.scene3d-eyebrow::before {
+  content: '';
+  width: 24px;
+  height: 2px;
+  background: var(--gold);
+}
+.scene3d-h2 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: clamp(44px, 5.5vw, 72px);
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+  color: var(--t1);
+  margin-bottom: 18px;
+}
+.scene3d-h2 span {
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.scene3d-body {
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.7;
+  color: var(--t2);
+}
+/* Hotspot labels */
+.hs {
+  position: absolute;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+  opacity: 0;
+}
+.hs-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 0 4px rgba(212,175,55,0.25), 0 0 16px rgba(212,175,55,0.5);
+  flex-shrink: 0;
+  animation: hs-pulse 2s ease-in-out infinite;
+}
+@keyframes hs-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(212,175,55,0.25), 0 0 16px rgba(212,175,55,0.5); }
+  50% { box-shadow: 0 0 0 8px rgba(212,175,55,0.1), 0 0 28px rgba(212,175,55,0.7); }
+}
+.hs-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: rgba(6,6,10,0.75);
+  border: 1px solid rgba(212,175,55,0.2);
+  padding: 5px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+}
+/* Scroll progress indicator */
+.scene3d-progress {
+  position: absolute;
+  right: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+}
+.scene3d-pip {
+  width: 4px;
+  height: 28px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.12);
+  transition: background 0.3s, height 0.3s;
+}
+.scene3d-pip.on {
+  background: var(--gold);
+  height: 38px;
+}
 </style>
 </head>
 <body>
@@ -825,6 +956,63 @@ footer{
           <div class="dot" id="d2"></div>
         </div>
       </div><!-- /phone -->
+    </div>
+  </div>
+</section>
+
+<!-- 3D TOILET SCROLL EXPERIENCE -->
+<section id="scene3d-section">
+  <div id="scene3d-sticky">
+    <canvas id="toiletCanvas"></canvas>
+
+    <!-- Panel 0: Intro -->
+    <div class="scene3d-panel" id="panel-0">
+      <div class="scene3d-eyebrow">The Hardware</div>
+      <h2 class="scene3d-h2">Meet the<br><span>Throne.</span></h2>
+      <p class="scene3d-body">Precision-engineered porcelain with gold hardware. The only toilet seat worthy of your Dump Score™.</p>
+    </div>
+
+    <!-- Panel 1: Weight sensors -->
+    <div class="scene3d-panel" id="panel-1">
+      <div class="scene3d-eyebrow">Weight Analytics</div>
+      <h2 class="scene3d-h2">Weighs<br><span>Every Drop.</span></h2>
+      <p class="scene3d-body">Four precision load cells accurate to 0.1g. You've never known yourself this well.</p>
+    </div>
+
+    <!-- Panel 2: Bluetooth -->
+    <div class="scene3d-panel" id="panel-2">
+      <div class="scene3d-eyebrow">Always Connected</div>
+      <h2 class="scene3d-h2">Bluetooth 5.2.<br><span>Zero Lag.</span></h2>
+      <p class="scene3d-body">Data syncs the moment you stand up. Your phone knows before you do.</p>
+    </div>
+
+    <!-- Panel 3: Heat -->
+    <div class="scene3d-panel" id="panel-3">
+      <div class="scene3d-eyebrow">Heated Seat Technology</div>
+      <h2 class="scene3d-h2">Never Cold.<br><span>Ever Again.</span></h2>
+      <p class="scene3d-body">Four temperature settings. Because you deserve better than cold plastic at 3am.</p>
+    </div>
+
+    <!-- Hotspots -->
+    <div class="hs" id="hs-sensor" style="top:62%;left:54%;">
+      <div class="hs-dot"></div>
+      <div class="hs-label">Load Cell Array</div>
+    </div>
+    <div class="hs" id="hs-bt" style="top:44%;left:56%;">
+      <div class="hs-dot"></div>
+      <div class="hs-label">Bluetooth 5.2 Module</div>
+    </div>
+    <div class="hs" id="hs-heat" style="top:54%;left:52%;">
+      <div class="hs-dot"></div>
+      <div class="hs-label">Heated Seat Element</div>
+    </div>
+
+    <!-- Progress pips -->
+    <div class="scene3d-progress">
+      <div class="scene3d-pip on" id="pip-0"></div>
+      <div class="scene3d-pip" id="pip-1"></div>
+      <div class="scene3d-pip" id="pip-2"></div>
+      <div class="scene3d-pip" id="pip-3"></div>
     </div>
   </div>
 </section>
@@ -1474,6 +1662,470 @@ footer{
   <div class="foot-copy">© 2026 U·Dump Inc. · Aaron, Shelden & Nick · Originally conceived 2016</div>
   <div class="foot-egg">Built without asking permission · 👑</div>
 </footer>
+
+<!-- GSAP + ScrollTrigger -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<!-- Three.js importmap -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+// ─── SCENE SETUP ───
+const canvas = document.getElementById('toiletCanvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x06060A);
+scene.fog = new THREE.Fog(0x06060A, 12, 28);
+
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+camera.position.set(0, 2.2, 6.5);
+camera.lookAt(0, 0.6, 0);
+
+// ─── RESIZE ───
+function resize() {
+  const sticky = document.getElementById('scene3d-sticky');
+  const w = sticky.clientWidth;
+  const h = sticky.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ─── MATERIALS ───
+const goldMat = new THREE.MeshStandardMaterial({
+  color: 0xD4AF37,
+  metalness: 1.0,
+  roughness: 0.12,
+  envMapIntensity: 2.0,
+});
+const goldDarkMat = new THREE.MeshStandardMaterial({
+  color: 0xA88820,
+  metalness: 0.95,
+  roughness: 0.20,
+  envMapIntensity: 1.5,
+});
+const porcelainMat = new THREE.MeshStandardMaterial({
+  color: 0xF2F0E8,
+  metalness: 0.04,
+  roughness: 0.14,
+  envMapIntensity: 0.8,
+});
+const porcelainDarkMat = new THREE.MeshStandardMaterial({
+  color: 0xDDDBD2,
+  metalness: 0.04,
+  roughness: 0.18,
+  envMapIntensity: 0.6,
+});
+
+// ─── FAKE ENV MAP (gradient cube) ───
+const pmremGen = new THREE.PMREMGenerator(renderer);
+const envScene = new THREE.Scene();
+const envMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(10, 32, 32),
+  new THREE.MeshBasicMaterial({
+    side: THREE.BackSide,
+    vertexColors: true,
+  })
+);
+// Build vertex colors — warm gold top, deep void bottom
+const sphere = new THREE.SphereGeometry(10, 32, 32);
+const posAttr = sphere.attributes.position;
+const colors = [];
+for (let i = 0; i < posAttr.count; i++) {
+  const y = posAttr.getY(i);
+  const t = (y + 10) / 20; // 0 bottom, 1 top
+  colors.push(
+    THREE.MathUtils.lerp(0.02, 0.25, t),
+    THREE.MathUtils.lerp(0.02, 0.18, t),
+    THREE.MathUtils.lerp(0.04, 0.04, t)
+  );
+}
+sphere.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+const envMesh2 = new THREE.Mesh(sphere, new THREE.MeshBasicMaterial({ side: THREE.BackSide, vertexColors: true }));
+envScene.add(envMesh2);
+const envTex = pmremGen.fromScene(envScene).texture;
+scene.environment = envTex;
+pmremGen.dispose();
+
+// ─── BUILD TOILET MODEL ───
+const toiletGroup = new THREE.Group();
+
+// --- Floor/base platform ---
+const platformGeom = new THREE.CylinderGeometry(1.1, 1.2, 0.06, 48);
+const platform = new THREE.Mesh(platformGeom, goldMat);
+platform.position.y = 0.03;
+platform.receiveShadow = true;
+toiletGroup.add(platform);
+
+const platformRingGeom = new THREE.TorusGeometry(1.15, 0.04, 8, 48);
+const platformRing = new THREE.Mesh(platformRingGeom, goldDarkMat);
+platformRing.rotation.x = Math.PI / 2;
+platformRing.position.y = 0.03;
+toiletGroup.add(platformRing);
+
+// --- Bowl base / pedestal: lathe geometry ---
+const bowlProfilePoints = [
+  new THREE.Vector2(0.08, 0),
+  new THREE.Vector2(0.42, 0.01),
+  new THREE.Vector2(0.55, 0.08),
+  new THREE.Vector2(0.64, 0.20),
+  new THREE.Vector2(0.70, 0.38),
+  new THREE.Vector2(0.72, 0.56),
+  new THREE.Vector2(0.70, 0.74),
+  new THREE.Vector2(0.64, 0.90),
+  new THREE.Vector2(0.62, 1.02),
+  new THREE.Vector2(0.65, 1.10),
+  new THREE.Vector2(0.68, 1.16),
+];
+const bowlGeom = new THREE.LatheGeometry(bowlProfilePoints, 64);
+bowlGeom.computeVertexNormals();
+const bowlMesh = new THREE.Mesh(bowlGeom, porcelainMat);
+bowlMesh.position.y = 0.06;
+bowlMesh.castShadow = true;
+bowlMesh.receiveShadow = true;
+toiletGroup.add(bowlMesh);
+
+// --- Rim (flat ring on top of bowl) ---
+const rimGeom = new THREE.TorusGeometry(0.65, 0.055, 12, 64);
+const rimMesh = new THREE.Mesh(rimGeom, goldMat);
+rimMesh.rotation.x = Math.PI / 2;
+rimMesh.position.y = 1.22;
+rimMesh.castShadow = true;
+toiletGroup.add(rimMesh);
+
+// Inner rim detail
+const innerRimGeom = new THREE.TorusGeometry(0.56, 0.028, 8, 64);
+const innerRim = new THREE.Mesh(innerRimGeom, goldDarkMat);
+innerRim.rotation.x = Math.PI / 2;
+innerRim.position.y = 1.20;
+toiletGroup.add(innerRim);
+
+// --- Seat (flat oval torus, slightly above rim) ---
+const seatGeom = new THREE.TorusGeometry(0.60, 0.062, 10, 64, Math.PI * 2);
+const seatMesh = new THREE.Mesh(seatGeom, porcelainMat);
+seatMesh.rotation.x = Math.PI / 2;
+seatMesh.scale.y = 0.78; // make it oval-ish
+seatMesh.position.y = 1.30;
+seatMesh.position.z = -0.02;
+seatMesh.castShadow = true;
+toiletGroup.add(seatMesh);
+
+// Seat surface (thin disc)
+const seatDiscGeom = new THREE.CylinderGeometry(0.60, 0.60, 0.03, 64);
+const seatDisc = new THREE.Mesh(seatDiscGeom, porcelainDarkMat);
+seatDisc.position.y = 1.30;
+toiletGroup.add(seatDisc);
+
+// --- Seat lid (tilted slightly back) ---
+const lidGroup = new THREE.Group();
+const lidGeom = new THREE.CylinderGeometry(0.62, 0.62, 0.035, 64);
+const lidMesh = new THREE.Mesh(lidGeom, porcelainMat);
+const lidEdgeGeom = new THREE.TorusGeometry(0.62, 0.04, 8, 64);
+const lidEdge = new THREE.Mesh(lidEdgeGeom, goldMat);
+lidEdge.rotation.x = Math.PI / 2;
+lidGroup.add(lidMesh);
+lidGroup.add(lidEdge);
+lidGroup.position.y = 1.36;
+lidGroup.position.z = 0.62;
+lidGroup.rotation.x = -0.42; // slightly open/leaning back
+toiletGroup.add(lidGroup);
+
+// --- Tank / cistern ---
+// Create tank shape: box with rounded top
+const tankW = 0.85, tankH = 0.90, tankD = 0.32;
+const tankGeom = new THREE.BoxGeometry(tankW, tankH, tankD, 1, 1, 1);
+const tankMesh = new THREE.Mesh(tankGeom, porcelainMat);
+tankMesh.position.set(0, 1.06 + tankH / 2, -(0.70 + tankD / 2));
+tankMesh.castShadow = true;
+toiletGroup.add(tankMesh);
+
+// Tank top cap (slightly oversized box to fake rounded top)
+const tankTopGeom = new THREE.BoxGeometry(tankW + 0.04, 0.06, tankD + 0.04);
+const tankTop = new THREE.Mesh(tankTopGeom, porcelainDarkMat);
+tankTop.position.set(0, 1.06 + tankH + 0.01, -(0.70 + tankD / 2));
+toiletGroup.add(tankTop);
+
+// Tank edge trim (gold)
+const tankRimGeom = new THREE.EdgesGeometry(new THREE.BoxGeometry(tankW + 0.02, tankH + 0.06, tankD + 0.02));
+// Skip edges, just add corner accent cylinders
+for (let xi = -1; xi <= 1; xi += 2) {
+  for (let zi = -1; zi <= 1; zi += 2) {
+    const cornerGeom = new THREE.CylinderGeometry(0.022, 0.022, tankH, 8);
+    const corner = new THREE.Mesh(cornerGeom, goldMat);
+    corner.position.set(
+      xi * (tankW / 2 + 0.01),
+      1.06 + tankH / 2,
+      -(0.70 + tankD / 2) + zi * (tankD / 2 + 0.01)
+    );
+    toiletGroup.add(corner);
+  }
+}
+
+// --- Flush button on tank top ---
+const flushBtnGeom = new THREE.CylinderGeometry(0.09, 0.095, 0.055, 32);
+const flushBtn = new THREE.Mesh(flushBtnGeom, goldMat);
+flushBtn.position.set(0.18, 1.06 + tankH + 0.06, -(0.70 + tankD / 2));
+toiletGroup.add(flushBtn);
+const flushInnerGeom = new THREE.CylinderGeometry(0.05, 0.05, 0.02, 32);
+const flushInner = new THREE.Mesh(flushInnerGeom, goldDarkMat);
+flushInner.position.copy(flushBtn.position);
+flushInner.position.y += 0.04;
+toiletGroup.add(flushInner);
+
+// --- Hinge hardware (gold, connects lid to tank) ---
+for (let xi = -1; xi <= 1; xi += 2) {
+  const hingeGeom = new THREE.CylinderGeometry(0.04, 0.04, 0.12, 16);
+  const hinge = new THREE.Mesh(hingeGeom, goldMat);
+  hinge.rotation.z = Math.PI / 2;
+  hinge.position.set(xi * 0.28, 1.36, -0.05);
+  toiletGroup.add(hinge);
+
+  const hingeCap = new THREE.SphereGeometry(0.042, 12, 12);
+  const hingeCapMesh = new THREE.Mesh(hingeCap, goldDarkMat);
+  hingeCapMesh.position.set(xi * 0.34, 1.36, -0.05);
+  toiletGroup.add(hingeCapMesh);
+  const hingeCapMesh2 = new THREE.Mesh(new THREE.SphereGeometry(0.042, 12, 12), goldDarkMat);
+  hingeCapMesh2.position.set(xi * 0.22, 1.36, -0.05);
+  toiletGroup.add(hingeCapMesh2);
+}
+
+// --- Bolt caps at base (4 gold screws) ---
+const boltAngles = [0.7, Math.PI - 0.7, Math.PI + 0.7, Math.PI * 2 - 0.7];
+for (const angle of boltAngles) {
+  const boltGeom = new THREE.SphereGeometry(0.04, 12, 12);
+  const bolt = new THREE.Mesh(boltGeom, goldMat);
+  bolt.position.set(Math.cos(angle) * 0.70, 0.10, Math.sin(angle) * 0.70);
+  toiletGroup.add(bolt);
+}
+
+// --- Water pipe (coming from wall/floor, gold) ---
+const pipeGeom = new THREE.CylinderGeometry(0.045, 0.045, 0.70, 16);
+const pipeMesh = new THREE.Mesh(pipeGeom, goldMat);
+pipeMesh.rotation.z = Math.PI / 2;
+pipeMesh.position.set(-0.78, 0.38, -(0.70 + tankD / 2 + 0.01));
+toiletGroup.add(pipeMesh);
+const pipeCapGeom = new THREE.SphereGeometry(0.052, 12, 12);
+const pipeCap = new THREE.Mesh(pipeCapGeom, goldDarkMat);
+pipeCap.position.set(-0.78 - 0.35, 0.38, -(0.70 + tankD / 2 + 0.01));
+toiletGroup.add(pipeCap);
+
+// Position toilet group
+toiletGroup.position.y = 0;
+toiletGroup.scale.setScalar(0.001); // Start invisible (scale in)
+scene.add(toiletGroup);
+
+// ─── FLOOR REFLECTION ───
+const floorGeom = new THREE.CircleGeometry(6, 64);
+const floorMat = new THREE.MeshStandardMaterial({
+  color: 0x08080E,
+  metalness: 0.6,
+  roughness: 0.65,
+});
+const floor = new THREE.Mesh(floorGeom, floorMat);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = -0.01;
+floor.receiveShadow = true;
+scene.add(floor);
+
+// ─── LIGHTS ───
+// Ambient (dim, very slight warm)
+const ambient = new THREE.AmbientLight(0x1a1408, 1.8);
+scene.add(ambient);
+
+// Key light — warm gold from upper right
+const keyLight = new THREE.SpotLight(0xF0CE60, 18, 18, Math.PI / 7, 0.3, 1.5);
+keyLight.position.set(3.5, 5.5, 4.0);
+keyLight.target.position.set(0, 0.8, 0);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(1024, 1024);
+scene.add(keyLight);
+scene.add(keyLight.target);
+
+// Fill light — cool blue from left
+const fillLight = new THREE.PointLight(0x0A3060, 5.0, 14);
+fillLight.position.set(-4.5, 2.5, 2.0);
+scene.add(fillLight);
+
+// Rim light — subtle gold from behind
+const rimLight = new THREE.SpotLight(0xD4AF37, 8.0, 16, Math.PI / 6, 0.6, 2.0);
+rimLight.position.set(0, 3.0, -5.5);
+rimLight.target.position.set(0, 1.0, 0);
+scene.add(rimLight);
+scene.add(rimLight.target);
+
+// Ground bounce
+const bounceLight = new THREE.PointLight(0xD4AF37, 1.2, 6);
+bounceLight.position.set(0, -0.5, 1.5);
+scene.add(bounceLight);
+
+// ─── PARTICLES (floating gold dust) ───
+const particleCount = 180;
+const partPositions = new Float32Array(particleCount * 3);
+const partSpeeds = new Float32Array(particleCount);
+for (let i = 0; i < particleCount; i++) {
+  partPositions[i * 3]     = (Math.random() - 0.5) * 7;
+  partPositions[i * 3 + 1] = Math.random() * 4.5;
+  partPositions[i * 3 + 2] = (Math.random() - 0.5) * 7;
+  partSpeeds[i] = 0.0002 + Math.random() * 0.0004;
+}
+const partGeom = new THREE.BufferGeometry();
+partGeom.setAttribute('position', new THREE.BufferAttribute(partPositions, 3));
+const partMat = new THREE.PointsMaterial({ color: 0xD4AF37, size: 0.022, transparent: true, opacity: 0.55 });
+const particles = new THREE.Points(partGeom, partMat);
+scene.add(particles);
+
+// ─── SCROLL STATE ───
+let scrollProgress = 0; // 0..1 across entire section
+
+// Camera keyframes: [progress, posX, posY, posZ, targetY, fov]
+const camFrames = [
+  [0.00,  0,   2.8,  7.0,  0.7,  38],
+  [0.15,  0,   2.2,  6.5,  0.8,  36],
+  [0.30,  2.2, 1.8,  5.0,  0.9,  34],
+  [0.50, -2.0, 2.0,  5.2,  0.8,  35],
+  [0.70,  0.8, 3.2,  5.5,  0.6,  32],
+  [0.90,  0,   2.0,  5.8,  0.9,  36],
+  [1.00,  0,   2.2,  6.5,  0.8,  36],
+];
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+function getCamAtProgress(p) {
+  let i = 0;
+  while (i < camFrames.length - 2 && camFrames[i + 1][0] <= p) i++;
+  const f0 = camFrames[i], f1 = camFrames[i + 1];
+  const t = (p - f0[0]) / (f1[0] - f0[0]);
+  const smooth = t < 0.5 ? 2*t*t : -1+(4-2*t)*t; // ease in-out
+  return {
+    x: lerp(f0[1], f1[1], smooth),
+    y: lerp(f0[2], f1[2], smooth),
+    z: lerp(f0[3], f1[3], smooth),
+    ty: lerp(f0[4], f1[4], smooth),
+    fov: lerp(f0[5], f1[5], smooth),
+  };
+}
+
+// ─── GSAP SCROLL SETUP ───
+gsap.registerPlugin(ScrollTrigger);
+
+ScrollTrigger.create({
+  trigger: '#scene3d-section',
+  start: 'top top',
+  end: 'bottom bottom',
+  scrub: true,
+  onUpdate: (self) => {
+    scrollProgress = self.progress;
+  }
+});
+
+// Panel visibility
+const panels = ['panel-0', 'panel-1', 'panel-2', 'panel-3'];
+const panelRanges = [[0, 0.28], [0.25, 0.50], [0.48, 0.73], [0.70, 0.96]];
+const pips = ['pip-0', 'pip-1', 'pip-2', 'pip-3'];
+const hotspots = {
+  'hs-sensor': [0.28, 0.52],
+  'hs-bt':     [0.50, 0.73],
+  'hs-heat':   [0.72, 0.96],
+};
+
+function updateOverlays(p) {
+  panels.forEach((id, i) => {
+    const el = document.getElementById(id);
+    const [start, end] = panelRanges[i];
+    const fadeW = 0.06;
+    let alpha = 0;
+    if (p >= start && p <= end) {
+      const fadeIn  = Math.min(1, (p - start) / fadeW);
+      const fadeOut = Math.min(1, (end - p) / fadeW);
+      alpha = Math.min(fadeIn, fadeOut);
+    }
+    el.style.opacity = alpha;
+    el.style.transform = `translateY(calc(-50% + ${(1 - alpha) * 10}px))`;
+  });
+
+  pips.forEach((id, i) => {
+    const el = document.getElementById(id);
+    const [start, end] = panelRanges[i];
+    const active = p >= (start + 0.02) && p <= (end - 0.02);
+    el.classList.toggle('on', active);
+  });
+
+  Object.entries(hotspots).forEach(([id, [start, end]]) => {
+    const el = document.getElementById(id);
+    const fadeW = 0.04;
+    let alpha = 0;
+    if (p >= start && p <= end) {
+      const fadeIn  = Math.min(1, (p - start) / fadeW);
+      const fadeOut = Math.min(1, (end - p) / fadeW);
+      alpha = Math.min(fadeIn, fadeOut);
+    }
+    el.style.opacity = alpha;
+  });
+}
+
+// ─── ANIMATE LOOP ───
+let prevTime = 0;
+function animate(time) {
+  requestAnimationFrame(animate);
+  const dt = time - prevTime;
+  prevTime = time;
+
+  // Scale in toilet on first scroll
+  const targetScale = scrollProgress > 0.02
+    ? 1.0
+    : THREE.MathUtils.mapLinear(scrollProgress, 0, 0.02, 0.001, 1.0);
+  const currentScaleTarget = scrollProgress > 0.05 ? 1.0 : targetScale;
+  toiletGroup.scale.lerp(new THREE.Vector3(currentScaleTarget, currentScaleTarget, currentScaleTarget), 0.08);
+
+  // Toilet y-float (subtle idle)
+  toiletGroup.position.y = Math.sin(time * 0.0008) * 0.04;
+
+  // Toilet rotation — subtle continuous + scroll-driven
+  const baseRotY = time * 0.00015;
+  const scrollRotY = scrollProgress * Math.PI * 2;
+  toiletGroup.rotation.y = baseRotY + scrollRotY * 0.12;
+
+  // Camera
+  const cam = getCamAtProgress(scrollProgress);
+  camera.position.lerp(new THREE.Vector3(cam.x, cam.y, cam.z), 0.06);
+  camera.fov = THREE.MathUtils.lerp(camera.fov, cam.fov, 0.06);
+  camera.updateProjectionMatrix();
+  camera.lookAt(0, cam.ty, 0);
+
+  // Particle drift
+  const posArr = partGeom.attributes.position.array;
+  for (let i = 0; i < particleCount; i++) {
+    posArr[i * 3 + 1] += partSpeeds[i];
+    if (posArr[i * 3 + 1] > 5.0) posArr[i * 3 + 1] = 0;
+  }
+  partGeom.attributes.position.needsUpdate = true;
+
+  // Update overlays
+  updateOverlays(scrollProgress);
+
+  renderer.render(scene, camera);
+}
+animate(0);
+</script>
 
 <script>
   let c = 0;

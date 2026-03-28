@@ -141,6 +141,7 @@ export default function ActiveSessionScreen() {
           isPersonalRecord: result.isPersonalRecord ? '1' : '0',
           throneClaimed: result.throneClaimed ? '1' : '0',
           throneId: result.throneId ?? '',
+          newAchievements: JSON.stringify(result.newAchievements),
         },
       });
     } else {

@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -19,13 +19,96 @@ import Animated, {
 import { Badge } from '../../components/ui/Badge';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { GoldButton } from '../../components/ui/GoldButton';
-import { Colors } from '../../constants/colors';
+import { ACHIEVEMENTS } from '../../constants/achievements';
+import { Colors, TIER_COLORS } from '../../constants/colors';
 import { Type } from '../../constants/typography';
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+interface AchievementOverlayProps {
+  achievementKey: string;
+  onDismiss: () => void;
+}
+
+function AchievementUnlockOverlay({ achievementKey, onDismiss }: AchievementOverlayProps) {
+  const achievement = ACHIEVEMENTS.find((a) => a.key === achievementKey);
+  const overlayOpacity = useSharedValue(0);
+  const cardScale = useSharedValue(0.7);
+  const cardOpacity = useSharedValue(0);
+  const dismissedRef = useRef(false);
+
+  const tierColors = achievement ? TIER_COLORS[achievement.tier] : TIER_COLORS.bronze;
+
+  useEffect(() => {
+    overlayOpacity.value = withTiming(1, { duration: 300 });
+    cardScale.value = withSpring(1, { damping: 12, stiffness: 180 });
+    cardOpacity.value = withTiming(1, { duration: 350 });
+
+    const timer = setTimeout(() => {
+      if (!dismissedRef.current) {
+        dismissedRef.current = true;
+        overlayOpacity.value = withTiming(0, { duration: 400 });
+        cardOpacity.value = withTiming(0, { duration: 350 });
+        setTimeout(onDismiss, 400);
+      }
+    }, 3500);
+
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const overlayStyle = useAnimatedStyle(() => ({ opacity: overlayOpacity.value }));
+  const cardStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: cardScale.value }],
+    opacity: cardOpacity.value,
+  }));
+
+  const handleTap = () => {
+    if (!dismissedRef.current) {
+      dismissedRef.current = true;
+      overlayOpacity.value = withTiming(0, { duration: 300 });
+      cardOpacity.value = withTiming(0, { duration: 250 });
+      setTimeout(onDismiss, 300);
+    }
+  };
+
+  if (!achievement) return null;
+
+  return (
+    <Animated.View style={[StyleSheet.absoluteFillObject, styles.overlayContainer, overlayStyle]}>
+      <TouchableOpacity
+        style={StyleSheet.absoluteFillObject}
+        onPress={handleTap}
+        activeOpacity={1}
+      >
+        <LinearGradient
+          colors={['rgba(0,0,0,0.85)', 'rgba(0,0,0,0.92)']}
+          style={StyleSheet.absoluteFillObject}
+        />
+      </TouchableOpacity>
+
+      <Animated.View
+        style={[
+          styles.overlayCard,
+          { borderColor: tierColors.border, backgroundColor: tierColors.bg },
+          cardStyle,
+        ]}
+      >
+        <Text style={styles.overlayLabel}>ACHIEVEMENT UNLOCKED</Text>
+        <Text style={styles.overlayIcon}>{achievement.icon}</Text>
+        <Text style={[styles.overlayTier, { color: tierColors.text }]}>
+          {achievement.tier.toUpperCase()}
+        </Text>
+        <Text style={styles.overlayTitle}>{achievement.title}</Text>
+        <Text style={styles.overlayDesc}>{achievement.description}</Text>
+        <Text style={styles.overlayDismiss}>Tap to continue</Text>
+      </Animated.View>
+    </Animated.View>
+  );
 }
 
 export default function ResultsScreen() {
@@ -37,12 +120,20 @@ export default function ResultsScreen() {
     isPersonalRecord: string;
     throneClaimed: string;
     throneId: string;
+    newAchievements: string;
   }>();
 
   const isPersonalRecord = params.isPersonalRecord === '1';
   const throneClaimed = params.throneClaimed === '1';
   const durationSeconds = parseInt(params.durationSeconds ?? '0', 10);
   const weightDelta = params.weightDelta ? parseFloat(params.weightDelta) : null;
+
+  const newAchievementKeys: string[] = params.newAchievements
+    ? (JSON.parse(params.newAchievements) as string[])
+    : [];
+
+  const [achievementQueue, setAchievementQueue] = useState<string[]>([]);
+  const [currentAchievement, setCurrentAchievement] = useState<string | null>(null);
 
   const crownScale = useSharedValue(0);
   const crownOpacity = useSharedValue(0);
@@ -61,7 +152,27 @@ export default function ResultsScreen() {
     crownScale.value = withSpring(1, { damping: 10, stiffness: 150 });
     crownOpacity.value = withTiming(1, { duration: 400 });
     contentOpacity.value = withDelay(300, withTiming(1, { duration: 500 }));
+
+    if (newAchievementKeys.length > 0) {
+      setTimeout(() => {
+        setAchievementQueue(newAchievementKeys.slice(1));
+        setCurrentAchievement(newAchievementKeys[0]);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }, 2000);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleAchievementDismiss = () => {
+    if (achievementQueue.length > 0) {
+      const [next, ...rest] = achievementQueue;
+      setCurrentAchievement(next);
+      setAchievementQueue(rest);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } else {
+      setCurrentAchievement(null);
+    }
+  };
 
   const crownStyle = useAnimatedStyle(() => ({
     transform: [{ scale: crownScale.value }],
@@ -73,12 +184,8 @@ export default function ResultsScreen() {
   }));
 
   const getHeaderContent = () => {
-    if (isPersonalRecord) {
-      return { badge: 'NEW PERSONAL RECORD', title: null };
-    }
-    if (throneClaimed) {
-      return { badge: 'THRONE CLAIMED', title: null };
-    }
+    if (isPersonalRecord) return { badge: 'NEW PERSONAL RECORD', title: null };
+    if (throneClaimed) return { badge: 'THRONE CLAIMED', title: null };
     return { badge: null, title: 'Session Complete' };
   };
 
@@ -101,7 +208,6 @@ export default function ResultsScreen() {
       )}
 
       <View style={styles.content}>
-        {/* Crown / Header */}
         <Animated.View style={[styles.heroSection, crownStyle]}>
           <Text style={styles.crownIcon}>👑</Text>
           {badge && (
@@ -121,7 +227,6 @@ export default function ResultsScreen() {
           </Text>
         </Animated.View>
 
-        {/* Stats Card */}
         <Animated.View style={[styles.statsSection, contentStyle]}>
           <GlassCard>
             <View style={styles.statsContent}>
@@ -145,7 +250,6 @@ export default function ResultsScreen() {
           </GlassCard>
         </Animated.View>
 
-        {/* Actions */}
         <Animated.View style={[styles.actions, contentStyle]}>
           <GoldButton
             label="DONE"
@@ -160,6 +264,14 @@ export default function ResultsScreen() {
           </TouchableOpacity>
         </Animated.View>
       </View>
+
+      {currentAchievement && (
+        <AchievementUnlockOverlay
+          key={currentAchievement}
+          achievementKey={currentAchievement}
+          onDismiss={handleAchievementDismiss}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -255,5 +367,53 @@ const styles = StyleSheet.create({
   shareBtnText: {
     ...Type.body,
     color: Colors.text3,
+  },
+  // Achievement overlay
+  overlayContainer: {
+    zIndex: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  overlayCard: {
+    width: '100%',
+    borderRadius: 20,
+    borderWidth: 1.5,
+    padding: 32,
+    alignItems: 'center',
+    gap: 10,
+  },
+  overlayLabel: {
+    ...Type.label,
+    color: Colors.text3,
+    letterSpacing: 2,
+    fontSize: 10,
+    marginBottom: 4,
+  },
+  overlayIcon: {
+    fontSize: 64,
+  },
+  overlayTier: {
+    ...Type.label,
+    fontSize: 10,
+    letterSpacing: 2,
+  },
+  overlayTitle: {
+    ...Type.display,
+    fontSize: 24,
+    color: Colors.text1,
+    textAlign: 'center',
+  },
+  overlayDesc: {
+    ...Type.body,
+    color: Colors.text2,
+    textAlign: 'center',
+    lineHeight: 22,
+    fontSize: 14,
+  },
+  overlayDismiss: {
+    ...Type.caption,
+    color: Colors.text3,
+    marginTop: 8,
   },
 });

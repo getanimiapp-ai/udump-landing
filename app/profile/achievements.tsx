@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { formatDistanceToNow } from 'date-fns';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -10,10 +11,9 @@ import {
   View,
 } from 'react-native';
 import { GlassCard } from '../../components/ui/GlassCard';
-import { Colors, TIER_COLORS } from '../../constants/colors';
 import { ACHIEVEMENTS, AchievementTier } from '../../constants/achievements';
+import { Colors, TIER_COLORS } from '../../constants/colors';
 import { Type } from '../../constants/typography';
-import { formatDistanceToNow } from 'date-fns';
 
 type TierFilter = 'all' | AchievementTier;
 
@@ -42,7 +42,8 @@ export default function AchievementsScreen() {
     const { data } = await supabase
       .from('user_achievements')
       .select('achievement_key, unlocked_at')
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .order('unlocked_at', { ascending: false });
 
     if (data) setUnlocked(data);
   }, []);
@@ -73,6 +74,36 @@ export default function AchievementsScreen() {
         </Text>
       </View>
 
+      {/* Recently Unlocked */}
+      {unlocked.length > 0 && (
+        <View style={styles.recentSection}>
+          <Text style={styles.recentLabel}>RECENTLY UNLOCKED</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.recentList}
+          >
+            {unlocked.slice(0, 8).map((u) => {
+              const a = ACHIEVEMENTS.find((x) => x.key === u.achievement_key);
+              if (!a) return null;
+              const tc = TIER_COLORS[a.tier];
+              return (
+                <View
+                  key={u.achievement_key}
+                  style={[styles.recentCard, { borderColor: tc.border, backgroundColor: tc.bg }]}
+                >
+                  <Text style={styles.recentIcon}>{a.icon}</Text>
+                  <Text style={[styles.recentTitle, { color: tc.text }]} numberOfLines={1}>
+                    {a.title}
+                  </Text>
+                </View>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+
+      {/* Tier filters */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -166,6 +197,38 @@ const styles = StyleSheet.create({
   subtitle: {
     ...Type.caption,
     color: Colors.text3,
+  },
+  recentSection: {
+    paddingBottom: 16,
+  },
+  recentLabel: {
+    ...Type.label,
+    color: Colors.text3,
+    fontSize: 9,
+    letterSpacing: 2,
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  recentList: {
+    paddingHorizontal: 20,
+    gap: 10,
+  },
+  recentCard: {
+    width: 80,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 10,
+    alignItems: 'center',
+    gap: 5,
+  },
+  recentIcon: {
+    fontSize: 28,
+  },
+  recentTitle: {
+    ...Type.caption,
+    fontSize: 9,
+    textAlign: 'center',
+    letterSpacing: 0.3,
   },
   filters: {
     paddingHorizontal: 20,

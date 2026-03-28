@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../supabase';
+import { checkAndUnlockAchievements } from '../utils/checkAchievements';
 
 interface ActiveSession {
   id: string | null;
@@ -23,6 +24,7 @@ export interface SessionResult {
   isPersonalRecord: boolean;
   throneClaimed: boolean;
   throneId: string | null;
+  newAchievements: string[];
 }
 
 export const useSessionStore = create<SessionState>((set, get) => ({
@@ -131,6 +133,47 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
     if (!data) return null;
 
+    // Count total sessions for achievement checks
+    const { count: totalSessions } = await supabase
+      .from('dump_sessions')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .not('ended_at', 'is', null);
+
+    // Compute current streak (consecutive days with at least one session, ending today)
+    const { data: recentSessions } = await supabase
+      .from('dump_sessions')
+      .select('started_at')
+      .eq('user_id', user.id)
+      .not('ended_at', 'is', null)
+      .order('started_at', { ascending: false })
+      .limit(60);
+
+    let streakDays = 0;
+    if (recentSessions && recentSessions.length > 0) {
+      const daySet = new Set(
+        recentSessions.map((s) => new Date(s.started_at).toDateString()),
+      );
+      const today = new Date();
+      let cursor = new Date(today);
+      while (daySet.has(cursor.toDateString())) {
+        streakDays++;
+        cursor.setDate(cursor.getDate() - 1);
+      }
+    }
+
+    const newAchievements = await checkAndUnlockAchievements(
+      {
+        id: data.id,
+        user_id: user.id,
+        started_at: data.started_at,
+        duration_seconds: durationSeconds,
+        weight_delta_lbs: weightDelta,
+        throne_claimed: throneClaimed,
+      },
+      { totalSessions: totalSessions ?? 1, streakDays },
+    );
+
     return {
       id: data.id,
       durationSeconds,
@@ -138,6 +181,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       isPersonalRecord,
       throneClaimed,
       throneId: activeSession.throneId,
+      newAchievements,
     };
   },
 

@@ -1,0 +1,47 @@
+{
+  "name": "udump",
+  "version": "1.0.0",
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "lint": "expo lint"
+  },
+  "dependencies": {
+    "@expo/cli": "^55.0.20-canary-20260327-0789fbc",
+    "@shopify/flash-list": "^1.7.3",
+    "@supabase/supabase-js": "^2.49.4",
+    "@tanstack/react-query": "^5.74.2",
+    "date-fns": "^4.1.0",
+    "expo": "55.0.10-canary-20260327-0789fbc",
+    "expo-blur": "55.0.11-canary-20260327-0789fbc",
+    "expo-haptics": "55.0.10-canary-20260327-0789fbc",
+    "expo-image-picker": "55.0.15-canary-20260327-0789fbc",
+    "expo-linear-gradient": "55.0.10-canary-20260327-0789fbc",
+    "expo-location": "55.1.5-canary-20260327-0789fbc",
+    "expo-notifications": "55.0.15-canary-20260327-0789fbc",
+    "expo-router": "55.0.9-canary-20260327-0789fbc",
+    "expo-secure-store": "55.0.10-canary-20260327-0789fbc",
+    "expo-status-bar": "55.0.5-canary-20260327-0789fbc",
+    "react": "19.2.0",
+    "react-native": "0.83.4",
+    "react-native-gesture-handler": "~2.30.0",
+    "react-native-maps": "1.27.2",
+    "react-native-mmkv": "^3.2.0",
+    "react-native-reanimated": "4.2.1",
+    "react-native-safe-area-context": "~5.6.2",
+    "react-native-screens": "~4.23.0",
+    "react-native-svg": "15.15.3",
+    "victory-native": "^41.14.0",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "eslint": "^9.25.0",
+    "eslint-config-expo": "~9.2.0",
+    "typescript": "~5.9.2"
+  },
+  "private": true
+}

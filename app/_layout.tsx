@@ -1,11 +1,18 @@
 import { supabase } from '@/lib/supabase';
 import { useUserStore } from '@/lib/store/user.store';
 import { Session } from '@supabase/supabase-js';
+import * as Notifications from 'expo-notifications';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { Colors } from '../constants/colors';
+import {
+  configureNotifications,
+  registerForPushNotifications,
+} from '../lib/utils/notifications';
+
+configureNotifications();
 
 export default function RootLayout() {
   const [session, setSession] = useState<Session | null>(null);
@@ -13,6 +20,40 @@ export default function RootLayout() {
   const { setProfile, fetchProfile } = useUserStore();
   const segments = useSegments();
   const router = useRouter();
+  const notificationResponseListener = useRef<Notifications.EventSubscription | null>(null);
+
+  // Deep link handler: route to the right screen based on notification data
+  useEffect(() => {
+    notificationResponseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        const data = response.notification.request.content.data as Record<string, unknown>;
+        const type = data?.type as string | undefined;
+
+        switch (type) {
+          case 'record_broken':
+          case 'throne_claimed':
+          case 'throne_lost':
+            router.push('/profile/analytics');
+            break;
+          case 'overstay_60':
+          case 'overstay_120':
+            router.push('/(tabs)/activity');
+            break;
+          case 'friend_active':
+            router.push('/(tabs)/activity');
+            break;
+          case 'streak_milestone':
+            router.push('/profile/achievements');
+            break;
+          default:
+            break;
+        }
+      });
+
+    return () => {
+      notificationResponseListener.current?.remove();
+    };
+  }, [router]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -25,6 +66,8 @@ export default function RootLayout() {
         setSession(session);
         if (session?.user) {
           await fetchProfile(session.user.id);
+          // Register push token whenever auth state changes to a valid session
+          registerForPushNotifications(session.user.id);
         } else {
           setProfile(null);
         }

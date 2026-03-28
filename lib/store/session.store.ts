@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from '../supabase';
 import { checkAndUnlockAchievements } from '../utils/checkAchievements';
+import { notifyFriends } from '../utils/notifications';
 
 interface ActiveSession {
   id: string | null;
@@ -58,6 +59,25 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         },
         isStarting: false,
       });
+
+      // Notify friends: friend is now active
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name, username')
+        .eq('id', user.id)
+        .single();
+      const displayName = profile?.display_name || profile?.username || 'Someone';
+
+      let locationName = 'Home';
+      if (throneId) {
+        const { data: throne } = await supabase
+          .from('thrones')
+          .select('name')
+          .eq('id', throneId)
+          .single();
+        locationName = throne?.name ?? 'Unknown';
+      }
+      notifyFriends(user.id, 'friend_active', { name: displayName, location: locationName, mins: 0 });
     } else {
       set({ isStarting: false });
     }
@@ -133,6 +153,34 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
     if (!data) return null;
 
+    // Fetch user display name for notification copy
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('display_name, username')
+      .eq('id', user.id)
+      .single();
+    const displayName = profile?.display_name || profile?.username || 'Someone';
+
+    // Notify friends: record broken
+    if (isPersonalRecord && weightDelta != null) {
+      notifyFriends(user.id, 'record_broken', { name: displayName, lbs: weightDelta });
+    }
+
+    // Notify friends: throne claimed
+    if (throneClaimed && activeSession.throneId) {
+      const { data: throneInfo } = await supabase
+        .from('thrones')
+        .select('name')
+        .eq('id', activeSession.throneId)
+        .single();
+      notifyFriends(user.id, 'throne_claimed', {
+        name: displayName,
+        location: throneInfo?.name ?? 'a throne',
+        lbs: weightDelta ?? 0,
+        mins: Math.floor(durationSeconds / 60),
+      });
+    }
+
     // Count total sessions for achievement checks
     const { count: totalSessions } = await supabase
       .from('dump_sessions')
@@ -173,6 +221,14 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       },
       { totalSessions: totalSessions ?? 1, streakDays },
     );
+
+    // Streak milestone notifications (7, 30 day)
+    if (newAchievements.includes('STREAK_7')) {
+      notifyFriends(user.id, 'streak_milestone', { days: 7 });
+    }
+    if (newAchievements.includes('STREAK_30')) {
+      notifyFriends(user.id, 'streak_milestone', { days: 30 });
+    }
 
     return {
       id: data.id,

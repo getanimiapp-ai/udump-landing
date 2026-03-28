@@ -750,6 +750,138 @@ footer{
   background: var(--gold);
   height: 38px;
 }
+
+/* ─── MOBILE RESPONSIVE ─── */
+@media (max-width: 768px) {
+
+  /* NAV */
+  nav { padding: 0 20px; }
+  .nav-links { display: none; }
+  .nav-cta { padding: 8px 16px; font-size: 13px; }
+
+  /* HERO */
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 90px 24px 60px;
+    gap: 40px;
+    text-align: center;
+  }
+  .hero-bloom { width: 300px; height: 300px; right: 10%; }
+  .hero-body { max-width: 100%; }
+  .hero-btns { justify-content: center; }
+  .founded-pill { justify-content: center; }
+  .eyebrow { justify-content: center; }
+  .eyebrow::before { display: none; }
+  .phone { width: 240px; }
+
+  /* FEATURES BENTO */
+  .feat-sec { padding: 60px 24px; }
+  .bento { grid-template-columns: 1fr; }
+  .fc.w2, .fc.t2 { grid-column: span 1; grid-row: span 1; }
+
+  /* NOTIFICATIONS */
+  .notif-sec { padding: 60px 24px; }
+
+  /* TESTIMONIALS */
+  .testi-sec { padding: 60px 24px; }
+  .testi-grid { grid-template-columns: 1fr; }
+
+  /* ORIGIN */
+  .origin-sec { padding: 60px 24px; }
+
+  /* FOUNDERS */
+  .founders-sec { padding: 60px 24px; }
+  .founders-grid { grid-template-columns: 1fr; max-width: 100%; }
+
+  /* CTA */
+  .cta-sec { padding: 80px 24px; }
+  .cta-form { flex-direction: column; border-radius: 16px; }
+  .cta-input { padding: 14px 20px; }
+  .cta-submit { margin: 0 4px 4px; padding: 14px 24px; border-radius: 12px; }
+  .store-row { flex-direction: column; align-items: center; }
+
+  /* PRESS */
+  .press-sec { padding: 40px 24px; }
+  .press-logos { gap: 24px; }
+
+  /* FOOTER */
+  footer {
+    padding: 32px 24px;
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+
+  /* SECTION HEADERS */
+  .sec-h2 { margin-bottom: 32px; }
+
+  /* TICKER */
+  .tick-n { font-size: 20px; }
+  .tick-l { font-size: 12px; }
+
+  /* 3D SCROLL SECTION — panel moves to bottom */
+  .scene3d-panel {
+    left: 20px;
+    right: 20px;
+    top: auto;
+    bottom: 80px;
+    transform: none;
+    max-width: none;
+    background: rgba(6,6,10,0.82);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(212,175,55,0.15);
+    border-radius: 20px;
+    padding: 20px 22px;
+  }
+  .scene3d-h2 { font-size: clamp(32px, 8vw, 48px); margin-bottom: 10px; }
+  .scene3d-body { font-size: 14px; }
+  .scene3d-eyebrow { justify-content: flex-start; margin-bottom: 8px; }
+
+  /* Hide hotspot labels on mobile — too cluttered */
+  .hs { display: none; }
+
+  /* Progress pips — move to bottom-right above panel */
+  .scene3d-progress {
+    right: 16px;
+    top: auto;
+    bottom: 220px;
+    transform: none;
+  }
+
+  /* HARDWARE SECTION inline-grid and padding override */
+  .hardware-grid { grid-template-columns: 1fr !important; }
+  .hardware-sec { padding: 60px 24px !important; }
+
+  /* U·THRONE PRO inline-grid and padding override */
+  .throne-pro-sec { padding: 60px 24px !important; }
+  .throne-pro-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+
+  /* FOUNDERS inline 3-col grid override */
+  .founders-grid { grid-template-columns: 1fr !important; max-width: 100% !important; }
+}
+
+@media (max-width: 480px) {
+  /* Hero headline tighten */
+  .hero { padding: 80px 16px 48px; }
+  .btn-gold, .btn-ghost { padding: 12px 22px; font-size: 15px; }
+  .phone { width: 200px; }
+
+  /* Sections tighter */
+  .feat-sec, .notif-sec, .testi-sec, .origin-sec, .founders-sec { padding: 48px 16px; }
+  .cta-sec { padding: 64px 16px; }
+  .press-sec, footer { padding: 28px 16px; }
+
+  /* Feature cards */
+  .fc { padding: 20px; }
+  .fc-title { font-size: 18px; }
+
+  /* Testimonials */
+  .tc { padding: 20px; }
+
+  /* 3D scroll panel smaller */
+  .scene3d-panel { bottom: 64px; padding: 16px 18px; }
+  .scene3d-h2 { font-size: clamp(28px, 7vw, 40px); }
+}
 </style>
 </head>
 <body>
@@ -1038,7 +1170,7 @@ footer{
 </div>
 
 <!-- HARDWARE SECTION -->
-<section style="padding:100px 60px;background:var(--void);position:relative;overflow:hidden;">
+<section class="hardware-sec" style="padding:100px 60px;background:var(--void);position:relative;overflow:hidden;">
   <!-- ambient blooms -->
   <div style="position:absolute;top:30%;left:10%;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(48,209,88,0.04) 0%,transparent 65%);pointer-events:none;"></div>
   <div style="position:absolute;bottom:10%;right:10%;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.05) 0%,transparent 65%);pointer-events:none;"></div>
@@ -1052,7 +1184,7 @@ footer{
   <p style="font-size:18px;font-weight:300;line-height:1.7;color:var(--t2);max-width:520px;margin-bottom:72px;">The U·Dump Sensor Kit attaches to any standard toilet seat in under 10 minutes. No plumbing. No drilling. No grossness. Just load cells, Bluetooth, and competitive glory.</p>
 
   <!-- HARDWARE LAYOUT: diagram left, specs right -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+  <div class="hardware-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
 
     <!-- SENSOR RING DIAGRAM -->
     <div style="background:var(--g1);border:1px solid var(--gb);border-radius:28px;padding:40px;display:flex;flex-direction:column;align-items:center;position:relative;overflow:hidden;">
@@ -1179,7 +1311,7 @@ footer{
 </section>
 
 <!-- U·THRONE PRO UPGRADE -->
-<section style="padding:80px 60px;background:var(--base);position:relative;overflow:hidden;border-top:1px solid var(--gb);">
+<section class="throne-pro-sec" style="padding:80px 60px;background:var(--base);position:relative;overflow:hidden;border-top:1px solid var(--gb);">
   <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);"></div>
   <div style="position:absolute;top:20%;right:5%;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(10,132,255,0.04) 0%,transparent 65%);pointer-events:none;"></div>
   <div style="position:absolute;bottom:10%;left:5%;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.04) 0%,transparent 65%);pointer-events:none;"></div>
@@ -1190,7 +1322,7 @@ footer{
     <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#0A84FF;">Optional Upgrade</span>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;">
+  <div class="throne-pro-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;">
     <div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:clamp(52px,7vw,88px);line-height:0.88;letter-spacing:-0.01em;margin-bottom:20px;">
         U·THRONE<br><em style="font-style:italic;color:#0A84FF;">PRO</em>

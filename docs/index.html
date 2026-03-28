@@ -48,617 +48,914 @@ body {
   pointer-events: none;
 }
 
-/* ── LOADER ── */
-#loader {
-  position: fixed; inset: 0;
-  z-index: 1000;
-  background: var(--void);
-  display: flex; align-items: center; justify-content: center;
-  flex-direction: column; gap: 28px;
-  transition: opacity 0.8s ease;
-}
-#loader.hidden { opacity: 0; pointer-events: none; }
-
-.ldr-orb {
-  width: 72px; height: 72px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--gold), var(--gold2));
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 900; font-size: 28px; color: #000;
-  box-shadow: 0 0 40px rgba(212,175,55,0.45);
-  animation: ldrPulse 1.6s ease-in-out infinite;
-}
-@keyframes ldrPulse {
-  0%, 100% { box-shadow: 0 0 40px rgba(212,175,55,0.45); }
-  50% { box-shadow: 0 0 70px rgba(212,175,55,0.7); }
-}
-.ldr-label {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700; font-size: 12px;
-  letter-spacing: 0.22em; text-transform: uppercase;
-  color: var(--t3);
-}
-.ldr-bar {
-  width: 220px; height: 2px;
-  background: var(--gb); border-radius: 2px; overflow: hidden;
-}
-.ldr-fill {
-  height: 100%; width: 0%;
-  background: linear-gradient(90deg, var(--gold), var(--gold2));
-  border-radius: 2px;
-  transition: width 0.4s ease;
-}
+/* ── CONTENT LAYERS ── */
+.above-canvas { position: relative; z-index: 2; }
+.canvas-bg    { position: relative; z-index: 1; }
 
 /* ── NAV ── */
 nav {
   position: fixed; top: 0; left: 0; right: 0;
-  z-index: 200; height: 58px;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 48px;
-  background: rgba(6,6,10,0.82);
-  backdrop-filter: blur(24px) saturate(180%);
-  border-bottom: 1px solid var(--gb);
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.5s ease;
+  padding: 0 40px; height: 64px;
+  background: linear-gradient(to bottom, rgba(6,6,10,0.9), transparent);
+  z-index: 100;
 }
-nav.on { opacity: 1; pointer-events: all; }
-
-.nav-logo { display: flex; align-items: center; gap: 10px; cursor: default; }
-.nav-orb {
-  width: 30px; height: 30px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--gold), var(--gold2));
-  display: flex; align-items: center; justify-content: center;
+.nav-logo {
   font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 900; font-size: 13px; color: #000;
-  box-shadow: 0 0 14px rgba(212,175,55,0.35);
+  font-weight: 800; font-size: 22px; letter-spacing: 0.08em;
+  color: var(--gold);
 }
-.nav-wordmark {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 800; font-size: 20px; letter-spacing: 0.06em;
-}
-.nav-links { display: flex; gap: 28px; list-style: none; }
-.nav-links a {
-  font-size: 14px; font-weight: 400; color: var(--t2);
-  text-decoration: none; transition: color .2s;
-}
-.nav-links a:hover { color: var(--t1); }
 .nav-cta {
-  padding: 9px 22px; border-radius: 22px;
-  background: var(--gold); color: #000;
+  background: var(--gold); color: var(--void);
+  border: none; border-radius: 6px;
+  padding: 9px 20px;
   font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 800; font-size: 15px; letter-spacing: 0.06em;
-  text-transform: uppercase; border: none; cursor: pointer;
-  box-shadow: 0 0 18px rgba(212,175,55,0.28);
-  transition: all .2s;
+  font-weight: 700; font-size: 14px; letter-spacing: 0.1em;
+  cursor: pointer; text-transform: uppercase;
+  transition: background 0.2s;
 }
-.nav-cta:hover { background: var(--gold2); box-shadow: 0 0 28px rgba(212,175,55,0.45); }
-
-/* ── CONTENT ── */
-#content { position: relative; z-index: 1; }
+.nav-cta:hover { background: var(--gold2); }
 
 /* ── HERO ── */
 #hero {
   height: 100vh;
-  display: flex; align-items: center;
-  padding: 80px 60px 60px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+  padding-bottom: 120px;
+  text-align: center;
   position: relative;
 }
-
-.eyebrow {
+.hero-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 16px;
+}
+.hero-h1 {
   font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700; font-size: 12px; letter-spacing: 0.2em;
-  text-transform: uppercase; color: var(--gold);
-  margin-bottom: 16px;
-  display: flex; align-items: center; gap: 10px;
-  opacity: 0; transform: translateY(16px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
-}
-.eyebrow::before { content: ''; width: 24px; height: 2px; background: var(--gold); flex-shrink: 0; }
-.eyebrow.in { opacity: 1; transform: translateY(0); }
-
-.hero-headline {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 900;
-  font-size: clamp(72px, 9vw, 130px);
-  line-height: 0.88; letter-spacing: -0.01em;
-  margin-bottom: 20px;
-  opacity: 0; transform: translateY(24px);
-  transition: opacity 0.7s ease 0.1s, transform 0.7s ease 0.1s;
-}
-.hero-headline.in { opacity: 1; transform: translateY(0); }
-
-.line-u {
-  background: linear-gradient(135deg, var(--gold) 0%, var(--gold2) 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  display: block;
-}
-.line-dump { display: block; color: var(--t1); }
-
-.hero-kicker {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700; font-style: italic;
-  font-size: clamp(16px, 2vw, 22px);
-  color: var(--t2); margin-bottom: 20px; line-height: 1.35;
-  opacity: 0; transform: translateY(16px);
-  transition: opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s;
-}
-.hero-kicker.in { opacity: 1; transform: translateY(0); }
-
-.hero-body {
-  font-size: 16px; font-weight: 300; line-height: 1.75;
-  color: var(--t2); max-width: 380px; margin-bottom: 32px;
-  opacity: 0; transform: translateY(16px);
-  transition: opacity 0.6s ease 0.3s, transform 0.6s ease 0.3s;
-}
-.hero-body.in { opacity: 1; transform: translateY(0); }
-
-.hero-btns {
-  display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  font-weight: 900; font-size: clamp(52px, 10vw, 108px);
+  line-height: 0.92; text-transform: uppercase; letter-spacing: -0.01em;
   margin-bottom: 24px;
-  opacity: 0; transform: translateY(16px);
-  transition: opacity 0.6s ease 0.4s, transform 0.6s ease 0.4s;
 }
-.hero-btns.in { opacity: 1; transform: translateY(0); }
-
-.btn-gold {
-  padding: 14px 32px; border-radius: 14px;
+.hero-h1 em { font-style: italic; color: var(--gold); }
+.hero-sub {
+  font-size: 18px; font-weight: 300; color: var(--t2);
+  max-width: 480px; line-height: 1.6; margin-bottom: 40px;
+}
+.hero-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+.btn-primary {
   background: linear-gradient(135deg, var(--gold), var(--gold2));
-  color: #000; font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 800; font-size: 17px; letter-spacing: 0.06em;
-  text-transform: uppercase; border: none; cursor: pointer;
-  box-shadow: 0 4px 28px rgba(212,175,55,0.32);
-  transition: all .2s; text-decoration: none; display: inline-block;
-}
-.btn-gold:hover { transform: translateY(-2px); box-shadow: 0 6px 36px rgba(212,175,55,0.5); }
-
-.btn-ghost {
-  padding: 14px 32px; border-radius: 14px;
-  background: var(--g2); color: var(--t1);
+  color: var(--void);
+  border: none; border-radius: 8px;
+  padding: 16px 32px;
   font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700; font-size: 17px; letter-spacing: 0.06em;
-  text-transform: uppercase; border: 1px solid var(--gb2);
-  cursor: pointer; backdrop-filter: blur(12px);
-  transition: all .2s; text-decoration: none; display: inline-block;
+  font-weight: 700; font-size: 15px; letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer; transition: opacity 0.2s;
+}
+.btn-primary:hover { opacity: 0.9; }
+.btn-ghost {
+  background: var(--g2);
+  color: var(--t2);
+  border: 1px solid var(--gb);
+  border-radius: 8px;
+  padding: 16px 32px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: 15px; letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer; transition: background 0.2s;
 }
 .btn-ghost:hover { background: var(--g3); }
-
-.founded-pill {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 8px 16px; border-radius: 999px;
-  background: rgba(212,175,55,0.08);
-  border: 1px solid rgba(212,175,55,0.20);
-  opacity: 0; transition: opacity 0.6s ease 0.5s;
-}
-.founded-pill.in { opacity: 1; }
-.founded-pill span { font-size: 11px; font-weight: 500; color: var(--gold); letter-spacing: 0.04em; }
-.fp-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 6px var(--gold); flex-shrink: 0; }
-
 .scroll-hint {
-  position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+  position: absolute; bottom: 32px;
   display: flex; flex-direction: column; align-items: center; gap: 8px;
-  opacity: 0; transition: opacity 1s ease 1.2s;
+  color: var(--t3); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
 }
-.scroll-hint.in { opacity: 1; }
-.scroll-hint span {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 10px; font-weight: 700; letter-spacing: 0.22em;
-  text-transform: uppercase; color: var(--t3);
-}
-.scroll-arrow {
-  width: 1px; height: 44px;
-  background: linear-gradient(to bottom, var(--gold), transparent);
-  animation: sArrow 1.6s ease-in-out infinite;
-}
-@keyframes sArrow {
-  0%, 100% { opacity: 0.7; transform: scaleY(1); transform-origin: top; }
-  50% { opacity: 0.25; transform: scaleY(0.5); transform-origin: top; }
-}
-
-/* ── PRODUCT SECTION ── */
-#product-spacer { height: 300vh; position: relative; }
-
-#product-sticky {
-  position: sticky; top: 0; height: 100vh;
-  display: flex; align-items: center;
-  padding: 80px 60px;
-  overflow: hidden;
-}
-
-.product-left { width: 420px; flex-shrink: 0; }
-
-.sec-eyebrow {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700; font-size: 11px; letter-spacing: 0.22em;
-  text-transform: uppercase; color: var(--gold);
-  margin-bottom: 14px;
-  display: flex; align-items: center; gap: 10px;
-}
-.sec-eyebrow::before { content: ''; width: 20px; height: 2px; background: var(--gold); flex-shrink: 0; }
-
-.product-headline {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 900; font-size: clamp(36px, 4.5vw, 58px);
-  line-height: 1.0; letter-spacing: -0.01em;
-  margin-bottom: 14px; color: var(--t1);
-}
-
-.product-desc {
-  font-size: 15px; font-weight: 300; line-height: 1.75;
-  color: var(--t2); max-width: 340px;
-}
-
-.product-steps { margin-top: 36px; display: flex; flex-direction: column; gap: 14px; }
-
-.pstep {
-  display: flex; align-items: center; gap: 14px;
-  opacity: 0.25;
-  transition: opacity 0.35s ease;
-  cursor: default;
-}
-.pstep.active { opacity: 1; }
-
-.pstep-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--gold); flex-shrink: 0;
-  box-shadow: 0 0 0 0 rgba(212,175,55,0.3);
-  transition: box-shadow 0.35s ease, transform 0.35s ease;
-}
-.pstep.active .pstep-dot {
-  transform: scale(1.5);
-  box-shadow: 0 0 0 5px rgba(212,175,55,0.15), 0 0 12px rgba(212,175,55,0.5);
-}
-
-.pstep-text {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700; font-size: 20px; letter-spacing: 0.02em;
-  color: var(--t1);
-}
-
-/* ── HOTSPOTS ── */
-.hotspot {
-  position: absolute;
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.4s ease;
-  display: flex; align-items: center; gap: 14px;
-}
-.hotspot.on { opacity: 1; pointer-events: all; }
-
-.hs-dot {
-  width: 14px; height: 14px; border-radius: 50%;
-  background: radial-gradient(circle, var(--gold2) 30%, var(--gold) 100%);
-  box-shadow: 0 0 0 4px rgba(212,175,55,0.18), 0 0 18px rgba(212,175,55,0.55);
-  flex-shrink: 0; position: relative;
-}
-.hs-dot::after {
+.scroll-hint::after {
   content: '';
-  position: absolute; inset: -5px; border-radius: 50%;
-  border: 1px solid rgba(212,175,55,0.35);
-  animation: hsPulse 2.2s ease-in-out infinite;
-}
-@keyframes hsPulse {
-  0%, 100% { transform: scale(1); opacity: 0.9; }
-  50% { transform: scale(1.8); opacity: 0; }
+  width: 1px; height: 40px;
+  background: linear-gradient(to bottom, var(--t3), transparent);
 }
 
-.hs-card {
-  background: rgba(6,6,10,0.88);
-  border: 1px solid var(--gb2);
-  backdrop-filter: blur(16px);
-  border-radius: 12px;
-  padding: 12px 18px;
-  min-width: 180px;
+/* ── TICKER ── */
+.ticker-wrap {
+  overflow: hidden;
+  border-top: 1px solid var(--gb);
+  border-bottom: 1px solid var(--gb);
+  background: var(--g1);
+  padding: 14px 0;
+}
+.ticker-track {
+  display: flex; gap: 0;
+  animation: ticker 28s linear infinite;
+  white-space: nowrap;
+}
+.ticker-track:hover { animation-play-state: paused; }
+.ticker-item {
+  display: flex; align-items: center; gap: 24px;
+  padding: 0 40px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--t3);
+}
+.ticker-item b { color: var(--gold); font-weight: 500; }
+.ticker-sep { color: var(--gold); opacity: 0.4; }
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ── SECTION COMMON ── */
+.sec-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 16px;
+}
+.sec-h2 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800; font-size: clamp(36px, 6vw, 72px);
+  text-transform: uppercase; line-height: 0.95;
+  margin-bottom: 20px;
+}
+.sec-h2 em { font-style: italic; color: var(--gold); }
+.sec-sub {
+  font-size: 16px; font-weight: 300; color: var(--t2);
+  max-width: 520px; line-height: 1.7;
+}
+
+/* ── PRODUCT ORBIT (3D SECTION) ── */
+#orbit-section {
+  height: 300vh;
+  position: relative;
+}
+#orbit-sticky {
+  position: sticky; top: 0; height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.orbit-hotspot {
+  position: absolute;
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.orbit-hotspot.visible { opacity: 1; }
+.orbit-hs-1 { right: 5%; top: 50%; transform: translateY(-50%); text-align: right; }
+.orbit-hs-2 { left: 5%; top: 45%; text-align: left; }
+.orbit-hs-3 { left: 50%; bottom: 12%; transform: translateX(-50%); text-align: center; }
+
+.hs-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold);
+  margin-bottom: 8px;
 }
 .hs-title {
   font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 800; font-size: 13px; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--gold);
-  margin-bottom: 3px;
+  font-weight: 800; font-size: 28px; text-transform: uppercase; line-height: 1;
+  margin-bottom: 8px;
 }
-.hs-desc {
-  font-size: 12px; font-weight: 300; color: var(--t2); line-height: 1.5;
+.hs-body { font-size: 14px; color: var(--t2); max-width: 240px; line-height: 1.6; }
+
+/* ── U·THRONE PRO ── */
+#throne-pro {
+  padding: 120px 40px;
+  max-width: 1200px; margin: 0 auto;
+  text-align: center;
 }
-
-/* ── FEATURES ── */
-#features {
-  min-height: 110vh;
-  padding: 120px 60px;
+.throne-kicker {
+  display: inline-block;
+  border: 1px solid var(--gold);
+  border-radius: 100px;
+  padding: 6px 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 32px;
 }
-
-.feat-header { margin-bottom: 64px; }
-
-.feat-title {
+.throne-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px;
+  margin-top: 64px;
+  border: 1px solid var(--gb);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.throne-feature {
+  background: var(--g1);
+  padding: 48px 40px;
+  text-align: left;
+  border: 1px solid var(--gb);
+  transition: background 0.2s;
+}
+.throne-feature:hover { background: var(--g2); }
+.tf-icon {
+  width: 48px; height: 48px;
+  background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(240,206,96,0.08));
+  border: 1px solid rgba(212,175,55,0.3);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; margin-bottom: 20px;
+}
+.tf-title {
   font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 900; font-size: clamp(44px, 5.5vw, 72px);
-  line-height: 0.95; letter-spacing: -0.01em;
-  margin-bottom: 16px;
+  font-weight: 700; font-size: 20px; text-transform: uppercase; letter-spacing: 0.05em;
+  margin-bottom: 10px;
 }
-.gold-text {
-  background: linear-gradient(135deg, var(--gold) 0%, var(--gold2) 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+.tf-body { font-size: 14px; color: var(--t2); line-height: 1.7; }
+.throne-bottom {
+  margin-top: 64px;
+  padding: 40px;
+  border: 1px solid var(--gb);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(212,175,55,0.06), transparent);
 }
+.throne-bottom-q {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: clamp(24px, 3vw, 38px);
+  text-transform: uppercase; letter-spacing: 0.02em;
+  color: var(--gold); margin-bottom: 16px;
+}
+.throne-bottom-a { font-size: 15px; color: var(--t2); line-height: 1.7; max-width: 600px; margin: 0 auto; }
 
-.feat-subtitle {
-  font-size: 17px; font-weight: 300; line-height: 1.75;
-  color: var(--t2); max-width: 460px;
+/* ── FEATURES BENTO ── */
+.feat-sec {
+  padding: 120px 40px;
+  max-width: 1200px; margin: 0 auto;
 }
-
-.feat-grid {
+.bento {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  max-width: 1000px;
+  gap: 2px;
+  margin-top: 64px;
 }
-
-.feat-card {
-  background: var(--g2);
+.fc {
+  background: var(--g1);
   border: 1px solid var(--gb);
-  border-radius: 20px; padding: 32px;
-  position: relative; overflow: hidden;
-  transition: border-color 0.3s ease, transform 0.2s ease;
-  opacity: 0; transform: translateY(32px);
+  border-radius: 12px;
+  padding: 40px 32px;
+  transition: background 0.2s;
 }
-.feat-card::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(212,175,55,0.25), transparent);
+.fc:hover { background: var(--g2); }
+.fc-icon {
+  font-size: 28px; margin-bottom: 16px;
 }
-.feat-card:hover { border-color: var(--gb2); transform: translateY(-3px); }
-.feat-card.in { opacity: 1; transform: translateY(0); transition: opacity 0.55s ease, transform 0.55s ease, border-color 0.3s, transform 0.2s; }
-
-.fc-badge {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px; font-weight: 400; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--gold);
-  margin-bottom: 14px;
-}
-.fc-name {
+.fc-title {
   font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 800; font-size: 22px; letter-spacing: 0.01em;
-  color: var(--t1); margin-bottom: 10px;
+  font-weight: 700; font-size: 18px; text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 10px;
 }
-.fc-body {
-  font-size: 14px; font-weight: 300; line-height: 1.65; color: var(--t2);
-}
-.fc-num {
-  margin-top: 24px;
+.fc-body { font-size: 13px; color: var(--t2); line-height: 1.7; }
+.fc-stat {
+  margin-top: 16px;
   font-family: 'DM Mono', monospace;
-  font-size: 36px; font-weight: 400; color: var(--gold); line-height: 1;
+  font-size: 32px; font-weight: 500; color: var(--gold);
+  letter-spacing: -0.02em;
 }
-.fc-num-lbl {
-  font-size: 10px; color: var(--t3); margin-top: 3px;
-  letter-spacing: 0.1em; text-transform: uppercase;
+.fc-stat-label { font-size: 11px; color: var(--t3); letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* ── NOTIFICATIONS ── */
+.notif-sec {
+  padding: 120px 40px;
+  max-width: 700px; margin: 0 auto;
+  text-align: center;
 }
+.notif-stack { margin-top: 56px; display: flex; flex-direction: column; gap: 12px; }
+.nc {
+  background: var(--g1);
+  border: 1px solid var(--gb);
+  border-radius: 16px;
+  padding: 20px 24px;
+  display: flex; align-items: flex-start; gap: 16px;
+  text-align: left;
+  transform: translateX(20px);
+  opacity: 0;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+}
+.nc.visible { transform: translateX(0); opacity: 1; }
+.nc-icon {
+  font-size: 24px; width: 44px; height: 44px;
+  background: var(--g2); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.nc-app {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 4px;
+}
+.nc-title { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+.nc-body { font-size: 13px; color: var(--t2); line-height: 1.5; }
+.nc-time { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--t3); margin-top: 4px; }
+
+/* ── TESTIMONIALS ── */
+.testi-sec {
+  padding: 120px 40px;
+  max-width: 1200px; margin: 0 auto;
+}
+.testi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 64px;
+}
+.tc {
+  background: var(--g1);
+  border: 1px solid var(--gb);
+  border-radius: 16px;
+  padding: 32px 28px;
+  transition: background 0.2s;
+}
+.tc:hover { background: var(--g2); }
+.tc-stars { margin-bottom: 16px; letter-spacing: 2px; font-size: 14px; }
+.tc-stars.gold { color: var(--gold); }
+.tc-stars.red { color: #E53935; }
+.tc-quote { font-size: 15px; color: var(--t2); line-height: 1.7; margin-bottom: 20px; font-style: italic; }
+.tc-author { font-weight: 600; font-size: 14px; }
+.tc-meta { font-size: 12px; color: var(--t3); margin-top: 2px; }
+.tc-badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+}
+.tc-badge.gold { background: rgba(212,175,55,0.15); color: var(--gold); border: 1px solid rgba(212,175,55,0.3); }
+.tc-badge.red { background: rgba(229,57,53,0.1); color: #EF5350; border: 1px solid rgba(229,57,53,0.3); }
+
+/* ── FOUNDERS ── */
+.founders-sec {
+  padding: 120px 40px;
+  max-width: 900px; margin: 0 auto;
+  text-align: center;
+}
+.founders-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 64px;
+}
+.founder-card {
+  background: var(--g1);
+  border: 1px solid var(--gb);
+  border-radius: 16px;
+  padding: 40px 24px 32px;
+  text-align: center;
+}
+.founder-avatar {
+  width: 80px; height: 80px;
+  background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(240,206,96,0.1));
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 28px; font-weight: 800; color: var(--gold);
+}
+.founder-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: 20px; text-transform: uppercase; letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+.founder-title { font-size: 13px; color: var(--t2); margin-bottom: 12px; }
+.founder-equity {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 0.1em;
+  padding: 4px 12px; border-radius: 100px;
+  display: inline-block;
+}
+.founder-equity.confirmed {
+  background: rgba(212,175,55,0.12); color: var(--gold); border: 1px solid rgba(212,175,55,0.3);
+}
+.founder-equity.pending {
+  background: rgba(255,255,255,0.05); color: var(--t3); border: 1px solid var(--gb);
+}
+
+/* ── ORIGIN ── */
+.origin-sec {
+  padding: 120px 40px;
+  max-width: 760px; margin: 0 auto;
+  text-align: center;
+}
+.origin-year {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900; font-size: 120px; line-height: 1;
+  text-transform: uppercase;
+  background: linear-gradient(to bottom, var(--gb2), transparent);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: -20px;
+}
+.origin-quote {
+  background: var(--g1);
+  border: 1px solid var(--gb);
+  border-left: 3px solid var(--gold);
+  border-radius: 8px;
+  padding: 32px 36px;
+  margin: 40px 0;
+  text-align: left;
+}
+.origin-quote p { font-size: 16px; font-style: italic; color: var(--t2); line-height: 1.8; }
+.origin-quote cite {
+  display: block; margin-top: 16px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--t3); font-style: normal;
+}
+.origin-reddit {
+  background: var(--g1);
+  border: 1px solid var(--gb);
+  border-radius: 12px;
+  padding: 24px 28px;
+  text-align: left;
+}
+.reddit-header {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 0.1em;
+  color: var(--t3); margin-bottom: 12px;
+}
+.reddit-header b { color: var(--gold); }
+.reddit-body { font-size: 14px; color: var(--t2); line-height: 1.7; }
+
+/* ── PRESS ── */
+.press-sec {
+  padding: 80px 40px;
+  max-width: 900px; margin: 0 auto;
+  text-align: center;
+  border-top: 1px solid var(--gb);
+}
+.press-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--t3); margin-bottom: 40px;
+}
+.press-logos {
+  display: flex; align-items: center; justify-content: center;
+  gap: 48px; flex-wrap: wrap;
+}
+.press-logo {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800; font-size: 20px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--t3); opacity: 0.45;
+  transition: opacity 0.2s;
+}
+.press-logo:hover { opacity: 0.8; }
 
 /* ── CTA ── */
-#cta {
-  height: 80vh; min-height: 480px;
-  display: flex; align-items: center; justify-content: center;
-  flex-direction: column; gap: 28px;
-  text-align: center; padding: 60px;
-  position: relative;
+.cta-sec {
+  padding: 140px 40px;
+  max-width: 680px; margin: 0 auto;
+  text-align: center;
 }
-#cta::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse at 50% 60%, rgba(212,175,55,0.07) 0%, transparent 65%);
-  pointer-events: none;
+.cta-email-form {
+  display: flex; gap: 8px;
+  margin-top: 40px;
 }
-
-.cta-title {
+.cta-email-input {
+  flex: 1;
+  background: var(--g2);
+  border: 1px solid var(--gb);
+  border-radius: 8px;
+  padding: 14px 20px;
+  font-size: 15px; color: var(--t1);
+  font-family: 'Barlow', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.cta-email-input::placeholder { color: var(--t3); }
+.cta-email-input:focus { border-color: var(--gold); }
+.cta-email-submit {
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: var(--void);
+  border: none; border-radius: 8px;
+  padding: 14px 28px;
   font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 900; font-size: clamp(56px, 7.5vw, 104px);
-  line-height: 0.88; letter-spacing: -0.01em; position: relative;
+  font-weight: 700; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer; white-space: nowrap;
+  transition: opacity 0.2s;
 }
-
-.cta-sub {
-  font-size: 18px; font-weight: 300;
-  color: var(--t2); max-width: 480px; line-height: 1.7; position: relative;
+.cta-email-submit:hover { opacity: 0.9; }
+.cta-store-btns {
+  display: flex; gap: 12px; justify-content: center; margin-top: 24px; flex-wrap: wrap;
 }
-
-.cta-btns { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; justify-content: center; position: relative; }
+.store-btn {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--g2); border: 1px solid var(--gb);
+  border-radius: 10px; padding: 12px 20px;
+  text-decoration: none; color: var(--t1);
+  transition: background 0.2s;
+}
+.store-btn:hover { background: var(--g3); }
+.store-btn-icon { font-size: 22px; }
+.store-btn-text { text-align: left; }
+.store-btn-sub { font-size: 10px; color: var(--t3); text-transform: uppercase; letter-spacing: 0.1em; }
+.store-btn-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 0.04em; }
+.cta-fine { font-size: 12px; color: var(--t3); margin-top: 24px; line-height: 1.7; }
 
 /* ── FOOTER ── */
 footer {
   border-top: 1px solid var(--gb);
-  padding: 36px 60px;
+  padding: 48px 40px;
   display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 24px;
 }
-.footer-l {
+.footer-logo {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 14px; font-weight: 400; color: var(--t3);
+  font-weight: 800; font-size: 18px; letter-spacing: 0.1em;
+  color: var(--gold);
 }
-.footer-r {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px; color: var(--t3); letter-spacing: 0.04em;
+.footer-copy { font-size: 12px; color: var(--t3); }
+.footer-links { display: flex; gap: 24px; }
+.footer-links a {
+  font-size: 12px; color: var(--t3); text-decoration: none;
+  transition: color 0.2s;
 }
+.footer-links a:hover { color: var(--t1); }
 
-/* ── RESPONSIVE ── */
+/* ── LOADING ── */
+#loader {
+  position: fixed; inset: 0;
+  background: var(--void);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  transition: opacity 0.6s ease;
+}
+#loader.gone { opacity: 0; pointer-events: none; }
+.loader-inner { text-align: center; }
+.loader-crown { font-size: 48px; animation: pulse 1.6s ease-in-out infinite; }
+.loader-text {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--t3); margin-top: 16px;
+}
+@keyframes pulse { 0%,100%{opacity:0.3; transform:scale(0.9);} 50%{opacity:1; transform:scale(1.05);} }
+
 @media (max-width: 768px) {
   nav { padding: 0 20px; }
-  .nav-links { display: none; }
-  #hero { padding: 80px 24px 60px; }
-  #product-sticky { padding: 80px 24px; }
-  .product-left { width: 100%; }
-  #features { padding: 80px 24px; }
-  .feat-grid { grid-template-columns: 1fr; }
-  #cta { padding: 60px 24px; }
-  footer { padding: 28px 24px; flex-direction: column; gap: 10px; text-align: center; }
+  .throne-grid { grid-template-columns: 1fr; }
+  .bento { grid-template-columns: 1fr; }
+  .testi-grid { grid-template-columns: 1fr; }
+  .founders-grid { grid-template-columns: 1fr; }
+  .cta-email-form { flex-direction: column; }
+  .press-logos { gap: 28px; }
+  footer { flex-direction: column; text-align: center; }
+  .orbit-hotspot { display: none; }
+  #throne-pro, .feat-sec, .notif-sec, .testi-sec, .founders-sec, .origin-sec, .cta-sec { padding: 80px 20px; }
 }
 </style>
 </head>
 <body>
 
-<canvas id="c"></canvas>
-
 <!-- LOADER -->
 <div id="loader">
-  <div class="ldr-orb">U</div>
-  <div class="ldr-label">Loading Experience</div>
-  <div class="ldr-bar"><div class="ldr-fill" id="ldr-fill"></div></div>
+  <div class="loader-inner">
+    <div class="loader-crown">&#x1F451;</div>
+    <div class="loader-text">Loading throne…</div>
+  </div>
 </div>
+
+<!-- 3D CANVAS -->
+<canvas id="c"></canvas>
 
 <!-- NAV -->
-<nav id="nav">
-  <div class="nav-logo">
-    <div class="nav-orb">U</div>
-    <span class="nav-wordmark">U·DUMP</span>
-  </div>
-  <ul class="nav-links">
-    <li><a href="#product-spacer">Technology</a></li>
-    <li><a href="#features">Features</a></li>
-    <li><a href="#cta">Download</a></li>
-  </ul>
-  <button class="nav-cta">Join Waitlist</button>
+<nav class="above-canvas">
+  <div class="nav-logo">U·DUMP</div>
+  <button class="nav-cta" onclick="document.querySelector('.cta-sec').scrollIntoView({behavior:'smooth'})">Get Early Access</button>
 </nav>
 
-<div id="content">
+<!-- HERO -->
+<section id="hero" class="above-canvas">
+  <div class="hero-eyebrow">Originally Conceived 2016 &nbsp;·&nbsp; Finally Shipped 2026 &nbsp;·&nbsp; You're Welcome</div>
+  <h1 class="hero-h1">Claim<br><em>What's</em><br>Yours</h1>
+  <p class="hero-sub">The world's first competitive toilet analytics platform. Track your dumps. Dominate the leaderboard. Assert dominance.</p>
+  <div class="hero-btns">
+    <button class="btn-primary" onclick="document.querySelector('.cta-sec').scrollIntoView({behavior:'smooth'})">Join Waitlist</button>
+    <button class="btn-ghost" onclick="document.getElementById('orbit-section').scrollIntoView({behavior:'smooth'})">See How It Works</button>
+  </div>
+  <div class="scroll-hint">Scroll</div>
+</section>
 
-  <!-- HERO -->
-  <section id="hero">
-    <div style="max-width: 480px;">
-      <div class="eyebrow" id="ey1">Originally conceived 2016. Finally shipped 2026.</div>
-      <h1 class="hero-headline" id="hh">
-        <span class="line-u">U·</span>
-        <span class="line-dump">DUMP</span>
-      </h1>
-      <p class="hero-kicker" id="hk">The world's first luxury competitive<br>toilet analytics platform.</p>
-      <p class="hero-body" id="hb">Smart sensors. Real-time load cells. Global leaderboards. Your porcelain throne, finally quantified.</p>
-      <div class="hero-btns" id="hbtns">
-        <a href="#cta" class="btn-gold">Join Waitlist</a>
-        <a href="#product-spacer" class="btn-ghost">How It Works</a>
-      </div>
-      <div class="founded-pill" id="fpill">
-        <div class="fp-dot"></div>
-        <span>Claim What's Yours</span>
-      </div>
+<!-- TICKER -->
+<div class="ticker-wrap above-canvas">
+  <div class="ticker-track">
+    <div class="ticker-item"><b>2.4M+</b><span class="ticker-sep">·</span> Dumps Logged</div>
+    <div class="ticker-item"><b>847</b><span class="ticker-sep">·</span> Thrones Claimed Today</div>
+    <div class="ticker-item"><b>4.2 lbs</b><span class="ticker-sep">·</span> Average Dump Weight</div>
+    <div class="ticker-item"><b>14 min</b><span class="ticker-sep">·</span> Avg Session Duration</div>
+    <div class="ticker-item"><b>99,241</b><span class="ticker-sep">·</span> Users on Waitlist</div>
+    <div class="ticker-item"><b>#1</b><span class="ticker-sep">·</span> Ranked: Dave M. · 8.7 lbs</div>
+    <div class="ticker-item"><b>12</b><span class="ticker-sep">·</span> Throne Records Broken This Hour</div>
+    <!-- Duplicate for infinite scroll -->
+    <div class="ticker-item"><b>2.4M+</b><span class="ticker-sep">·</span> Dumps Logged</div>
+    <div class="ticker-item"><b>847</b><span class="ticker-sep">·</span> Thrones Claimed Today</div>
+    <div class="ticker-item"><b>4.2 lbs</b><span class="ticker-sep">·</span> Average Dump Weight</div>
+    <div class="ticker-item"><b>14 min</b><span class="ticker-sep">·</span> Avg Session Duration</div>
+    <div class="ticker-item"><b>99,241</b><span class="ticker-sep">·</span> Users on Waitlist</div>
+    <div class="ticker-item"><b>#1</b><span class="ticker-sep">·</span> Ranked: Dave M. · 8.7 lbs</div>
+    <div class="ticker-item"><b>12</b><span class="ticker-sep">·</span> Throne Records Broken This Hour</div>
+  </div>
+</div>
+
+<!-- PRODUCT ORBIT — 3D camera orbits while scrolling -->
+<div id="orbit-section" class="canvas-bg">
+  <div id="orbit-sticky">
+    <!-- Hotspot 1: Right side -->
+    <div class="orbit-hotspot orbit-hs-1" id="hs1">
+      <div class="hs-label">Feature 01</div>
+      <div class="hs-title">Precision<br>Weigh-In</div>
+      <div class="hs-body">Integrated smart seat measures weight to 0.1g accuracy. No extra hardware required.</div>
     </div>
-    <div class="scroll-hint" id="shint">
-      <div class="scroll-arrow"></div>
-      <span>Scroll</span>
+    <!-- Hotspot 2: Left side -->
+    <div class="orbit-hotspot orbit-hs-2" id="hs2">
+      <div class="hs-label">Feature 02</div>
+      <div class="hs-title">GPS Throne<br>Claiming</div>
+      <div class="hs-body">Drop the heaviest load on a toilet and it's yours. The crown goes to the biggest contender.</div>
     </div>
-  </section>
+    <!-- Hotspot 3: Bottom -->
+    <div class="orbit-hotspot orbit-hs-3" id="hs3">
+      <div class="hs-label">Feature 03</div>
+      <div class="hs-title">Dump Score™ AI</div>
+      <div class="hs-body">Proprietary algorithm combines weight, consistency, duration, and frequency into one legendary number.</div>
+    </div>
+  </div>
+</div>
 
-  <!-- PRODUCT SHOWCASE -->
-  <div id="product-spacer">
-    <div id="product-sticky">
-      <div class="product-left">
-        <div class="sec-eyebrow">Engineering</div>
-        <div class="product-headline">Precision<br>Engineered</div>
-        <div class="product-desc">The U·DUMP smart seat is packed with medical-grade sensors, invisible to the naked eye, built for serious athletes.</div>
-        <div class="product-steps">
-          <div class="pstep" id="ps1">
-            <div class="pstep-dot"></div>
-            <span class="pstep-text">Smart Sensors</span>
-          </div>
-          <div class="pstep" id="ps2">
-            <div class="pstep-dot"></div>
-            <span class="pstep-text">Load Cells</span>
-          </div>
-          <div class="pstep" id="ps3">
-            <div class="pstep-dot"></div>
-            <span class="pstep-text">Bluetooth Module</span>
-          </div>
-        </div>
-      </div>
+<!-- U·THRONE PRO -->
+<section id="throne-pro" class="above-canvas">
+  <div class="throne-kicker">Introducing U·Throne Pro</div>
+  <div class="sec-eyebrow">Hardware + Software</div>
+  <h2 class="sec-h2">The Throne<br><em>Evolved</em></h2>
+  <p class="sec-sub" style="margin:0 auto;">A $400 smart toilet seat that turns your bathroom into a competitive arena. Pairs with the app in 60 seconds.</p>
 
-      <!-- HOTSPOT: Smart Sensors — appears at front view -->
-      <div class="hotspot" id="hs1" style="right:14%;top:28%;">
-        <div class="hs-dot"></div>
-        <div class="hs-card">
-          <div class="hs-title">Smart Sensors</div>
-          <div class="hs-desc">Temp · Humidity · Pressure<br>calibration array</div>
-        </div>
-      </div>
-
-      <!-- HOTSPOT: Load Cells — appears at side view -->
-      <div class="hotspot" id="hs2" style="right:10%;bottom:26%;">
-        <div class="hs-dot"></div>
-        <div class="hs-card">
-          <div class="hs-title">Load Cells</div>
-          <div class="hs-desc">±0.1g precision<br>weight measurement</div>
-        </div>
-      </div>
-
-      <!-- HOTSPOT: Bluetooth — appears at rear view -->
-      <div class="hotspot" id="hs3" style="left:48%;top:22%;">
-        <div class="hs-dot"></div>
-        <div class="hs-card">
-          <div class="hs-title">Bluetooth Module</div>
-          <div class="hs-desc">BLE 5.2 · Encrypted<br>sync to your phone</div>
-        </div>
-      </div>
-
+  <div class="throne-grid">
+    <div class="throne-feature">
+      <div class="tf-icon">&#x1F3A7;</div>
+      <div class="tf-title">Spatial Audio Mode</div>
+      <div class="tf-body">Immersive 3D sound design responds to session performance. Victory fanfares. Ambient ambience. The full ceremony — tuned by a Grammy-nominated sound designer who asked to remain anonymous.</div>
+    </div>
+    <div class="throne-feature">
+      <div class="tf-icon">&#x1F321;&#xFE0F;</div>
+      <div class="tf-title">Thermal Comfort System</div>
+      <div class="tf-body">Precision-heated seat with 6 temperature zones. Machine-learned to your preferred warmth. Never suffer cold porcelain again. Adjusts automatically at 6am for your morning ritual.</div>
+    </div>
+    <div class="throne-feature">
+      <div class="tf-icon">&#x26A1;</div>
+      <div class="tf-title">Victory Vibration</div>
+      <div class="tf-body">Haptic feedback engine built into the seat. Pulses when you set a new personal record. Rumbles when someone tries to claim your throne. Feels exactly as good as it sounds.</div>
+    </div>
+    <div class="throne-feature">
+      <div class="tf-icon">&#x1F9E0;</div>
+      <div class="tf-title">DumpMind AI</div>
+      <div class="tf-body">On-device health intelligence tracks trends over time, flags anomalies, and suggests optimal hydration windows. Not a doctor. Still smarter than your doctor about this specific thing.</div>
     </div>
   </div>
 
-  <!-- FEATURES -->
-  <section id="features">
-    <div class="feat-header">
-      <div class="sec-eyebrow" style="margin-bottom:16px;">The App</div>
-      <h2 class="feat-title">
-        Everything<br>
-        <span class="gold-text">Tracked.</span>
-      </h2>
-      <p class="feat-subtitle">From your morning ritual to the global Dump Score™ leaderboard — every session counts.</p>
-    </div>
-    <div class="feat-grid">
-      <div class="feat-card" id="fc1">
-        <div class="fc-badge">Real-Time</div>
-        <div class="fc-name">Live Session Tracking</div>
-        <div class="fc-body">The moment you sit, U·DUMP starts measuring. Weight, duration, intensity — streamed live via BLE to your phone.</div>
-        <div class="fc-num">0.1g</div>
-        <div class="fc-num-lbl">Precision threshold</div>
-      </div>
-      <div class="feat-card" id="fc2">
-        <div class="fc-badge">Competition</div>
-        <div class="fc-name">Global Leaderboards</div>
-        <div class="fc-body">Claim your throne. Challenge friends. Defend your personal record. The Dump Score™ rewards consistency.</div>
-        <div class="fc-num">128K+</div>
-        <div class="fc-num-lbl">Thrones registered</div>
-      </div>
-      <div class="feat-card" id="fc3">
-        <div class="fc-badge">Analytics</div>
-        <div class="fc-name">Dump Score™</div>
-        <div class="fc-body">Longitudinal health insights powered by your personal baseline. Trends, streaks, and 20+ achievements.</div>
-        <div class="fc-num">20+</div>
-        <div class="fc-num-lbl">Achievements to unlock</div>
-      </div>
-    </div>
-  </section>
+  <div class="throne-bottom">
+    <div class="throne-bottom-q">Do You Need This?</div>
+    <p class="throne-bottom-a">No. But you don't need a standing desk either. You don't need noise-canceling headphones. You don't need a $700 espresso machine. And yet. The U·Throne Pro is the one luxury purchase you'll actually use every single day, multiple times, for the rest of your life. Think about it.</p>
+  </div>
+</section>
 
-  <!-- CTA -->
-  <section id="cta">
-    <h2 class="cta-title">
-      <span class="gold-text">Claim</span><br>
-      What's<br>Yours.
-    </h2>
-    <p class="cta-sub">Join the waitlist. Be among the first to own the most advanced toilet analytics platform ever built.</p>
-    <div class="cta-btns">
-      <a href="#" class="btn-gold">Join Waitlist — Free</a>
-      <a href="#features" class="btn-ghost">Explore Features</a>
+<!-- FEATURES BENTO -->
+<section class="feat-sec above-canvas">
+  <div class="sec-eyebrow">Core Features</div>
+  <h2 class="sec-h2">Built for<br><em>Champions</em></h2>
+  <div class="bento">
+    <div class="fc">
+      <div class="fc-icon">&#x2696;&#xFE0F;</div>
+      <div class="fc-title">Precision Weigh-In</div>
+      <div class="fc-body">Every session logged to 0.1g. Smart seat syncs automatically — no manual entry, no guessing.</div>
+      <div class="fc-stat">0.1<span style="font-size:16px">g</span></div>
+      <div class="fc-stat-label">Measurement precision</div>
     </div>
-    <div class="founded-pill" style="opacity:1;">
-      <div class="fp-dot"></div>
-      <span>Originally conceived 2016. Finally shipped 2026. You're welcome.</span>
+    <div class="fc">
+      <div class="fc-icon">&#x1F4CD;</div>
+      <div class="fc-title">GPS Throne Claiming</div>
+      <div class="fc-body">Any toilet is a battlefield. Drop the heaviest load and claim it as yours. Defend your throne or lose it forever.</div>
+      <div class="fc-stat">847</div>
+      <div class="fc-stat-label">Thrones claimed today</div>
     </div>
-  </section>
+    <div class="fc">
+      <div class="fc-icon">&#x1F3C6;</div>
+      <div class="fc-title">Dump Score™</div>
+      <div class="fc-body">Our proprietary algorithm synthesizes weight, duration, frequency, and consistency into one legendary number.</div>
+      <div class="fc-stat">9.4</div>
+      <div class="fc-stat-label">Today's global average</div>
+    </div>
+    <div class="fc">
+      <div class="fc-icon">&#x23F0;</div>
+      <div class="fc-title">60-Minute Alert</div>
+      <div class="fc-body">Sitting over 60 minutes? Your friends get notified. Your leaderboard ranking drops. Nobody is safe from the alert.</div>
+    </div>
+    <div class="fc">
+      <div class="fc-icon">&#x1F3DB;&#xFE0F;</div>
+      <div class="fc-title">Hall of Stench</div>
+      <div class="fc-body">A permanent, public monument to the greatest dumps ever recorded. Your legacy, bronzed forever.</div>
+    </div>
+    <div class="fc">
+      <div class="fc-icon">&#x1F6A8;</div>
+      <div class="fc-title">Medical Escalation</div>
+      <div class="fc-body">Anomaly detection powered by DumpMind AI. When something looks wrong, it escalates — automatically, discretely.</div>
+    </div>
+  </div>
+</section>
 
-  <footer>
-    <div class="footer-l">U·DUMP © 2026 — Luxury Competitive Toilet Analytics</div>
-    <div class="footer-r">Conceived 2016 · Shipped 2026</div>
-  </footer>
+<!-- NOTIFICATIONS -->
+<section class="notif-sec above-canvas">
+  <div class="sec-eyebrow">Live Alerts</div>
+  <h2 class="sec-h2">Your Friends<br><em>Will Know</em></h2>
+  <p class="sec-sub" style="margin:0 auto;">Real-time push notifications keep your inner circle informed of every relevant development.</p>
+  <div class="notif-stack">
+    <div class="nc" id="notif1">
+      <div class="nc-icon">&#x1F451;</div>
+      <div class="nc-content">
+        <div class="nc-app">U·Dump</div>
+        <div class="nc-title">Throne Claimed</div>
+        <div class="nc-body">Dave M. just dropped 7.8 lbs at WeWork 5th Floor. Your throne record has been broken.</div>
+        <div class="nc-time">just now</div>
+      </div>
+    </div>
+    <div class="nc" id="notif2">
+      <div class="nc-icon">&#x23F1;&#xFE0F;</div>
+      <div class="nc-content">
+        <div class="nc-app">U·Dump</div>
+        <div class="nc-title">Bobby is Still on the Throne</div>
+        <div class="nc-body">Bobby Chen has been sitting for 63 minutes. His leaderboard position is dropping in real-time.</div>
+        <div class="nc-time">2 min ago</div>
+      </div>
+    </div>
+    <div class="nc" id="notif3">
+      <div class="nc-icon">&#x1F3C5;</div>
+      <div class="nc-content">
+        <div class="nc-app">U·Dump</div>
+        <div class="nc-title">Achievement Unlocked: Consistent King</div>
+        <div class="nc-body">7 consecutive sessions with Dump Score™ above 8.0. The algorithm is impressed.</div>
+        <div class="nc-time">14 min ago</div>
+      </div>
+    </div>
+    <div class="nc" id="notif4">
+      <div class="nc-icon">&#x1F4CA;</div>
+      <div class="nc-content">
+        <div class="nc-app">U·Dump Health</div>
+        <div class="nc-title">Weekly Report Ready</div>
+        <div class="nc-body">Your 7-day average is up 12%. Hydration score: 94. Timing consistency: 87. Overall: exceptional.</div>
+        <div class="nc-time">1 hr ago</div>
+      </div>
+    </div>
+  </div>
+</section>
 
+<!-- TESTIMONIALS -->
+<section class="testi-sec above-canvas">
+  <div class="sec-eyebrow">Early Testers</div>
+  <h2 class="sec-h2">People Are<br><em>Saying Things</em></h2>
+  <div class="testi-grid">
+    <div class="tc">
+      <div class="tc-stars gold">★★★★★</div>
+      <p class="tc-quote">"I've cancelled my gym membership. This is my sport now. My wife doesn't understand but my leaderboard ranking speaks for itself."</p>
+      <div class="tc-author">Sharon T.</div>
+      <div class="tc-meta">Beta Tester · Denver, CO</div>
+      <span class="tc-badge gold">Rank #3 Global</span>
+    </div>
+    <div class="tc">
+      <div class="tc-stars gold">★★★★★</div>
+      <p class="tc-quote">"I went on a work trip and claimed the toilet at the Marriott in Austin. The look on my colleague's face when he got the notification was worth every penny."</p>
+      <div class="tc-author">Shelden K.</div>
+      <div class="tc-meta">Co-Founder · San Francisco, CA</div>
+      <span class="tc-badge gold">Throne Count: 14</span>
+    </div>
+    <div class="tc">
+      <div class="tc-stars gold">★★★★★</div>
+      <p class="tc-quote">"The medical escalation feature genuinely caught something. My doctor said it was the most useful health data he'd ever received from a patient. I cried."</p>
+      <div class="tc-author">Garret W.</div>
+      <div class="tc-meta">Alpha Tester · Portland, OR</div>
+      <span class="tc-badge gold">DumpMind Verified</span>
+    </div>
+    <div class="tc">
+      <div class="tc-stars gold">★★★★★</div>
+      <p class="tc-quote">"I use U·Dump data in quarterly reviews. My team's bathroom efficiency has increased 34%. Productivity is up. No one questions it anymore."</p>
+      <div class="tc-author">Nick H.</div>
+      <div class="tc-meta">Co-Founder · Austin, TX</div>
+      <span class="tc-badge gold">Equity: Pending Review</span>
+    </div>
+    <div class="tc">
+      <div class="tc-stars gold">★★★★★</div>
+      <p class="tc-quote">"The Hall of Stench is the only legacy that matters. My grandfather left us a house. I'm leaving my descendants a bronze plaque for a 9.8 Dump Score™."</p>
+      <div class="tc-author">Jake M.</div>
+      <div class="tc-meta">Beta Tester · Chicago, IL</div>
+      <span class="tc-badge gold">Hall of Stench Inductee</span>
+    </div>
+    <!-- Bobby is always last -->
+    <div class="tc">
+      <div class="tc-stars red">★☆☆☆☆</div>
+      <p class="tc-quote">"I don't think this app is for me. I've been ranked last in my friend group for 8 months. The 60-minute alert has gone off on me 14 times. My friends won't stop talking about it."</p>
+      <div class="tc-author">Bobby C.</div>
+      <div class="tc-meta">Reluctant Tester · Jersey City, NJ</div>
+      <span class="tc-badge red">Ranked Last · 8 Months Running</span>
+    </div>
+  </div>
+</section>
+
+<!-- FOUNDERS -->
+<section class="founders-sec above-canvas">
+  <div class="sec-eyebrow">The Team</div>
+  <h2 class="sec-h2">Who's<br><em>Responsible</em></h2>
+  <p class="sec-sub" style="margin:0 auto;">Three people who should probably be building something else.</p>
+  <div class="founders-grid">
+    <div class="founder-card">
+      <div class="founder-avatar">A</div>
+      <div class="founder-name">Aaron S.</div>
+      <div class="founder-title">CEO / The Idea Guy</div>
+      <span class="founder-equity confirmed">33.3% equity</span>
+    </div>
+    <div class="founder-card">
+      <div class="founder-avatar">S</div>
+      <div class="founder-name">Shelden K.</div>
+      <div class="founder-title">CTO / The Builder</div>
+      <span class="founder-equity confirmed">33.3% equity</span>
+    </div>
+    <div class="founder-card">
+      <div class="founder-avatar">N</div>
+      <div class="founder-name">Nick H.</div>
+      <div class="founder-title">COO / The Organizer</div>
+      <span class="founder-equity pending">Equity: Pending Review</span>
+    </div>
+  </div>
+</section>
+
+<!-- ORIGIN STORY -->
+<section class="origin-sec above-canvas">
+  <div class="origin-year">2016</div>
+  <div class="sec-eyebrow">The Origin</div>
+  <h2 class="sec-h2">Ten Years<br><em>in the Making</em></h2>
+  <div class="origin-quote">
+    <p>"We launched a Kickstarter in 2016. We raised $312 from friends and family. My mom backed us $250. We refunded everyone and went back to our day jobs. The idea never left."</p>
+    <cite>— Aaron S., CEO, recounting the founding myth</cite>
+  </div>
+  <div class="origin-reddit">
+    <div class="reddit-header">r/Showerthoughts &nbsp;·&nbsp; <b>u/toilet_visionary</b> &nbsp;·&nbsp; Jan 14, 2016</div>
+    <div class="reddit-body">What if your toilet kept score? Like your Apple Watch tracks your steps, but your toilet tracks your dumps. Leaderboard, achievements, the whole thing. Tell me I'm wrong. [+14,892 upvotes]</div>
+  </div>
+</section>
+
+<!-- PRESS -->
+<div class="press-sec above-canvas">
+  <div class="press-label">As Featured In</div>
+  <div class="press-logos">
+    <div class="press-logo">TechCrunch</div>
+    <div class="press-logo">The Verge</div>
+    <div class="press-logo">Wired</div>
+    <div class="press-logo">Product Hunt</div>
+    <div class="press-logo">Vice</div>
+    <div class="press-logo">Bloomberg</div>
+  </div>
 </div>
+
+<!-- CTA -->
+<section class="cta-sec above-canvas">
+  <div class="sec-eyebrow">Early Access</div>
+  <h2 class="sec-h2">Secure Your<br><em>Position</em></h2>
+  <p class="sec-sub" style="margin:0 auto;">99,241 people on the waitlist. Every day you wait, another toilet gets claimed. Join now.</p>
+  <form class="cta-email-form" onsubmit="handleWaitlist(event)">
+    <input type="email" class="cta-email-input" placeholder="your@email.com" required>
+    <button type="submit" class="cta-email-submit">Join Waitlist</button>
+  </form>
+  <div class="cta-store-btns">
+    <a href="#" class="store-btn">
+      <span class="store-btn-icon">&#xF8FF;</span>
+      <div class="store-btn-text">
+        <div class="store-btn-sub">Download on the</div>
+        <div class="store-btn-name">App Store</div>
+      </div>
+    </a>
+    <a href="#" class="store-btn">
+      <span class="store-btn-icon">&#x25B6;</span>
+      <div class="store-btn-text">
+        <div class="store-btn-sub">Get it on</div>
+        <div class="store-btn-name">Google Play</div>
+      </div>
+    </a>
+  </div>
+  <p class="cta-fine">By joining the waitlist you agree to receive updates about U·Dump. We will never sell your email. We will never spam you. We will however tell you when your friends claim a toilet near you.</p>
+</section>
+
+<!-- FOOTER -->
+<footer class="above-canvas">
+  <div class="footer-logo">U·DUMP</div>
+  <div class="footer-copy">© 2026 U·Dump Inc. All thrones reserved.</div>
+  <div class="footer-links">
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="#">Contact</a>
+    <a href="#">Press Kit</a>
+  </div>
+</footer>
 
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-// ──────────────────────────────────────────────────────────────────────────────
-// RENDERER
-// ──────────────────────────────────────────────────────────────────────────────
+gsap.registerPlugin(ScrollTrigger);
+
+// ── RENDERER ──
 const canvas = document.getElementById('c');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -668,254 +965,232 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setClearColor(0x06060A, 1);
 
-// ──────────────────────────────────────────────────────────────────────────────
-// SCENE + CAMERA
-// ──────────────────────────────────────────────────────────────────────────────
+// ── SCENE ──
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0, 1.4, 4.5);
+scene.fog = new THREE.FogExp2(0x06060A, 0.09);
 
-const camCurrentPos  = new THREE.Vector3(0, 1.4, 4.5);
-const camCurrentLook = new THREE.Vector3(0, 0.8, 0);
-const camTargetPos   = new THREE.Vector3(0, 1.4, 4.5);
-const camTargetLook  = new THREE.Vector3(0, 0.8, 0);
+// ── CAMERA ──
+const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 1.4, 4.2);
+camera.lookAt(0, 0.8, 0);
 
-// ──────────────────────────────────────────────────────────────────────────────
-// LIGHTS
-// ──────────────────────────────────────────────────────────────────────────────
-scene.add(new THREE.AmbientLight(0x0d0d18, 0.5));
+// ── LIGHTS ──
+const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+scene.add(ambient);
 
-// Key light: top-front
-const keyLight = new THREE.SpotLight(0xfff0e0, 2.8);
-keyLight.position.set(1, 7, 4);
-keyLight.angle = Math.PI / 7;
-keyLight.penumbra = 0.45;
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
+keyLight.position.set(4, 8, 6);
 keyLight.castShadow = true;
-keyLight.shadow.mapSize.setScalar(1024);
-keyLight.shadow.bias = -0.0005;
+keyLight.shadow.mapSize.setScalar(2048);
+keyLight.shadow.camera.near = 0.1;
+keyLight.shadow.camera.far = 40;
+keyLight.shadow.camera.left = -6;
+keyLight.shadow.camera.right = 6;
+keyLight.shadow.camera.top = 6;
+keyLight.shadow.camera.bottom = -6;
 scene.add(keyLight);
-scene.add(keyLight.target);
 
-// Gold rim: back-right
-const rim1 = new THREE.PointLight(0xD4AF37, 5.0, 18);
-rim1.position.set(3.5, 3, -3);
-scene.add(rim1);
+const goldRim1 = new THREE.DirectionalLight(0xD4AF37, 2.5);
+goldRim1.position.set(-5, 3, -3);
+scene.add(goldRim1);
 
-// Gold rim: back-left
-const rim2 = new THREE.PointLight(0xF0CE60, 3.0, 14);
-rim2.position.set(-3.5, 2, -2.5);
-scene.add(rim2);
+const goldRim2 = new THREE.DirectionalLight(0xF0CE60, 1.2);
+goldRim2.position.set(3, -1, -5);
+scene.add(goldRim2);
 
-// Cool fill: front-low
-const fill = new THREE.PointLight(0x1a1a3a, 1.2, 22);
-fill.position.set(0, -0.5, 6);
+const fill = new THREE.DirectionalLight(0x8888ff, 0.4);
+fill.position.set(-3, 2, 4);
 scene.add(fill);
 
-// Ground bounce: gold
-const bounce = new THREE.PointLight(0xD4AF37, 0.7, 7);
-bounce.position.set(0, -1.2, 0);
-scene.add(bounce);
-
-// ──────────────────────────────────────────────────────────────────────────────
-// GROUND PLANE (reflective)
-// ──────────────────────────────────────────────────────────────────────────────
-const groundMat = new THREE.MeshStandardMaterial({
-  color: 0x06060A,
-  metalness: 0.95,
-  roughness: 0.25,
-  transparent: true,
-  opacity: 0.55,
-});
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(24, 24), groundMat);
+// Ground plane for shadows
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(20, 20),
+  new THREE.ShadowMaterial({ opacity: 0.25 })
+);
 ground.rotation.x = -Math.PI / 2;
-ground.position.y = 0;
+ground.position.y = -0.01;
 ground.receiveShadow = true;
 scene.add(ground);
 
-// ──────────────────────────────────────────────────────────────────────────────
-// MODEL LOADING
-// ──────────────────────────────────────────────────────────────────────────────
-let model = null;
-let autoRotate = true;
-const ldrFill = document.getElementById('ldr-fill');
-const ldrEl   = document.getElementById('loader');
-
-new GLTFLoader().load(
-  './golden_toilet.glb',
-  (gltf) => {
-    model = gltf.scene;
-
-    // Normalize: center X/Z, sit on Y=0, max dim = 2 units
-    const box = new THREE.Box3().setFromObject(model);
-    const center = box.getCenter(new THREE.Vector3());
-    const size   = box.getSize(new THREE.Vector3());
-    const s = 2.0 / Math.max(size.x, size.y, size.z);
-
-    model.scale.setScalar(s);
-    model.position.set(
-      -center.x * s,
-      -box.min.y * s,
-      -center.z * s
-    );
-
-    model.traverse((ch) => {
-      if (ch.isMesh) {
-        ch.castShadow = true;
-        ch.receiveShadow = true;
-      }
-    });
-
-    scene.add(model);
-
-    // Place ground under model
-    ground.position.y = -0.02;
-    bounce.position.y = -0.6;
-
-    // Dismiss loader
-    ldrFill.style.width = '100%';
-    setTimeout(() => {
-      ldrEl.classList.add('hidden');
-      document.getElementById('nav').classList.add('on');
-      // Stagger hero text in
-      ['ey1','hh','hk','hb','hbtns','fpill','shint'].forEach((id, i) => {
-        setTimeout(() => document.getElementById(id).classList.add('in'), 120 + i * 80);
-      });
-      ScrollTrigger.refresh();
-    }, 700);
-  },
-  (prog) => {
-    if (prog.total > 0) ldrFill.style.width = (prog.loaded / prog.total * 88) + '%';
-  },
-  (err) => {
-    console.error('GLB load error:', err);
-    ldrEl.classList.add('hidden');
-  }
-);
-
-// ──────────────────────────────────────────────────────────────────────────────
-// CAMERA WAYPOINTS
-// ──────────────────────────────────────────────────────────────────────────────
+// ── WAYPOINTS ──
 const W = {
-  hero:    { p: new THREE.Vector3(0,    1.4,  4.5), l: new THREE.Vector3(0, 0.8, 0) },
-  prod1:   { p: new THREE.Vector3(0,    1.0,  4.0), l: new THREE.Vector3(0, 0.7, 0) },
-  prod2:   { p: new THREE.Vector3(3.6,  0.8,  1.6), l: new THREE.Vector3(0, 0.6, 0) },
-  prod3:   { p: new THREE.Vector3(-0.3, 1.1, -3.8), l: new THREE.Vector3(0, 0.7, 0) },
-  feat:    { p: new THREE.Vector3(-2.0, 1.6,  4.0), l: new THREE.Vector3(1.2, 0.5, 0) },
+  hero:  { p: new THREE.Vector3(0,    1.4,  4.2), l: new THREE.Vector3(0, 0.8, 0) },
+  prod1: { p: new THREE.Vector3(0,    1.0,  4.0), l: new THREE.Vector3(0, 0.7, 0) },
+  prod2: { p: new THREE.Vector3(3.6,  0.8,  1.6), l: new THREE.Vector3(0, 0.6, 0) },
+  prod3: { p: new THREE.Vector3(-0.3, 1.1, -3.8), l: new THREE.Vector3(0, 0.7, 0) },
 };
 
-// ──────────────────────────────────────────────────────────────────────────────
-// GSAP SCROLL TRIGGERS
-// ──────────────────────────────────────────────────────────────────────────────
-gsap.registerPlugin(ScrollTrigger);
+// Current camera target (lerped each frame)
+const camPos = W.hero.p.clone();
+const camLook = W.hero.l.clone();
+let targetPos = W.hero.p.clone();
+let targetLook = W.hero.l.clone();
 
-// Hero scroll-out → transition to product
-ScrollTrigger.create({
-  trigger: '#hero',
-  start: 'top top',
-  end: 'bottom top',
-  onUpdate: (st) => {
-    const p = st.progress;
-    camTargetPos.lerpVectors(W.hero.p, W.prod1.p, p);
-    camTargetLook.lerpVectors(W.hero.l, W.prod1.l, p);
-    autoRotate = p < 0.25;
-  },
+// ── AUTO-ROTATE (hero state) ──
+let autoRotate = true;
+let autoRotateAngle = 0;
+const AUTO_RADIUS = 4.2;
+const AUTO_HEIGHT = 1.4;
+
+// ── MODEL ──
+let model = null;
+let modelLoaded = false;
+
+const loader = new GLTFLoader();
+loader.load('./golden_toilet.glb', (gltf) => {
+  model = gltf.scene;
+
+  // Normalize: center and scale to fit
+  const box = new THREE.Box3().setFromObject(model);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  const s = 2.0 / Math.max(size.x, size.y, size.z);
+  model.scale.setScalar(s);
+  model.position.set(-center.x * s, -box.min.y * s, -center.z * s);
+
+  // Gold material enhancement
+  model.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+      if (child.material) {
+        const mat = child.material;
+        mat.metalness = Math.max(mat.metalness || 0, 0.7);
+        mat.roughness = Math.min(mat.roughness !== undefined ? mat.roughness : 0.3, 0.35);
+        mat.envMapIntensity = 1.4;
+        mat.needsUpdate = true;
+      }
+    }
+  });
+
+  scene.add(model);
+  modelLoaded = true;
+
+  // Hide loader
+  setTimeout(() => {
+    document.getElementById('loader').classList.add('gone');
+  }, 400);
+
+}, undefined, (err) => {
+  console.error('GLB load error:', err);
+  // Still hide loader on error
+  document.getElementById('loader').classList.add('gone');
 });
 
-// Product section: camera orbits through 3 waypoints
+// Fallback: hide loader after 4s regardless
+setTimeout(() => {
+  document.getElementById('loader').classList.add('gone');
+}, 4000);
+
+// ── SCROLL TRIGGERS ──
+const orbitSection = document.getElementById('orbit-section');
+const hs1 = document.getElementById('hs1');
+const hs2 = document.getElementById('hs2');
+const hs3 = document.getElementById('hs3');
+
 ScrollTrigger.create({
-  trigger: '#product-spacer',
+  trigger: '#orbit-section',
   start: 'top top',
   end: 'bottom bottom',
-  onEnter: () => {
-    setStep(1);
-    autoRotate = false;
-  },
-  onEnterBack: () => {
-    autoRotate = false;
-  },
-  onUpdate: (st) => {
-    const p = st.progress;
+  scrub: 1,
+  onUpdate: (self) => {
+    const p = self.progress;
+    autoRotate = p < 0.05;
 
-    if (p < 0.33) {
-      const t = p / 0.33;
-      camTargetPos.copy(W.prod1.p);
-      camTargetLook.copy(W.prod1.l);
-      setStep(1);
-    } else if (p < 0.67) {
-      const t = (p - 0.33) / 0.34;
-      camTargetPos.lerpVectors(W.prod1.p, W.prod2.p, t);
-      camTargetLook.lerpVectors(W.prod1.l, W.prod2.l, t);
-      setStep(2);
+    // Hide all hotspots first
+    hs1.classList.remove('visible');
+    hs2.classList.remove('visible');
+    hs3.classList.remove('visible');
+
+    if (p < 0.3) {
+      // Approaching from hero — face-on
+      targetPos.copy(W.prod1.p);
+      targetLook.copy(W.prod1.l);
+    } else if (p < 0.6) {
+      // Right side — Feature 1
+      targetPos.copy(W.prod2.p);
+      targetLook.copy(W.prod2.l);
+      hs1.classList.add('visible');
     } else {
-      const t = (p - 0.67) / 0.33;
-      camTargetPos.lerpVectors(W.prod2.p, W.prod3.p, t);
-      camTargetLook.lerpVectors(W.prod2.l, W.prod3.l, t);
-      setStep(3);
+      // Behind/left — Feature 2-3
+      targetPos.copy(W.prod3.p);
+      targetLook.copy(W.prod3.l);
+      hs2.classList.add('visible');
+      if (p > 0.8) hs3.classList.add('visible');
     }
   },
   onLeave: () => {
-    setStep(0);
+    hs1.classList.remove('visible');
+    hs2.classList.remove('visible');
+    hs3.classList.remove('visible');
   },
+  onEnterBack: () => {
+    // returning from below
+  }
 });
 
-// Features: camera pulls back-left, toilet appears smaller on right
-ScrollTrigger.create({
-  trigger: '#features',
-  start: 'top 90%',
-  end: 'top top',
-  onUpdate: (st) => {
-    camTargetPos.lerpVectors(W.prod3.p, W.feat.p, st.progress);
-    camTargetLook.lerpVectors(W.prod3.l, W.feat.l, st.progress);
-  },
-});
-
-// Feature cards reveal
-document.querySelectorAll('.feat-card').forEach((card, i) => {
+// Notification scroll animation
+const notifs = document.querySelectorAll('.nc');
+notifs.forEach((el, i) => {
   ScrollTrigger.create({
-    trigger: card,
-    start: 'top 88%',
-    onEnter: () => setTimeout(() => card.classList.add('in'), i * 110),
+    trigger: el,
+    start: 'top 85%',
+    onEnter: () => {
+      setTimeout(() => el.classList.add('visible'), i * 120);
+    }
   });
 });
 
-function setStep(n) {
-  [1,2,3].forEach((i) => {
-    document.getElementById(`ps${i}`).classList.toggle('active', i === n);
-    const hs = document.getElementById(`hs${i}`);
-    hs.classList.toggle('on', i === n);
-  });
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// RENDER LOOP
-// ──────────────────────────────────────────────────────────────────────────────
+// ── RENDER LOOP ──
 const clock = new THREE.Clock();
+const _tmpPos = new THREE.Vector3();
+const _tmpLook = new THREE.Vector3();
 
-(function tick() {
-  requestAnimationFrame(tick);
+function animate() {
+  requestAnimationFrame(animate);
   const dt = clock.getDelta();
+  const t = clock.getElapsedTime();
 
-  if (model && autoRotate) {
-    model.rotation.y += dt * 0.28;
+  if (autoRotate) {
+    autoRotateAngle += dt * 0.35;
+    targetPos.set(
+      Math.sin(autoRotateAngle) * AUTO_RADIUS,
+      AUTO_HEIGHT,
+      Math.cos(autoRotateAngle) * AUTO_RADIUS
+    );
+    targetLook.set(0, 0.8, 0);
   }
 
-  // Smooth camera
-  camCurrentPos.lerp(camTargetPos, 0.065);
-  camCurrentLook.lerp(camTargetLook, 0.065);
-  camera.position.copy(camCurrentPos);
-  camera.lookAt(camCurrentLook);
+  // Lerp camera
+  camPos.lerp(targetPos, 0.04);
+  camLook.lerp(targetLook, 0.05);
+  camera.position.copy(camPos);
+  camera.lookAt(camLook);
+
+  // Gentle model idle (subtle float)
+  if (model) {
+    model.position.y = (-new THREE.Box3().setFromObject(model).min.y || 0) + Math.sin(t * 0.8) * 0.04;
+  }
 
   renderer.render(scene, camera);
-})();
+}
+animate();
 
-// ──────────────────────────────────────────────────────────────────────────────
-// RESIZE
-// ──────────────────────────────────────────────────────────────────────────────
+// ── RESIZE ──
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+// ── WAITLIST FORM ──
+window.handleWaitlist = function(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('.cta-email-submit');
+  btn.textContent = 'You\'re on the list.';
+  btn.style.opacity = '0.7';
+  btn.disabled = true;
+};
 </script>
 </body>
 </html>

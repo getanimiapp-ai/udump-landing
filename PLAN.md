@@ -1,155 +1,228 @@
-# PLAN.md — U Dump
+# PLAN.md — U·DUMP Build Plan
 
 ## How to Use This Plan
 
 Each Claude Code session should:
 1. `git pull --rebase` first
-2. Read CLAUDE.md for architecture and conventions
-3. Pick the next unchecked task in phase order
+2. Read CLAUDE.md, UDUMP_BUILD_SPEC.md, and UDUMP_ROADMAP.md
+3. Pick the next unchecked phase
 4. Complete it fully (code + lint + commit + push)
 5. Check it off `[x]`
-6. Move to next task
+6. Move to next phase
 
-Phases MUST be completed in order. Tasks within a phase can run in parallel unless noted.
-
----
-
-## Phase 1: Foundation
-
-- [ ] **1.1 — Expo Project Init**
-  - `npx create-expo-app udump --template tabs` or manual setup with Expo Router
-  - TypeScript, Expo SDK 53+
-  - File-based routing under `src/app/`
-  - **Done when:** `npx expo start` runs clean, tab navigation works
-
-- [ ] **1.2 — Design System**
-  - Create `src/theme/colors.ts` — dark theme, gold/brown accents, poop-brand palette
-  - Create `src/theme/fonts.ts` — bold display font + clean body font
-  - Create `src/theme/spacing.ts` — consistent scale
-  - Create `src/theme/index.ts` — re-export everything
-  - Write `DESIGN.md` with full token reference
-  - **Done when:** DESIGN.md exists and all tokens are importable
-
-- [ ] **1.3 — Supabase Setup**
-  - Create `src/lib/supabase.ts` with Expo-compatible client (AsyncStorage)
-  - Create migration files for all tables from CLAUDE.md schema
-  - Set up RLS policies (users can read friends' data, write own data)
-  - Add `.env` template with SUPABASE_URL and SUPABASE_ANON_KEY
-  - **Done when:** Supabase client connects, tables exist, RLS works
-
-- [ ] **1.4 — Auth Flow**
-  - Login screen (email/password + Apple Sign In + Google Sign In)
-  - Signup screen with username picker (check uniqueness)
-  - Auth context provider wrapping the app
-  - Protected routes redirect to login
-  - **Done when:** Can sign up, log in, log out, session persists
+Phases MUST be completed in order. The ROADMAP has detailed agent prompts and code snippets for each phase.
 
 ---
 
-## Phase 2: Core Features
+## Phase 0: Environment Setup (Manual — not an agent task)
 
-- [ ] **2.1 — Log a Dump**
-  - Weight before/after input (numeric keypad, lbs or kg toggle)
-  - Calculate dump weight
-  - Optional: duration timer (auto-start on entry, tap to stop)
-  - Optional: notes field, toilet selector
-  - Celebratory animation on submit (confetti 💩, bigger = more dramatic)
-  - Save to `dumps` table
-  - **Done when:** Can log a dump, see it saved, animation plays
-
-- [ ] **2.2 — Home Feed**
-  - Recent dumps from you and friends (opt-in visibility)
-  - Each dump card shows: user, weight, time ago, toilet (if registered)
-  - Reaction buttons (💩🏆👑🫡)
-  - Pull to refresh
-  - **Done when:** Feed loads, shows real data, reactions work
-
-- [ ] **2.3 — Leaderboard**
-  - Tabs: Friends / Global
-  - Filters: Biggest Single, Weekly Total, All-Time Total, Average
-  - Ranked list with position, username, avatar, stat
-  - Your rank highlighted
-  - **Done when:** Leaderboard shows real ranked data from Supabase
-
-- [ ] **2.4 — Friend System**
-  - Search by username
-  - Send/accept/decline friend requests
-  - Friends list with stats preview
-  - Unfriend option
-  - Uses `friendships` table with realtime subscription
-  - **Done when:** Can add friends, see their dumps on feed and leaderboard
+- [ ] **0.1 — Apple Developer Account** — App ID: `com.udump.app`
+- [ ] **0.2 — Supabase Project** — Create `udump-production`, save URL + keys
+- [ ] **0.3 — Expo Account** — Create project `u-dump`, install EAS CLI
+- [ ] **0.4 — Environment File** — `.env.local` with Supabase + Expo credentials
 
 ---
 
-## Phase 3: Signature Features
+## Phase 1: Project Scaffold
 
-- [ ] **3.1 — Toilets & Throne System**
-  - Register a toilet (name it, e.g. "Master Bath")
-  - QR code for each toilet (friends scan to check in)
-  - Current throne holder displayed on toilet card
-  - Auto-claim: if your dump on someone's toilet beats the record, you claim the throne
-  - Push notification to dethroned owner: "[User] just claimed your throne with a [X] lb dump!"
-  - Throne history log
-  - **Done when:** Can register toilet, dump on friend's toilet, auto-claim works, push notification sent
+- [ ] **1.1 — Expo Init + Dependencies**
+  - `npx create-expo-app@latest udump --template blank-typescript`
+  - Install all dependencies from ROADMAP Phase 1
+  - Configure app.json (bundle ID, permissions, plugins)
+  - Configure eas.json
+  - **Done when:** `npx expo start` runs clean
 
-- [ ] **3.2 — Throne Alerts**
-  - "Start Session" button when you sit down
-  - Timer runs, visible only to you
-  - After threshold (default 10 min), friends get alert: "[User] has been on the throne for 14 minutes"
-  - Configurable threshold per user
-  - End session manually or auto-timeout at 60 min
-  - **Done when:** Session timer works, friends receive alert after threshold
+- [ ] **1.2 — Design System + Constants**
+  - `constants/colors.ts` — full palette from BUILD_SPEC
+  - `constants/typography.ts` — Barlow Condensed, Barlow, DM Mono
+  - `constants/achievements.ts` — all 20 achievements with tiers
+  - **Done when:** all tokens importable
 
-- [ ] **3.3 — Achievements**
-  - Achievement definitions:
-    - First Dump, Throne Claimer, 10 lb Club, Speed Run (<60s), Marathon (30+ min)
-    - Regular (5 days streak), Ironman (30 days streak), Social Dumper (10 friend toilets)
-    - Dethroned (lost your throne), Reclaimer (won it back)
-  - Pop-up animation when earned
-  - Achievement showcase on profile
-  - **Done when:** Achievements trigger correctly, display on profile
-
-- [ ] **3.4 — Stats & History**
-  - Personal dump history (calendar view + list)
-  - Trends: average dump weight over time (chart)
-  - Personal records: biggest, smallest, fastest, longest
-  - Weekly/monthly summaries
-  - **Done when:** Stats page shows real data with charts
+- [ ] **1.3 — Core UI Components**
+  - `GlassCard.tsx` — blur + border + gradient
+  - `GoldButton.tsx` — gradient gold
+  - `StatCard.tsx`, `Badge.tsx`, `Avatar.tsx`
+  - **Done when:** components render in isolation
 
 ---
 
-## Phase 4: Polish & Launch
+## Phase 2: Supabase Backend
 
-- [ ] **4.1 — Push Notifications**
-  - Expo Push Notifications setup
-  - Notification types: throne claimed, throne alert, friend request, achievement
-  - Notification preferences screen
-  - **Done when:** Push notifications deliver on iOS and Android
+- [ ] **2.1 — Schema + RLS**
+  - Run complete SQL from BUILD_SPEC
+  - All tables: profiles, dump_sessions, thrones, friendships, user_achievements, notification_events
+  - RLS policies per BUILD_SPEC
+  - **Done when:** tables exist, RLS works
 
-- [ ] **4.2 — Onboarding**
-  - 3-4 screen walkthrough: "Welcome to U Dump" → "Log Your Dumps" → "Claim Thrones" → "Add Friends"
-  - Only shows once (AsyncStorage flag)
-  - **Done when:** Onboarding flow runs on first launch, skips after
+- [ ] **2.2 — Seed Data**
+  - Test users: Aaron, Shelden, Nick, Bobby, Jake, Garret
+  - Bobby has worst stats. Nick has best.
+  - Seed thrones, friendships
+  - **Done when:** seed data queryable
 
-- [ ] **4.3 — App Store Polish**
-  - App icon (toilet + crown)
-  - Splash screen
-  - App Store screenshots
-  - Privacy policy (no real health data, it's a joke)
-  - **Done when:** All assets created, app builds for submission
-
-- [ ] **4.4 — QR Code System**
-  - Generate QR per toilet (links to toilet check-in)
-  - Camera scanner to scan friend's toilet QR
-  - Deep link handling
-  - **Done when:** QR generates, scans work, deep links to correct toilet
+- [ ] **2.3 — Storage + Realtime + Edge Functions**
+  - Avatars bucket (public)
+  - Realtime on: dump_sessions, notification_events, thrones
+  - Edge Functions: send-notification, check-overstay, calculate-dump-score, update-throne
+  - **Done when:** realtime fires, functions deploy
 
 ---
 
-## Out of Scope (Future / Hardware Phase)
+## Phase 3: Auth Flow
 
-- Smart toilet seat with load cells (auto-weigh)
-- Bluetooth integration (ESP32)
-- Apple Health / Google Fit integration
-- Sponsored leaderboards / brand partnerships
-- NFT throne certificates (lol)
+- [ ] **3.1 — Auth Screens**
+  - welcome.tsx (3-panel onboarding)
+  - login.tsx, signup.tsx
+  - username.tsx (pick username post-signup)
+  - throne-name.tsx (name home throne, optional)
+  - Supabase auth with SecureStore persistence
+  - **Done when:** full signup → username → throne → home flow works
+
+---
+
+## Phase 4: Tab Navigation + Home Screen
+
+- [ ] **4.1 — Custom Tab Bar**
+  - 4 tabs: Home, Activity, Social, Thrones
+  - Gold active state, blur background, haptic feedback
+  - **Done when:** tabs navigate correctly
+
+- [ ] **4.2 — Home Screen**
+  - Time-aware greeting
+  - START SESSION button (gold gradient, pulsing)
+  - Stats row (today count, today weight, streak)
+  - Last session card
+  - Mini friend feed (2-3 recent)
+  - Leaderboard peek (top 3)
+  - **Done when:** renders with real Supabase data
+
+---
+
+## Phase 5: Session Flow (Core Feature)
+
+- [ ] **5.1 — Active Session Screen**
+  - Timer with sonar rings animation
+  - Weight entry (before/after) on end
+  - Overstay detection (60min, 120min)
+  - **Done when:** timer works, weight entry saves
+
+- [ ] **5.2 — Results Screen**
+  - 3 states: standard, personal record, throne claim
+  - Crown animation, gold particle bloom
+  - Achievement unlock overlay
+  - Session save + throne check + score update + achievement check
+  - **Done when:** full end-to-end session flow works
+
+---
+
+## Phase 6: Social Feed + Realtime
+
+- [ ] **6.1 — Activity Feed**
+  - Realtime Supabase subscription for friend sessions
+  - 4 FeedItem types: session, record, throne_claimed, overstay
+  - Quick reply chips for overstay alerts
+  - Filter chips: All, Records, Thrones, Alerts
+  - **Done when:** friend sessions appear in real time
+
+---
+
+## Phase 7: Leaderboard
+
+- [ ] **7.1 — Friends + Global Leaderboard**
+  - Friends tab: ranked by weekly weight
+  - Global tab: top 100 all-time
+  - Rank 1 gold crown, rank 2 silver, rank 3 bronze
+  - Bobby always last (red tint on his row)
+  - **Done when:** real ranked data from Supabase
+
+---
+
+## Phase 8: Throne Map
+
+- [ ] **8.1 — Map + Throne Claiming**
+  - react-native-maps with dark style
+  - Custom pins (gold crown = yours, white = unconquered, red = lost)
+  - GPS proximity check (50m) for claiming
+  - Bottom sheet with throne list
+  - Register new throne flow
+  - **Done when:** map shows pins, claiming works, notifications fire
+
+---
+
+## Phase 9: Achievements System
+
+- [ ] **9.1 — Achievement Logic + Screen**
+  - checkAndUnlockAchievements runs after every session
+  - All 20 achievements from BUILD_SPEC
+  - Achievement screen with tier filters (Bronze/Silver/Gold/Platinum)
+  - Unlock animation overlay
+  - Secret achievements stay hidden until earned
+  - **Done when:** achievements trigger correctly
+
+---
+
+## Phase 10: Dump Score™ Analytics
+
+- [ ] **10.1 — Analytics Screen**
+  - Animated score ring (SVG arc)
+  - Score trend chart (victory-native, 30 days)
+  - Factor breakdown (4 glass cards with progress bars)
+  - Deterministic insight copy based on score range
+  - Session history log
+  - **Done when:** score renders, animates, factors display
+
+---
+
+## Phase 11: Push Notifications
+
+- [ ] **11.1 — All 7 Notification Types**
+  - Expo push token registration
+  - record_broken, throne_claimed, throne_lost, overstay_60, overstay_120, friend_active, streak_milestone
+  - Overstay pg_cron (every 5 min)
+  - **Done when:** all 7 types send and deep link correctly
+
+---
+
+## Phase 12: Profile + Settings
+
+- [ ] **12.1 — Profile Screen**
+  - Avatar upload, display name, username
+  - Dump Score™, global ranking
+  - Stats row, achievements preview
+  - Recent sessions
+  - Notification preferences toggles
+  - Friends management (search, add, accept/decline)
+  - **Done when:** profile loads, avatar works, friends manageable
+
+---
+
+## Phase 13: Polish + Animations
+
+- [ ] **13.1 — Animation Pass**
+  - All animations from ROADMAP Phase 13 (home stagger, session pulse, results spring, achievement unlock, tab bounce)
+  - Skeleton loaders (no spinners)
+  - Personality-driven empty/error states
+  - **Done when:** app feels smooth, no janky transitions
+
+---
+
+## Phase 14: TestFlight Submission
+
+- [ ] **14.1 — Build + Submit**
+  - Final config check (bundle ID, permissions, version)
+  - `eas build --platform ios --profile preview`
+  - `eas submit --platform ios --latest`
+  - EAS secrets configured
+  - Supabase production checklist (RLS, Edge Functions, pg_cron, realtime, storage)
+  - **Done when:** build processes in App Store Connect
+
+---
+
+## Phase 15: Tester Onboarding
+
+- [ ] **15.1 — Seed + Invite**
+  - Create Bobby's account first, register his home throne
+  - Aaron claims Bobby's throne before anyone else joins
+  - Add internal testers: Aaron, Shelden, Nick, Bobby, Jake, Garret
+  - Send group text with instructions
+  - **Done when:** all testers installed, Bobby is last, throne is claimed

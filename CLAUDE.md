@@ -1,20 +1,36 @@
-# CLAUDE.md — U Dump
+# CLAUDE.md — U·DUMP
 
 ## What This Is
 
-U Dump is a novelty social app + future smart toilet seat product. The app tracks dump weight, maintains leaderboards, lets you "claim" friends' toilets with bigger dumps, and sends alerts when someone's been on the throne too long.
+U·Dump is a luxury competitive toilet analytics app. Smart toilet seat + social app. Tracks dump weight, maintains leaderboards, lets you "claim" friends' toilets with bigger dumps, and sends alerts when someone's been on the throne too long.
 
-Think: Strava for pooping. Disgusting and viral.
+**Design philosophy:** Dead serious health app UX. The comedy is purely in the subject matter. NO poop emoji in the UI. NO joke fonts. Think Apple Health meets competitive fitness — except the sport is pooping.
+
+**Brand voice:** "Originally conceived 2016. Finally shipped 2026. You're welcome."
+
+## Authoritative Spec Files
+
+These files contain the COMPLETE, pixel-level build specification. They are the single source of truth:
+
+1. **`UDUMP_BUILD_SPEC.md`** — Full design system (colors, typography, glass card + gold button components), complete Supabase schema with RLS policies, pixel-level screen specs for 8 screens, Dump Score™ algorithm, 20 achievements with tier colors, notification copy strings
+2. **`UDUMP_ROADMAP.md`** — Phase-by-phase build order (15 phases), agent prompts per phase, code snippets, verification criteria
+3. **`udump-v4.html`** — Visual mockup of the marketing/landing page with exact CSS variables for the design system
+
+**When in doubt, the BUILD_SPEC wins.** It overrides anything in this file or PLAN.md.
 
 ## Stack
 
 - **Framework:** React Native + Expo (SDK 53+)
 - **Language:** TypeScript
 - **Navigation:** Expo Router (file-based)
-- **Backend:** Supabase (auth, database, realtime, push notifications)
-- **State:** React Context + hooks
+- **Backend:** Supabase (auth, database, realtime, push notifications, Edge Functions)
+- **State:** Zustand (NOT React Context)
+- **Animations:** Reanimated 3
+- **Glass effects:** expo-blur BlurView for all glass card effects
+- **Haptics:** expo-haptics on all interactions
+- **Charts:** victory-native
+- **Lists:** @shopify/flash-list
 - **Styling:** StyleSheet.create — NO inline styles
-- **Design:** Dark theme, bold/irreverent, toilet humor aesthetic. Think meme energy.
 
 ## Commands
 
@@ -22,119 +38,92 @@ Think: Strava for pooping. Disgusting and viral.
 npx expo start           # Dev server
 npx expo run:ios         # iOS build
 npx expo run:android     # Android build
+npx expo lint            # Lint before committing
+eas build --platform ios --profile preview  # TestFlight build
 ```
 
 ## Architecture
 
 ```
-src/
-  app/              # Expo Router pages
-    (tabs)/          # Tab navigation
-      index.tsx      # Home — recent dumps + quick log
-      leaderboard.tsx # Friends + global rankings
-      thrones.tsx    # Toilets you've claimed
-      profile.tsx    # Your stats + history
-    dump/
-      log.tsx        # Log a dump (weight entry)
-      [id].tsx       # Dump detail
-    social/
-      friends.tsx    # Friend list + add friends
-      alerts.tsx     # Throne alerts
-    auth/
-      login.tsx
-      signup.tsx
-  components/        # Reusable components
-  lib/               # Supabase client, helpers
-  contexts/          # Auth, user, friends contexts
-  theme/             # Colors, fonts, spacing constants
-  types/             # TypeScript types
+app/
+  _layout.tsx               # Root layout, providers
+  +not-found.tsx
+  (auth)/
+    _layout.tsx             # Auth stack layout
+    welcome.tsx             # 3-panel onboarding
+    login.tsx
+    signup.tsx
+    username.tsx            # Pick username (post-signup)
+    throne-name.tsx         # Name home throne (optional)
+  (tabs)/
+    _layout.tsx             # Tab bar layout
+    index.tsx               # Home — greeting, START SESSION, stats, feed peek
+    activity.tsx            # Social feed with realtime
+    social.tsx              # Friends + leaderboard
+    thrones.tsx             # Throne map
+  session/
+    active.tsx              # Active session timer + sonar rings
+    results.tsx             # Results screen (3 states)
+  profile/
+    index.tsx               # Profile + settings
+    achievements.tsx        # Achievement grid
+    analytics.tsx           # Dump Score™ analytics
+
+constants/
+  colors.ts                 # Full design system from BUILD_SPEC
+  typography.ts
+  achievements.ts           # All 20 achievements
+
+lib/
+  supabase.ts               # Supabase client init (SecureStore)
+  store/
+    user.store.ts           # Zustand user store
+    session.store.ts        # Zustand session store
+  utils/
+    checkAchievements.ts
+    notifications.ts
+    dumpScore.ts            # Dump Score™ algorithm
+
+components/
+  ui/
+    GlassCard.tsx           # blur + border + gradient overlay
+    GoldButton.tsx          # gradient gold button
+    StatCard.tsx
+    Badge.tsx
+    Avatar.tsx
+    TabBar.tsx              # Custom tab bar
 ```
 
-## Database Schema (Supabase)
+## Database Schema
 
-### users
-- id (uuid, PK, from auth)
-- username (text, unique)
-- display_name (text)
-- avatar_url (text, nullable)
-- created_at (timestamptz)
+**See UDUMP_BUILD_SPEC.md for the complete SQL schema with RLS policies.**
 
-### toilets
-- id (uuid, PK)
-- owner_id (uuid, FK → users)
-- name (text) — e.g. "Jake's Downstairs Bathroom"
-- location_label (text, nullable)
-- current_throne_holder_id (uuid, FK → users, nullable)
-- throne_weight (numeric) — the record to beat
-- created_at (timestamptz)
+Key tables: `profiles`, `dump_sessions`, `thrones`, `friendships`, `user_achievements`, `notification_events`
 
-### dumps
-- id (uuid, PK)
-- user_id (uuid, FK → users)
-- toilet_id (uuid, FK → toilets, nullable) — null = unknown toilet
-- weight_before (numeric) — lbs/kg
-- weight_after (numeric)
-- dump_weight (numeric, generated) — weight_before - weight_after
-- duration_seconds (integer, nullable)
-- notes (text, nullable)
-- photo_url (text, nullable) — trophy shots lmao
-- created_at (timestamptz)
+## Non-Negotiable Rules
 
-### friendships
-- id (uuid, PK)
-- requester_id (uuid, FK → users)
-- addressee_id (uuid, FK → users)
-- status (text) — pending, accepted, blocked
-- created_at (timestamptz)
+1. **Bobby is always last** in seed data and leaderboards. His stats are the worst. This is the joke.
+2. **No poop emoji in the UI.** Crown emoji only. Gold accents. Luxury aesthetic.
+3. **Zustand for state**, not React Context
+4. **Reanimated 3 for ALL animations** — no Animated API
+5. **expo-blur BlurView** for all glass effects
+6. **All colors from constants/colors.ts** — NEVER hardcode hex
+7. **All typography from constants/typography.ts** — NEVER hardcode font strings
+8. **StyleSheet.create only** — NO inline styles
+9. **Commit after every completed phase**
+10. **Push directly to main** — no feature branches
 
-### throne_claims
-- id (uuid, PK)
-- toilet_id (uuid, FK → toilets)
-- claimer_id (uuid, FK → users)
-- dump_id (uuid, FK → dumps)
-- previous_holder_id (uuid, FK → users, nullable)
-- claimed_at (timestamptz)
+## Design System (Quick Reference)
 
-### alerts
-- id (uuid, PK)
-- user_id (uuid, FK → users) — the person ON the toilet
-- toilet_id (uuid, FK → toilets)
-- started_at (timestamptz)
-- ended_at (timestamptz, nullable)
-- alert_sent (boolean, default false)
-- alert_threshold_minutes (integer, default 10)
+See BUILD_SPEC for full token list. Key colors:
+- Void: `#06060A` (deepest background)
+- Base: `#0C0C12` (primary background)
+- Gold: `#D4AF37` (primary accent)
+- Gold Light: `#F0CE60` (highlight accent)
+- Glass borders: `rgba(255,255,255,0.08)`
 
-## Key Features (Priority Order)
-
-1. **Log a Dump** — Enter weight before/after (manual for now, hardware later). Shows dump weight with celebratory/disgusting animation.
-2. **Leaderboard** — Friends leaderboard (biggest single dump, weekly total, all-time). Global leaderboard.
-3. **Claim the Throne** — Register your toilet. Friends can dump on it. Biggest dump claims the throne. Push notification to dethroned owner.
-4. **Throne Alerts** — Start a "session." If you exceed the time threshold, friends get notified. "Jake has been on the throne for 14 minutes."
-5. **Social Feed** — Recent dumps from friends (opt-in). Reactions (💩🏆👑🫡).
-6. **Friend System** — Add by username, see their stats, challenge them.
-7. **Stats & History** — Personal dump history, trends, averages, personal records.
-8. **Achievements** — "First Dump," "Throne Claimer," "10 lb Club," "Speed Run" (under 60 seconds), "Marathon" (30+ minutes).
-
-## Design Rules
-
-- Dark theme with gold/brown accent colors (on brand)
-- All colors in theme/colors.ts — NEVER hardcode hex
-- All fonts in theme/fonts.ts
-- All spacing in theme/spacing.ts
-- Bold, irreverent copy. This is a joke app — lean into it.
-- Toilet emoji 🚽, crown emoji 👑, poop emoji 💩 are the brand icons
-- Animations for big dumps, throne claims, and achievements
-- Sound effects optional but encouraged
-
-## Agent Guardrails
-
-- Push directly to main
-- Commit after every completed feature
-- Run `npx expo lint` before committing
-- Follow the Playbook phases: design system → architecture → screens
-- NO inline styles — use StyleSheet.create
-- All API calls through Supabase client in lib/supabase.ts
+Fonts: Barlow Condensed (display), Barlow (body), DM Mono (data/numbers)
 
 ## Dev Phases
 
-See PLAN.md for the full task breakdown.
+See PLAN.md for task checklist. See UDUMP_ROADMAP.md for detailed per-phase agent prompts and code snippets.

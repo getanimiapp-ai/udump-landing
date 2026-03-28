@@ -126,12 +126,12 @@ Phases MUST be completed in order. The ROADMAP has detailed agent prompts and co
 
 ## Phase 7: Leaderboard
 
-- [ ] **7.1 — Friends + Global Leaderboard**
-  - Friends tab: ranked by weekly weight
+- [x] **7.1 — Friends + Global Leaderboard**
+  - Friends tab: ranked by all-time total weight
   - Global tab: top 100 all-time
   - Rank 1 gold crown, rank 2 silver, rank 3 bronze
   - Bobby always last (red tint on his row)
-  - **NOTE:** Needs dedicated leaderboard screen or integration into social tab
+  - Integrated into Social tab (Feed / Leaderboard switcher)
   - **Done when:** real ranked data from Supabase
 
 ---

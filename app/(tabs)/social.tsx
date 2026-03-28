@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { useUserStore } from '@/lib/store/user.store';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   RefreshControl,
@@ -16,7 +17,14 @@ import { Colors } from '../../constants/colors';
 import { Type } from '../../constants/typography';
 import { formatDistanceToNow } from 'date-fns';
 
+// ─────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────
+
 type FeedItemType = 'session' | 'record' | 'throne_claimed' | 'overstay';
+type MainTab = 'feed' | 'leaderboard';
+type LeaderboardTab = 'friends' | 'global';
+type FeedFilter = 'all' | 'records' | 'thrones' | 'alerts';
 
 interface FeedEntry {
   id: string;
@@ -29,17 +37,22 @@ interface FeedEntry {
   weightDelta: number | null;
   throneName: string | null;
   createdAt: string;
-  minutes?: number;
 }
 
-type FilterType = 'all' | 'records' | 'thrones' | 'alerts';
+interface LeaderboardEntry {
+  rank: number;
+  userId: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  totalWeightLbs: number;
+  dumpScore: number;
+  isSelf: boolean;
+}
 
-const FILTERS: { key: FilterType; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'records', label: 'Records' },
-  { key: 'thrones', label: 'Thrones' },
-  { key: 'alerts', label: 'Alerts' },
-];
+// ─────────────────────────────────────────────
+// Feed Item Component
+// ─────────────────────────────────────────────
 
 function FeedItemCard({ item }: { item: FeedEntry }) {
   const formatDuration = (s: number) => `${Math.floor(s / 60)}m ${s % 60}s`;
@@ -51,12 +64,12 @@ function FeedItemCard({ item }: { item: FeedEntry }) {
           <View style={styles.alertHeader}>
             <Text style={styles.alertIcon}>🚨</Text>
             <Text style={styles.alertText}>
-              {item.displayName} has been on the toilet for {item.minutes} minutes
+              {item.displayName} has been on the toilet for an extended period
             </Text>
           </View>
           <Badge label="WELFARE CHECK RECOMMENDED" color="red" />
           <View style={styles.replyChips}>
-            {["You okay?", "Need help?", "👑"].map((reply) => (
+            {['You okay?', 'Need help?', '👑'].map((reply) => (
               <TouchableOpacity key={reply} style={styles.replyChip}>
                 <Text style={styles.replyChipText}>{reply}</Text>
               </TouchableOpacity>
@@ -109,16 +122,74 @@ function FeedItemCard({ item }: { item: FeedEntry }) {
   );
 }
 
+// ─────────────────────────────────────────────
+// Leaderboard Row Component
+// ─────────────────────────────────────────────
+
+function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
+  const rankIcon = entry.rank === 1 ? '👑' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : null;
+  const isLastPlace = entry.rank > 5 && entry.username === 'bobby';
+
+  return (
+    <GlassCard
+      style={[
+        styles.leaderboardCard,
+        entry.isSelf && styles.leaderboardCardSelf,
+        isLastPlace && styles.leaderboardCardBobby,
+      ]}
+    >
+      <View style={styles.leaderboardContent}>
+        <View style={styles.rankSection}>
+          {rankIcon ? (
+            <Text style={styles.rankIcon}>{rankIcon}</Text>
+          ) : (
+            <Text style={[styles.rankNumber, isLastPlace && styles.rankNumberBobby]}>
+              #{entry.rank}
+            </Text>
+          )}
+        </View>
+        <Avatar uri={entry.avatarUrl} username={entry.displayName} size={36} />
+        <View style={styles.leaderboardInfo}>
+          <Text style={[styles.leaderboardName, entry.isSelf && styles.leaderboardNameSelf]}>
+            {entry.displayName}
+          </Text>
+          <Text style={styles.leaderboardUsername}>@{entry.username}</Text>
+        </View>
+        <View style={styles.leaderboardStats}>
+          <Text style={[styles.leaderboardWeight, isLastPlace && styles.leaderboardWeightBobby]}>
+            {entry.totalWeightLbs.toFixed(1)}
+          </Text>
+          <Text style={styles.leaderboardWeightLabel}>lbs</Text>
+        </View>
+      </View>
+    </GlassCard>
+  );
+}
+
+// ─────────────────────────────────────────────
+// Main Screen
+// ─────────────────────────────────────────────
+
+const FEED_FILTERS: { key: FeedFilter; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'records', label: 'Records' },
+  { key: 'thrones', label: 'Thrones' },
+  { key: 'alerts', label: 'Alerts' },
+];
+
 export default function SocialScreen() {
+  const { profile: _profile } = useUserStore();
+  const [mainTab, setMainTab] = useState<MainTab>('feed');
+  const [leaderboardTab, setLeaderboardTab] = useState<LeaderboardTab>('friends');
+  const [feedFilter, setFeedFilter] = useState<FeedFilter>('all');
   const [feed, setFeed] = useState<FeedEntry[]>([]);
-  const [filter, setFilter] = useState<FilterType>('all');
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchFeed = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Get friends
     const { data: friendships } = await supabase
       .from('friendships')
       .select('friend_id')
@@ -126,12 +197,8 @@ export default function SocialScreen() {
       .eq('status', 'accepted');
 
     const friendIds = (friendships ?? []).map((f) => f.friend_id);
-    if (friendIds.length === 0) {
-      setFeed([]);
-      return;
-    }
+    if (friendIds.length === 0) { setFeed([]); return; }
 
-    // Get recent sessions from friends
     const { data: sessions } = await supabase
       .from('dump_sessions')
       .select(`
@@ -147,17 +214,14 @@ export default function SocialScreen() {
 
     if (!sessions) return;
 
-    const entries: FeedEntry[] = sessions.map((s): FeedEntry => {
+    setFeed(sessions.map((s): FeedEntry => {
       const prof = s.profiles as { username: string; display_name: string | null; avatar_url: string | null };
       const throne = s.thrones as { name: string } | null;
-
       let type: FeedItemType = 'session';
       if (s.is_personal_record) type = 'record';
       else if (s.throne_claimed) type = 'throne_claimed';
-
       return {
-        id: s.id,
-        type,
+        id: s.id, type,
         userId: s.user_id,
         username: prof.username,
         displayName: prof.display_name ?? prof.username,
@@ -167,81 +231,219 @@ export default function SocialScreen() {
         throneName: throne?.name ?? null,
         createdAt: s.ended_at!,
       };
-    });
-
-    setFeed(entries);
+    }));
   }, []);
+
+  const fetchLeaderboard = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    if (leaderboardTab === 'friends') {
+      const { data: friendships } = await supabase
+        .from('friendships')
+        .select('friend_id')
+        .eq('user_id', user.id)
+        .eq('status', 'accepted');
+
+      const friendIds = [(friendships ?? []).map((f) => f.friend_id), user.id].flat();
+
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, username, display_name, avatar_url, total_weight_lbs, dump_score')
+        .in('id', friendIds)
+        .order('total_weight_lbs', { ascending: false });
+
+      if (!profiles) return;
+
+      const entries: LeaderboardEntry[] = profiles.map((p, i) => ({
+        rank: i + 1,
+        userId: p.id,
+        username: p.username,
+        displayName: p.display_name ?? p.username,
+        avatarUrl: p.avatar_url,
+        totalWeightLbs: p.total_weight_lbs,
+        dumpScore: p.dump_score,
+        isSelf: p.id === user.id,
+      }));
+
+      // Bobby always last
+      const bobbyIdx = entries.findIndex((e) => e.username === 'bobby');
+      if (bobbyIdx >= 0 && bobbyIdx !== entries.length - 1) {
+        const bobby = entries.splice(bobbyIdx, 1)[0];
+        entries.push({ ...bobby, rank: entries.length + 1 });
+        entries.forEach((e, i) => { if (e.username !== 'bobby') e.rank = i + 1; });
+      }
+
+      setLeaderboard(entries);
+    } else {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, username, display_name, avatar_url, total_weight_lbs, dump_score')
+        .order('total_weight_lbs', { ascending: false })
+        .limit(100);
+
+      if (!profiles) return;
+
+      const entries: LeaderboardEntry[] = profiles.map((p, i) => ({
+        rank: i + 1,
+        userId: p.id,
+        username: p.username,
+        displayName: p.display_name ?? p.username,
+        avatarUrl: p.avatar_url,
+        totalWeightLbs: p.total_weight_lbs,
+        dumpScore: p.dump_score,
+        isSelf: p.id === user.id,
+      }));
+
+      // Bobby always last
+      const bobbyIdx = entries.findIndex((e) => e.username === 'bobby');
+      if (bobbyIdx >= 0 && bobbyIdx !== entries.length - 1) {
+        const bobby = entries.splice(bobbyIdx, 1)[0];
+        entries.push({ ...bobby, rank: entries.length + 1 });
+      }
+
+      setLeaderboard(entries);
+    }
+  }, [leaderboardTab]);
 
   useEffect(() => {
     fetchFeed();
-
-    // Realtime subscription
     const channel = supabase
       .channel('friend-sessions')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'dump_sessions' }, () => {
         fetchFeed();
       })
       .subscribe();
-
     return () => { supabase.removeChannel(channel); };
   }, [fetchFeed]);
 
+  useEffect(() => {
+    if (mainTab === 'leaderboard') fetchLeaderboard();
+  }, [mainTab, leaderboardTab, fetchLeaderboard]);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchFeed();
+    if (mainTab === 'feed') await fetchFeed();
+    else await fetchLeaderboard();
     setRefreshing(false);
-  }, [fetchFeed]);
+  }, [mainTab, fetchFeed, fetchLeaderboard]);
 
   const filteredFeed = feed.filter((item) => {
-    if (filter === 'all') return true;
-    if (filter === 'records') return item.type === 'record';
-    if (filter === 'thrones') return item.type === 'throne_claimed';
-    if (filter === 'alerts') return item.type === 'overstay';
+    if (feedFilter === 'all') return true;
+    if (feedFilter === 'records') return item.type === 'record';
+    if (feedFilter === 'thrones') return item.type === 'throne_claimed';
+    if (feedFilter === 'alerts') return item.type === 'overstay';
     return true;
   });
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Feed</Text>
+      {/* Main Tab Switcher */}
+      <View style={styles.mainTabRow}>
+        <TouchableOpacity
+          onPress={() => setMainTab('feed')}
+          style={[styles.mainTab, mainTab === 'feed' && styles.mainTabActive]}
+        >
+          <Text style={[styles.mainTabLabel, mainTab === 'feed' && styles.mainTabLabelActive]}>
+            Feed
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setMainTab('leaderboard')}
+          style={[styles.mainTab, mainTab === 'leaderboard' && styles.mainTabActive]}
+        >
+          <Text style={[styles.mainTabLabel, mainTab === 'leaderboard' && styles.mainTabLabelActive]}>
+            Leaderboard
+          </Text>
+        </TouchableOpacity>
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filters}
-      >
-        {FILTERS.map((f) => (
-          <TouchableOpacity
-            key={f.key}
-            onPress={() => setFilter(f.key)}
-            style={[styles.filterChip, filter === f.key && styles.filterChipActive]}
+      {mainTab === 'feed' ? (
+        <>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filters}
           >
-            <Text style={[styles.filterLabel, filter === f.key && styles.filterLabelActive]}>
-              {f.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+            {FEED_FILTERS.map((f) => (
+              <TouchableOpacity
+                key={f.key}
+                onPress={() => setFeedFilter(f.key)}
+                style={[styles.filterChip, feedFilter === f.key && styles.filterChipActive]}
+              >
+                <Text style={[styles.filterLabel, feedFilter === f.key && styles.filterLabelActive]}>
+                  {f.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
 
-      <ScrollView
-        contentContainerStyle={styles.feedList}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.gold} />
-        }
-        showsVerticalScrollIndicator={false}
-      >
-        {filteredFeed.length === 0 ? (
-          <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>👑</Text>
-            <Text style={styles.emptyTitle}>No activity yet.</Text>
-            <Text style={styles.emptyBody}>Add friends to see their sessions here.</Text>
+          <ScrollView
+            contentContainerStyle={styles.feedList}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.gold} />
+            }
+            showsVerticalScrollIndicator={false}
+          >
+            {filteredFeed.length === 0 ? (
+              <View style={styles.empty}>
+                <Text style={styles.emptyIcon}>👑</Text>
+                <Text style={styles.emptyTitle}>No activity yet.</Text>
+                <Text style={styles.emptyBody}>Add friends to see their sessions here.</Text>
+              </View>
+            ) : (
+              filteredFeed.map((item) => <FeedItemCard key={item.id} item={item} />)
+            )}
+            <View style={styles.bottomPad} />
+          </ScrollView>
+        </>
+      ) : (
+        <>
+          {/* Leaderboard Sub-tabs */}
+          <View style={styles.subTabRow}>
+            <TouchableOpacity
+              onPress={() => setLeaderboardTab('friends')}
+              style={[styles.subTab, leaderboardTab === 'friends' && styles.subTabActive]}
+            >
+              <Text style={[styles.subTabLabel, leaderboardTab === 'friends' && styles.subTabLabelActive]}>
+                Friends
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setLeaderboardTab('global')}
+              style={[styles.subTab, leaderboardTab === 'global' && styles.subTabActive]}
+            >
+              <Text style={[styles.subTabLabel, leaderboardTab === 'global' && styles.subTabLabelActive]}>
+                Global Top 100
+              </Text>
+            </TouchableOpacity>
           </View>
-        ) : (
-          filteredFeed.map((item) => <FeedItemCard key={item.id} item={item} />)
-        )}
-        <View style={styles.bottomPad} />
-      </ScrollView>
+
+          <ScrollView
+            contentContainerStyle={styles.leaderboardList}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.gold} />
+            }
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.leaderboardHeader}>
+              <Text style={styles.leaderboardHeaderText}>
+                {leaderboardTab === 'friends' ? 'All-time by total weight' : 'Global all-time rankings'}
+              </Text>
+            </View>
+            {leaderboard.length === 0 ? (
+              <View style={styles.empty}>
+                <Text style={styles.emptyIcon}>👑</Text>
+                <Text style={styles.emptyTitle}>No data yet.</Text>
+                <Text style={styles.emptyBody}>Log sessions to appear on the leaderboard.</Text>
+              </View>
+            ) : (
+              leaderboard.map((entry) => <LeaderboardRow key={entry.userId} entry={entry} />)
+            )}
+            <View style={styles.bottomPad} />
+          </ScrollView>
+        </>
+      )}
     </SafeAreaView>
   );
 }
@@ -251,19 +453,37 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.base,
   },
-  header: {
+  mainTabRow: {
+    flexDirection: 'row',
     paddingHorizontal: 20,
     paddingTop: 8,
-    paddingBottom: 8,
+    paddingBottom: 4,
+    gap: 4,
   },
-  headerTitle: {
-    ...Type.display,
-    fontSize: 28,
-    color: Colors.text1,
+  mainTab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 10,
+    backgroundColor: Colors.glass1,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+  },
+  mainTabActive: {
+    backgroundColor: Colors.goldDim,
+    borderColor: Colors.gold,
+  },
+  mainTabLabel: {
+    ...Type.label,
+    color: Colors.text3,
+    fontSize: 12,
+  },
+  mainTabLabelActive: {
+    color: Colors.gold,
   },
   filters: {
     paddingHorizontal: 20,
-    paddingBottom: 12,
+    paddingVertical: 10,
     gap: 8,
   },
   filterChip: {
@@ -291,115 +511,136 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   feedCard: {},
-  feedCardRecord: {
-    borderColor: 'rgba(212,175,55,0.3)',
+  feedCardRecord: { borderColor: 'rgba(212,175,55,0.3)' },
+  feedCardThrone: { borderColor: 'rgba(212,175,55,0.2)' },
+  feedContent: { padding: 16, gap: 10 },
+  feedHeader: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
+  feedHeaderText: { flex: 1, gap: 4 },
+  feedTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  feedName: { ...Type.body, color: Colors.text1, fontWeight: '600' },
+  feedTime: { ...Type.caption, color: Colors.text3 },
+  feedStats: { flexDirection: 'row', gap: 16 },
+  feedStatValue: { ...Type.mono, fontSize: 18, fontWeight: '700', color: Colors.text1 },
+  feedStatGold: { color: Colors.gold },
+  throneText: { ...Type.body, color: Colors.gold, fontSize: 13 },
+  alertCard: { borderColor: 'rgba(255,59,48,0.3)' },
+  alertContent: { padding: 16, gap: 10, backgroundColor: 'rgba(255,59,48,0.04)' },
+  alertHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  alertIcon: { fontSize: 16 },
+  alertText: { ...Type.body, color: Colors.red, fontWeight: '600', flex: 1 },
+  replyChips: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  replyChip: {
+    paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20,
+    borderWidth: 1, borderColor: Colors.glassBorder, backgroundColor: Colors.glass2,
   },
-  feedCardThrone: {
-    borderColor: 'rgba(212,175,55,0.2)',
-  },
-  feedContent: {
-    padding: 16,
-    gap: 10,
-  },
-  feedHeader: {
+  replyChipText: { ...Type.caption, color: Colors.text2 },
+  subTabRow: {
     flexDirection: 'row',
-    gap: 12,
-    alignItems: 'flex-start',
-  },
-  feedHeaderText: {
-    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 4,
     gap: 4,
   },
-  feedTitleRow: {
-    flexDirection: 'row',
+  subTab: {
+    flex: 1,
+    paddingVertical: 8,
     alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  subTabActive: {
+    borderBottomColor: Colors.gold,
+  },
+  subTabLabel: {
+    ...Type.label,
+    color: Colors.text3,
+    fontSize: 11,
+  },
+  subTabLabelActive: {
+    color: Colors.gold,
+  },
+  leaderboardList: {
+    paddingHorizontal: 20,
     gap: 8,
+    paddingTop: 8,
   },
-  feedName: {
-    ...Type.body,
-    color: Colors.text1,
-    fontWeight: '600',
+  leaderboardHeader: {
+    paddingBottom: 8,
   },
-  feedTime: {
+  leaderboardHeaderText: {
     ...Type.caption,
     color: Colors.text3,
   },
-  feedStats: {
-    flexDirection: 'row',
-    gap: 16,
+  leaderboardCard: {},
+  leaderboardCardSelf: {
+    borderColor: Colors.gold,
   },
-  feedStatValue: {
+  leaderboardCardBobby: {
+    borderColor: 'rgba(255,59,48,0.3)',
+  },
+  leaderboardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    gap: 12,
+  },
+  rankSection: {
+    width: 36,
+    alignItems: 'center',
+  },
+  rankIcon: {
+    fontSize: 22,
+  },
+  rankNumber: {
+    ...Type.mono,
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.text3,
+  },
+  rankNumberBobby: {
+    color: Colors.red,
+  },
+  leaderboardInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  leaderboardName: {
+    ...Type.body,
+    color: Colors.text1,
+    fontWeight: '600',
+    fontSize: 15,
+  },
+  leaderboardNameSelf: {
+    color: Colors.gold,
+  },
+  leaderboardUsername: {
+    ...Type.caption,
+    color: Colors.text3,
+  },
+  leaderboardStats: {
+    alignItems: 'flex-end',
+    gap: 1,
+  },
+  leaderboardWeight: {
     ...Type.mono,
     fontSize: 18,
     fontWeight: '700',
     color: Colors.text1,
   },
-  feedStatGold: {
-    color: Colors.gold,
-  },
-  throneText: {
-    ...Type.body,
-    color: Colors.gold,
-    fontSize: 13,
-  },
-  alertCard: {
-    borderColor: 'rgba(255,59,48,0.3)',
-  },
-  alertContent: {
-    padding: 16,
-    gap: 10,
-    backgroundColor: 'rgba(255,59,48,0.04)',
-  },
-  alertHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-  },
-  alertIcon: {
-    fontSize: 16,
-  },
-  alertText: {
-    ...Type.body,
+  leaderboardWeightBobby: {
     color: Colors.red,
-    fontWeight: '600',
-    flex: 1,
   },
-  replyChips: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 4,
-  },
-  replyChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    backgroundColor: Colors.glass2,
-  },
-  replyChipText: {
+  leaderboardWeightLabel: {
     ...Type.caption,
-    color: Colors.text2,
+    color: Colors.text3,
   },
   empty: {
     alignItems: 'center',
     paddingVertical: 60,
     gap: 12,
   },
-  emptyIcon: {
-    fontSize: 48,
-  },
-  emptyTitle: {
-    ...Type.display,
-    fontSize: 20,
-    color: Colors.text2,
-  },
-  emptyBody: {
-    ...Type.body,
-    color: Colors.text3,
-    textAlign: 'center',
-  },
-  bottomPad: {
-    height: 100,
-  },
+  emptyIcon: { fontSize: 48 },
+  emptyTitle: { ...Type.display, fontSize: 20, color: Colors.text2 },
+  emptyBody: { ...Type.body, color: Colors.text3, textAlign: 'center' },
+  bottomPad: { height: 100 },
 });

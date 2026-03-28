@@ -143,7 +143,7 @@ Phases MUST be completed in order. The ROADMAP has detailed agent prompts and co
 
 ## Phase 9: Achievements System
 
-- [ ] **9.1 — Achievement Logic + Screen**
+- [x] **9.1 — Achievement Logic + Screen**
   - checkAndUnlockAchievements runs after every session
   - All 20 achievements from BUILD_SPEC
   - Achievement screen with tier filters (Bronze/Silver/Gold/Platinum)

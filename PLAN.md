@@ -155,7 +155,7 @@ Phases MUST be completed in order. The ROADMAP has detailed agent prompts and co
 
 ## Phase 10: Dump Score™ Analytics
 
-- [ ] **10.1 — Analytics Screen**
+- [x] **10.1 — Analytics Screen**
   - Animated score ring (SVG arc)
   - Score trend chart (victory-native, 30 days)
   - Factor breakdown (4 glass cards with progress bars)
@@ -167,7 +167,7 @@ Phases MUST be completed in order. The ROADMAP has detailed agent prompts and co
 
 ## Phase 11: Push Notifications
 
-- [ ] **11.1 — All 7 Notification Types**
+- [x] **11.1 — All 7 Notification Types**
   - Expo push token registration
   - record_broken, throne_claimed, throne_lost, overstay_60, overstay_120, friend_active, streak_milestone
   - Overstay pg_cron (every 5 min)
@@ -177,7 +177,7 @@ Phases MUST be completed in order. The ROADMAP has detailed agent prompts and co
 
 ## Phase 12: Profile + Settings
 
-- [ ] **12.1 — Profile Screen**
+- [x] **12.1 — Profile Screen**
   - Avatar upload, display name, username
   - Dump Score™, global ranking
   - Stats row, achievements preview

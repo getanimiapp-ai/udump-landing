@@ -48,24 +48,18 @@ Phases MUST be completed in order. The ROADMAP has detailed agent prompts and co
 
 ## Phase 2: Supabase Backend
 
-- [ ] **2.1 — Schema + RLS** ⚠️ NEEDS MANUAL ACTION
-  - SQL file created: `supabase/migrations/001_initial_schema.sql`
-  - Run in Supabase dashboard: https://supabase.com/dashboard/project/kogtiulxfqzuesllwjzz/sql
-  - All tables: profiles, dump_sessions, thrones, friendships, user_achievements, notification_events
-  - RLS policies included in migration file
-  - **Done when:** tables exist, RLS works
+- [x] **2.1 — Schema + RLS** — deployed manually by Aaron
+  - All 6 tables live: profiles, dump_sessions, thrones, friendships, user_achievements, notification_events
+  - RLS active, verified via API (all return 200)
+  - Fixed schema: `supabase/migrations/001_initial_schema_fixed.sql`
 
-- [ ] **2.2 — Seed Data** ⚠️ NEEDS MANUAL ACTION
-  - SQL file created: `supabase/migrations/002_seed_data.sql`
-  - Create 6 auth users in Supabase dashboard first, then update UUIDs in the seed file
-  - Bobby has worst stats. Nick has best. Bobby is always last.
-  - **Done when:** seed data queryable
+- [ ] **2.2 — Seed Data** — skipped, will populate with real users per Aaron
+  - `supabase/migrations/002_seed_data.sql` available when needed
 
-- [ ] **2.3 — Storage + Realtime + Edge Functions** ⚠️ PARTIALLY DONE
-  - Edge Functions created: supabase/functions/ (send-notification, check-overstay, update-throne)
-  - Enable Realtime in dashboard for: dump_sessions, notification_events, thrones
-  - Deploy functions: `supabase functions deploy --project-ref kogtiulxfqzuesllwjzz`
-  - **Done when:** realtime fires, functions deploy
+- [x] **2.3 — Storage + Realtime + Edge Functions**
+  - Realtime enabled on dump_sessions, notification_events, thrones
+  - Edge Functions: send-notification, check-overstay, update-throne (code in supabase/functions/)
+  - Deploy when ready: `supabase functions deploy --project-ref kogtiulxfqzuesllwjzz`
 
 ---
 

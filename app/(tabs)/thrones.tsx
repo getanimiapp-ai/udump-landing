@@ -169,26 +169,33 @@ export default function ThronesScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.throneList}
         >
-          {thrones.slice(0, 8).map((t) => (
-            <TouchableOpacity
-              key={t.id}
-              onPress={() => {
-                setSelectedThrone(t);
-                if (t.lat && t.lng) {
-                  setRegion({ latitude: t.lat, longitude: t.lng, latitudeDelta: 0.005, longitudeDelta: 0.005 });
-                }
-              }}
-            >
-              <GlassCard style={styles.throneChip}>
-                <View style={styles.throneChipContent}>
-                  <Text style={styles.throneChipName}>{t.name}</Text>
-                  <Text style={styles.throneChipKing}>
-                    {t.current_king_id === profile?.id ? 'You' : t.kingUsername ?? 'Unconquered'}
-                  </Text>
-                </View>
-              </GlassCard>
-            </TouchableOpacity>
-          ))}
+          {thrones.length === 0 ? (
+            <View style={styles.throneEmptyState}>
+              <Text style={styles.throneEmptyTitle}>No thrones claimed.</Text>
+              <Text style={styles.throneEmptySub}>The crown sits unclaimed. That is unacceptable.</Text>
+            </View>
+          ) : (
+            thrones.slice(0, 8).map((t) => (
+              <TouchableOpacity
+                key={t.id}
+                onPress={() => {
+                  setSelectedThrone(t);
+                  if (t.lat && t.lng) {
+                    setRegion({ latitude: t.lat, longitude: t.lng, latitudeDelta: 0.005, longitudeDelta: 0.005 });
+                  }
+                }}
+              >
+                <GlassCard style={styles.throneChip}>
+                  <View style={styles.throneChipContent}>
+                    <Text style={styles.throneChipName}>{t.name}</Text>
+                    <Text style={styles.throneChipKing}>
+                      {t.current_king_id === profile?.id ? 'You' : t.kingUsername ?? 'Unconquered'}
+                    </Text>
+                  </View>
+                </GlassCard>
+              </TouchableOpacity>
+            ))
+          )}
         </ScrollView>
       </View>
 
@@ -361,5 +368,20 @@ const styles = StyleSheet.create({
     ...Type.caption,
     color: Colors.text3,
     textAlign: 'center',
+  },
+  throneEmptyState: {
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    gap: 6,
+  },
+  throneEmptyTitle: {
+    ...Type.display,
+    fontSize: 18,
+    color: Colors.text2,
+  },
+  throneEmptySub: {
+    ...Type.body,
+    color: Colors.text3,
+    fontSize: 12,
   },
 });

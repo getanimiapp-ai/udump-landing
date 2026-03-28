@@ -273,10 +273,13 @@ export default function ResultsScreen() {
   const { badge, title } = getHeaderContent();
 
   const getInsightText = () => {
-    if (isPersonalRecord) return 'You have exceeded your previous best. The crown is yours.';
-    if (throneClaimed) return 'Throne secured. Your friends have been notified.';
-    if (weightDelta && weightDelta > 2) return 'Impressive output. Your Dump Score™ has been updated.';
-    return 'Solid consistency. Your streak continues.';
+    if (isPersonalRecord) return 'New personal best. Bobby has been notified and is devastated.';
+    if (throneClaimed) return 'Throne secured. The previous occupant has been dethroned and is embarrassed.';
+    if (durationSeconds < 120) return 'Under 2 minutes. Efficient, if not artistic.';
+    if (durationSeconds < 600) return 'A solid contribution to the historical record.';
+    if (durationSeconds < 1200) return 'A proper sit. Philosophers have achieved less.';
+    if (durationSeconds < 1800) return 'Historians will note this session.';
+    return 'Your phone battery suffered. Your dedication did not.';
   };
 
   return (

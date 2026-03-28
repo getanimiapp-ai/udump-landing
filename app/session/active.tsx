@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  Dimensions,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
@@ -18,12 +19,18 @@ import Animated, {
   useSharedValue,
   withRepeat,
   withSequence,
+  withSpring,
   withTiming,
   Easing,
+  runOnJS,
 } from 'react-native-reanimated';
+import Svg, { Circle } from 'react-native-svg';
 import { GlassCard } from '../../components/ui/GlassCard';
+import { GoldButton } from '../../components/ui/GoldButton';
 import { Colors } from '../../constants/colors';
 import { Type } from '../../constants/typography';
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 function formatTime(totalSeconds: number): string {
   const h = Math.floor(totalSeconds / 3600);
@@ -35,6 +42,105 @@ function formatTime(totalSeconds: number): string {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
+const MILESTONES: { seconds: number; label: string; haptic: Haptics.ImpactFeedbackStyle }[] = [
+  { seconds: 60, label: 'WARMING UP', haptic: Haptics.ImpactFeedbackStyle.Light },
+  { seconds: 300, label: 'COMMITTED', haptic: Haptics.ImpactFeedbackStyle.Medium },
+  { seconds: 600, label: 'ELITE TERRITORY', haptic: Haptics.ImpactFeedbackStyle.Rigid },
+  { seconds: 900, label: 'DEDICATED', haptic: Haptics.ImpactFeedbackStyle.Heavy },
+  { seconds: 1800, label: 'LEGENDARY', haptic: Haptics.ImpactFeedbackStyle.Heavy },
+];
+
+const PR_DURATION_DEFAULT = 600;
+const RING_SIZE = 220;
+const RING_STROKE = 3;
+const RING_RADIUS = (RING_SIZE - RING_STROKE * 2) / 2;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
+interface ProgressRingProps {
+  progress: number;
+}
+
+function ProgressRing({ progress }: ProgressRingProps) {
+  const clamped = Math.min(Math.max(progress, 0), 1);
+  const dashOffset = RING_CIRCUMFERENCE * (1 - clamped);
+  const r = Math.round(255 + (212 - 255) * clamped);
+  const g = Math.round(255 + (175 - 255) * clamped);
+  const b = Math.round(255 + (55 - 255) * clamped);
+  const a = (0.08 + 0.92 * clamped).toFixed(2);
+  const color = `rgba(${r},${g},${b},${a})`;
+
+  return (
+    <Svg width={RING_SIZE} height={RING_SIZE} style={ringStyles.svg}>
+      <Circle
+        cx={RING_SIZE / 2}
+        cy={RING_SIZE / 2}
+        r={RING_RADIUS}
+        stroke="rgba(255,255,255,0.06)"
+        strokeWidth={RING_STROKE}
+        fill="none"
+      />
+      <Circle
+        cx={RING_SIZE / 2}
+        cy={RING_SIZE / 2}
+        r={RING_RADIUS}
+        stroke={color}
+        strokeWidth={RING_STROKE}
+        fill="none"
+        strokeDasharray={RING_CIRCUMFERENCE}
+        strokeDashoffset={dashOffset}
+        strokeLinecap="round"
+        rotation="-90"
+        origin={`${RING_SIZE / 2}, ${RING_SIZE / 2}`}
+      />
+    </Svg>
+  );
+}
+
+const ringStyles = StyleSheet.create({
+  svg: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  },
+});
+
+interface MilestoneBannerProps {
+  label: string;
+  onDone: () => void;
+}
+
+function MilestoneBanner({ label, onDone }: MilestoneBannerProps) {
+  const translateY = useSharedValue(30);
+  const opacity = useSharedValue(0);
+
+  const style = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+    opacity: opacity.value,
+  }));
+
+  const dismiss = () => onDone();
+
+  useEffect(() => {
+    translateY.value = withSpring(0, { damping: 14, stiffness: 180 });
+    opacity.value = withTiming(1, { duration: 200 });
+
+    const timeout = setTimeout(() => {
+      opacity.value = withTiming(0, { duration: 500 }, (finished) => {
+        if (finished) runOnJS(dismiss)();
+      });
+    }, 2000);
+
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <Animated.View style={[styles.milestoneBanner, style]} pointerEvents="none">
+      <Text style={styles.milestoneText}>{label}</Text>
+    </Animated.View>
+  );
+}
+
 export default function ActiveSessionScreen() {
   const router = useRouter();
   const { activeSession, startSession, endSession, cancelSession } = useSessionStore();
@@ -42,19 +148,29 @@ export default function ActiveSessionScreen() {
   const [weightBefore, setWeightBefore] = useState('');
   const [weightAfter, setWeightAfter] = useState('');
   const [isEnding, setIsEnding] = useState(false);
+  const [sheetVisible, setSheetVisible] = useState(false);
+  const [activeMilestone, setActiveMilestone] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const cancelPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [cancelProgress, setCancelProgress] = useState(0);
+  const triggeredMilestonesRef = useRef<Set<number>>(new Set());
 
   const timerOpacity = useSharedValue(1);
   const sonar1Scale = useSharedValue(1);
   const sonar2Scale = useSharedValue(1);
   const sonar3Scale = useSharedValue(1);
+  const sheetTranslateY = useSharedValue(SCREEN_HEIGHT);
+
+  const weightDelta =
+    weightBefore && weightAfter
+      ? parseFloat(weightAfter) - parseFloat(weightBefore)
+      : null;
 
   useEffect(() => {
     if (!activeSession) {
       startSession();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -82,12 +198,25 @@ export default function ActiveSessionScreen() {
     sonarAnim(sonar1Scale, 0);
     sonarAnim(sonar2Scale, 1333);
     sonarAnim(sonar3Scale, 2666);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
       setElapsed((prev) => {
         const next = prev + 1;
+
+        for (const milestone of MILESTONES) {
+          if (next === milestone.seconds && !triggeredMilestonesRef.current.has(milestone.seconds)) {
+            triggeredMilestonesRef.current.add(milestone.seconds);
+            Haptics.impactAsync(milestone.haptic);
+            if (milestone.seconds === 1800) {
+              setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 200);
+            }
+            setActiveMilestone(milestone.label);
+          }
+        }
+
         if (next === 3600) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
         }
@@ -121,6 +250,21 @@ export default function ActiveSessionScreen() {
     transform: [{ scale: sonar3Scale.value }],
     opacity: 2.5 - sonar3Scale.value,
   }));
+
+  const sheetStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: sheetTranslateY.value }],
+  }));
+
+  const openSheet = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setSheetVisible(true);
+    sheetTranslateY.value = withSpring(0, { damping: 18, stiffness: 200 });
+  };
+
+  const closeSheet = () => {
+    sheetTranslateY.value = withTiming(SCREEN_HEIGHT, { duration: 300 });
+    setTimeout(() => setSheetVisible(false), 320);
+  };
 
   const handleEnd = async () => {
     if (isEnding) return;
@@ -182,6 +326,8 @@ export default function ActiveSessionScreen() {
     setCancelProgress(0);
   };
 
+  const ringProgress = Math.min(elapsed / PR_DURATION_DEFAULT, 1);
+
   return (
     <View style={styles.container}>
       {/* Sonar rings */}
@@ -192,24 +338,71 @@ export default function ActiveSessionScreen() {
       </View>
 
       <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.content}
-        >
-          {/* Timer */}
+        <View style={styles.content}>
+          {/* Timer with progress ring */}
           <Animated.View style={[styles.timerContainer, timerStyle]}>
-            <Text style={styles.timer}>{formatTime(elapsed)}</Text>
-            {elapsed >= 3600 && (
-              <Text style={styles.overstayWarning}>
-                {elapsed >= 7200 ? '🆘 2+ HOURS' : '⚠️ 60+ MINUTES'}
-              </Text>
-            )}
+            <View style={styles.ringWrapper}>
+              <ProgressRing progress={ringProgress} />
+              <View style={styles.timerInner}>
+                <Text style={styles.timer}>{formatTime(elapsed)}</Text>
+                {elapsed >= 3600 && (
+                  <Text style={styles.overstayWarning}>
+                    {elapsed >= 7200 ? '2+ HOURS' : '60+ MINUTES'}
+                  </Text>
+                )}
+              </View>
+            </View>
           </Animated.View>
 
-          {/* Weight entry */}
-          <GlassCard style={styles.weightCard}>
-            <View style={styles.weightContent}>
-              <Text style={styles.weightTitle}>WEIGHT ENTRY</Text>
+          {/* End Session Button */}
+          <TouchableOpacity
+            onPress={openSheet}
+            disabled={isEnding}
+            style={styles.endBtn}
+          >
+            <GlassCard style={styles.endBtnCard} intensity={30}>
+              <View style={styles.endBtnContent}>
+                <Text style={styles.endBtnLabel}>END SESSION</Text>
+              </View>
+            </GlassCard>
+          </TouchableOpacity>
+
+          {/* Cancel (hold 2s) */}
+          <TouchableOpacity
+            onPressIn={handleCancelPressIn}
+            onPressOut={handleCancelPressOut}
+            style={styles.cancelBtn}
+          >
+            <Text style={styles.cancelBtnText}>
+              {cancelProgress > 0
+                ? `Hold to cancel... ${Math.round(cancelProgress * 100)}%`
+                : 'Hold 2s to cancel'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+
+      {/* Milestone banner */}
+      {activeMilestone && (
+        <MilestoneBanner
+          key={activeMilestone}
+          label={activeMilestone}
+          onDone={() => setActiveMilestone(null)}
+        />
+      )}
+
+      {/* Weight entry bottom sheet */}
+      {sheetVisible && (
+        <Animated.View style={[styles.sheetOverlay, sheetStyle]}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.sheetKAV}
+          >
+            <View style={styles.sheet}>
+              <View style={styles.sheetHandle} />
+              <Text style={styles.sheetTitle}>WEIGHT ENTRY</Text>
+              <Text style={styles.sheetSub}>Optional. Enter your weight before and after.</Text>
+
               <View style={styles.weightRow}>
                 <View style={styles.weightField}>
                   <Text style={styles.weightLabel}>BEFORE</Text>
@@ -241,38 +434,27 @@ export default function ActiveSessionScreen() {
                   </View>
                 </View>
               </View>
-            </View>
-          </GlassCard>
 
-          {/* End Session Button */}
-          <TouchableOpacity
-            onPress={handleEnd}
-            disabled={isEnding}
-            style={styles.endBtn}
-          >
-            <GlassCard style={styles.endBtnCard} intensity={30}>
-              <View style={styles.endBtnContent}>
-                <Text style={styles.endBtnLabel}>
-                  {isEnding ? 'SAVING...' : 'END SESSION'}
+              {weightDelta !== null && (
+                <Text style={styles.weightDelta}>
+                  {weightDelta >= 0 ? '+' : ''}{weightDelta.toFixed(2)} lbs
                 </Text>
-              </View>
-            </GlassCard>
-          </TouchableOpacity>
+              )}
 
-          {/* Cancel (hold 2s) */}
-          <TouchableOpacity
-            onPressIn={handleCancelPressIn}
-            onPressOut={handleCancelPressOut}
-            style={styles.cancelBtn}
-          >
-            <Text style={styles.cancelBtnText}>
-              {cancelProgress > 0
-                ? `Hold to cancel... ${Math.round(cancelProgress * 100)}%`
-                : 'Hold 2s to cancel'}
-            </Text>
-          </TouchableOpacity>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
+              <GoldButton
+                label={isEnding ? 'SAVING...' : 'CONFIRM & END'}
+                onPress={handleEnd}
+                disabled={isEnding}
+                style={styles.confirmBtn}
+              />
+
+              <TouchableOpacity onPress={closeSheet} style={styles.cancelSheetBtn}>
+                <Text style={styles.cancelSheetText}>Keep going</Text>
+              </TouchableOpacity>
+            </View>
+          </KeyboardAvoidingView>
+        </Animated.View>
+      )}
     </View>
   );
 }
@@ -314,11 +496,20 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
+  },
+  ringWrapper: {
+    width: RING_SIZE,
+    height: RING_SIZE,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  timerInner: {
+    alignItems: 'center',
+    gap: 8,
   },
   timer: {
     ...Type.mono,
-    fontSize: 80,
+    fontSize: 64,
     fontWeight: '700',
     color: Colors.text1,
     letterSpacing: -2,
@@ -328,16 +519,84 @@ const styles = StyleSheet.create({
     color: Colors.red,
     fontSize: 12,
   },
-  weightCard: {
-    marginBottom: 16,
+  endBtn: {
+    marginBottom: 8,
   },
-  weightContent: {
-    padding: 16,
-    gap: 12,
+  endBtnCard: {
+    borderColor: Colors.glassBorderHi,
   },
-  weightTitle: {
+  endBtnContent: {
+    paddingVertical: 18,
+    alignItems: 'center',
+  },
+  endBtnLabel: {
     ...Type.label,
+    color: Colors.text1,
+    fontSize: 15,
+    letterSpacing: 2,
+  },
+  cancelBtn: {
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  cancelBtnText: {
+    ...Type.caption,
     color: Colors.text3,
+  },
+  milestoneBanner: {
+    position: 'absolute',
+    top: '45%',
+    alignSelf: 'center',
+    backgroundColor: Colors.goldDim,
+    borderWidth: 1,
+    borderColor: Colors.gold,
+    borderRadius: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  milestoneText: {
+    ...Type.label,
+    color: Colors.gold,
+    fontSize: 13,
+    letterSpacing: 2,
+  },
+  sheetOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    borderTopWidth: 1,
+    borderColor: Colors.glassBorder,
+  },
+  sheetKAV: {
+    flex: 0,
+  },
+  sheet: {
+    padding: 24,
+    paddingBottom: 40,
+    gap: 16,
+  },
+  sheetHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.glassBorderHi,
+    alignSelf: 'center',
+    marginBottom: 8,
+  },
+  sheetTitle: {
+    ...Type.label,
+    color: Colors.text1,
+    fontSize: 15,
+    letterSpacing: 2,
+  },
+  sheetSub: {
+    ...Type.caption,
+    color: Colors.text3,
+    marginTop: -8,
   },
   weightRow: {
     flexDirection: 'row',
@@ -378,27 +637,21 @@ const styles = StyleSheet.create({
     color: Colors.text3,
     fontSize: 18,
   },
-  endBtn: {
-    marginBottom: 8,
+  weightDelta: {
+    ...Type.mono,
+    fontSize: 28,
+    fontWeight: '700',
+    color: Colors.gold,
+    textAlign: 'center',
   },
-  endBtnCard: {
-    borderColor: Colors.glassBorderHi,
+  confirmBtn: {
+    marginTop: 4,
   },
-  endBtnContent: {
-    paddingVertical: 18,
+  cancelSheetBtn: {
     alignItems: 'center',
+    paddingVertical: 4,
   },
-  endBtnLabel: {
-    ...Type.label,
-    color: Colors.text1,
-    fontSize: 15,
-    letterSpacing: 2,
-  },
-  cancelBtn: {
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  cancelBtnText: {
+  cancelSheetText: {
     ...Type.caption,
     color: Colors.text3,
   },

@@ -9,9 +9,9 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
+import { PressScale } from '../../components/ui/PressScale';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -164,10 +164,7 @@ export default function HomeScreen() {
 
           {/* START SESSION Button */}
           <Animated.View style={[styles.startButtonWrapper, pulseStyle]}>
-            <TouchableOpacity
-              onPress={() => router.push('/session/active')}
-              activeOpacity={0.9}
-            >
+            <PressScale onPress={() => router.push('/session/pre')}>
               <LinearGradient
                 colors={['#C49A20', '#F0CE60']}
                 start={{ x: 0, y: 0 }}
@@ -184,7 +181,7 @@ export default function HomeScreen() {
                   </View>
                 </View>
               </LinearGradient>
-            </TouchableOpacity>
+            </PressScale>
           </Animated.View>
 
           {/* Stats Row */}
@@ -238,6 +235,13 @@ export default function HomeScreen() {
                 </View>
               </View>
             </GlassCard>
+          )}
+
+          {todayStats.sessionCount === 0 && !lastSession && (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyTitle}>Your throne awaits.</Text>
+              <Text style={styles.emptySub}>Tap BEGIN SESSION to start your first session.</Text>
+            </View>
           )}
 
           <View style={styles.bottomPad} />
@@ -371,5 +375,22 @@ const styles = StyleSheet.create({
   },
   bottomPad: {
     height: 100,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 32,
+    gap: 8,
+  },
+  emptyTitle: {
+    ...Type.display,
+    fontSize: 20,
+    color: Colors.text2,
+    textAlign: 'center',
+  },
+  emptySub: {
+    ...Type.body,
+    color: Colors.text3,
+    textAlign: 'center',
+    fontSize: 13,
   },
 });

@@ -387,9 +387,8 @@ export default function SocialScreen() {
           >
             {filteredFeed.length === 0 ? (
               <View style={styles.empty}>
-                <Text style={styles.emptyIcon}>👑</Text>
-                <Text style={styles.emptyTitle}>No activity yet.</Text>
-                <Text style={styles.emptyBody}>Add friends to see their sessions here.</Text>
+                <Text style={styles.emptyTitle}>No friends yet.</Text>
+                <Text style={styles.emptyBody}>Add friends to see who reigns supreme. Bobby will be last.</Text>
               </View>
             ) : (
               filteredFeed.map((item) => <FeedItemCard key={item.id} item={item} />)

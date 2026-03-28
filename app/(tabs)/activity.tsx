@@ -181,24 +181,31 @@ export default function ActivityScreen() {
 
         {/* Session Log */}
         <Text style={styles.logTitle}>DUMP LOG</Text>
-        {sessions.map((s) => (
-          <GlassCard key={s.id} style={styles.logItem}>
-            <View style={styles.logContent}>
-              <View style={styles.logLeft}>
-                <Text style={styles.logDate}>{formatDate(s.started_at)}</Text>
-                <Text style={styles.logTime}>{formatTime(s.started_at)}</Text>
+        {sessions.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyTitle}>No sessions recorded yet.</Text>
+            <Text style={styles.emptySub}>Champions start somewhere.</Text>
+          </View>
+        ) : (
+          sessions.map((s) => (
+            <GlassCard key={s.id} style={styles.logItem}>
+              <View style={styles.logContent}>
+                <View style={styles.logLeft}>
+                  <Text style={styles.logDate}>{formatDate(s.started_at)}</Text>
+                  <Text style={styles.logTime}>{formatTime(s.started_at)}</Text>
+                </View>
+                <View style={styles.logRight}>
+                  {s.duration_seconds != null && (
+                    <Text style={styles.logDuration}>{formatDuration(s.duration_seconds)}</Text>
+                  )}
+                  {s.weight_delta_lbs != null && s.weight_delta_lbs > 0 && (
+                    <Text style={styles.logWeight}>{s.weight_delta_lbs.toFixed(2)} lbs</Text>
+                  )}
+                </View>
               </View>
-              <View style={styles.logRight}>
-                {s.duration_seconds != null && (
-                  <Text style={styles.logDuration}>{formatDuration(s.duration_seconds)}</Text>
-                )}
-                {s.weight_delta_lbs != null && s.weight_delta_lbs > 0 && (
-                  <Text style={styles.logWeight}>{s.weight_delta_lbs.toFixed(2)} lbs</Text>
-                )}
-              </View>
-            </View>
-          </GlassCard>
-        ))}
+            </GlassCard>
+          ))
+        )}
 
         <View style={styles.bottomPad} />
       </ScrollView>
@@ -300,5 +307,22 @@ const styles = StyleSheet.create({
   },
   bottomPad: {
     height: 100,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 32,
+    gap: 8,
+  },
+  emptyTitle: {
+    ...Type.display,
+    fontSize: 20,
+    color: Colors.text2,
+    textAlign: 'center',
+  },
+  emptySub: {
+    ...Type.body,
+    color: Colors.text3,
+    textAlign: 'center',
+    fontSize: 13,
   },
 });

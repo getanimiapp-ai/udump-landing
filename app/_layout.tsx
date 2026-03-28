@@ -99,6 +99,7 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: Colors.base } }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="session/pre" options={{ presentation: 'fullScreenModal' }} />
         <Stack.Screen name="session/active" options={{ presentation: 'fullScreenModal' }} />
         <Stack.Screen name="session/results" options={{ presentation: 'fullScreenModal' }} />
         <Stack.Screen name="profile/index" />

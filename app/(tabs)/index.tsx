@@ -12,6 +12,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { PressScale } from '../../components/ui/PressScale';
@@ -184,10 +185,19 @@ export default function HomeScreen() {
           }
           showsVerticalScrollIndicator={false}
         >
-          {/* Greeting + Rank */}
+          {/* Greeting + Bell */}
           <FadeInView delay={0} slideFrom="bottom" slideDistance={15}>
             <View style={styles.greeting}>
-              <Text style={styles.greetingLabel}>{getGreeting()}</Text>
+              <View style={styles.greetingTopRow}>
+                <Text style={styles.greetingLabel}>{getGreeting()}</Text>
+                <TouchableOpacity
+                  onPress={() => { Haptics.selectionAsync(); router.push('/notifications'); }}
+                  style={styles.bellBtn}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons name="notifications-outline" size={22} color={Colors.gold} />
+                </TouchableOpacity>
+              </View>
               <View style={styles.nameRow}>
                 <Text style={styles.greetingName}>{displayProfile?.display_name ?? 'Friend'}.</Text>
                 <Animated.View style={crownStyle}>
@@ -360,6 +370,21 @@ const styles = StyleSheet.create({
   greeting: {
     gap: 4,
     paddingBottom: 4,
+  },
+  greetingTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  bellBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.glass2,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   greetingLabel: {
     ...Type.label,

@@ -1,4 +1,6 @@
 import { useSessionStore } from '@/lib/store/session.store';
+import { useUserStore } from '@/lib/store/user.store';
+import { notifyFriends } from '../../lib/utils/notifications';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -343,7 +345,9 @@ function CoachBubble({ message, onDone }: { message: string; onDone: () => void 
 export default function ActiveSessionScreen() {
   const router = useRouter();
   const { activeSession, startSession, endSession, cancelSession } = useSessionStore();
+  const { profile } = useUserStore();
   const [elapsed, setElapsed] = useState(0);
+  const hourNotifiedRef = useRef(false);
   const [weightBefore, setWeightBefore] = useState('');
   const [weightAfter, setWeightAfter] = useState('');
   const [isEnding, setIsEnding] = useState(false);
@@ -418,9 +422,15 @@ export default function ActiveSessionScreen() {
           setCoachMessage(msg);
         }
 
-        // Overstay haptics
+        // Overstay haptics + 1-hour friend notification
         if (next === 3600) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+          if (!hourNotifiedRef.current && profile?.id) {
+            hourNotifiedRef.current = true;
+            notifyFriends(profile.id, 'overstay_60', {
+              name: profile.display_name ?? profile.username ?? 'Someone',
+            });
+          }
         }
         if (next === 7200) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -433,6 +443,7 @@ export default function ActiveSessionScreen() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const timerStyle = useAnimatedStyle(() => ({

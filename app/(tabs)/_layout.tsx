@@ -50,7 +50,7 @@ function TabIcon({ iconOutline, iconFilled, label, focused }: TabIconProps) {
           color={focused ? Colors.gold : Colors.text3}
         />
       </Animated.View>
-      <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>{label}</Text>
+      <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]} numberOfLines={1}>{label}</Text>
       {focused && <View style={styles.activeDot} />}
     </View>
   );
@@ -83,7 +83,7 @@ export default function TabLayout() {
         name="index"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon iconOutline="crown-outline" iconFilled="crown" label="HOME" focused={focused} />
+            <TabIcon iconOutline="home-outline" iconFilled="home" label="HOME" focused={focused} />
           ),
         }}
       />
@@ -107,7 +107,7 @@ export default function TabLayout() {
         name="thrones"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon iconOutline="location-outline" iconFilled="location" label="THRONES" focused={focused} />
+            <TabIcon iconOutline="location-outline" iconFilled="location" label="THRONE" focused={focused} />
           ),
         }}
       />

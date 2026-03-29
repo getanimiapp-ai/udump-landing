@@ -344,7 +344,7 @@ export default function ActiveSessionScreen() {
             <View style={styles.ringWrapper}>
               <ProgressRing progress={ringProgress} />
               <View style={styles.timerInner}>
-                <Text style={styles.timer}>{formatTime(elapsed)}</Text>
+                <Text style={styles.timer} numberOfLines={1} adjustsFontSizeToFit>{formatTime(elapsed)}</Text>
                 {elapsed >= 3600 && (
                   <Text style={styles.overstayWarning}>
                     {elapsed >= 7200 ? '2+ HOURS' : '60+ MINUTES'}
@@ -372,11 +372,20 @@ export default function ActiveSessionScreen() {
             onPressIn={handleCancelPressIn}
             onPressOut={handleCancelPressOut}
             style={styles.cancelBtn}
+            activeOpacity={0.7}
           >
+            <View style={styles.cancelProgressTrack}>
+              <View
+                style={[
+                  styles.cancelProgressFill,
+                  { width: `${Math.round(cancelProgress * 100)}%` },
+                ]}
+              />
+            </View>
             <Text style={styles.cancelBtnText}>
               {cancelProgress > 0
-                ? `Hold to cancel... ${Math.round(cancelProgress * 100)}%`
-                : 'Hold 2s to cancel'}
+                ? `CANCELLING... ${Math.round(cancelProgress * 100)}%`
+                : 'HOLD 2S TO CANCEL'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -467,9 +476,8 @@ const styles = StyleSheet.create({
   sonarContainer: {
     position: 'absolute',
     top: '35%',
-    left: '50%',
-    width: 0,
-    height: 0,
+    left: 0,
+    right: 0,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -480,8 +488,6 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     borderWidth: 1,
     borderColor: 'rgba(212,175,55,0.15)',
-    marginLeft: -100,
-    marginTop: -100,
   },
   safeArea: {
     flex: 1,
@@ -505,13 +511,17 @@ const styles = StyleSheet.create({
   },
   timerInner: {
     alignItems: 'center',
+    justifyContent: 'center',
+    width: RING_SIZE - RING_STROKE * 4,
     gap: 8,
   },
   timer: {
     fontFamily: Fonts.monoFamily,
-    fontSize: 72,
+    fontSize: 56,
     color: Colors.text1,
     letterSpacing: 2,
+    textAlign: 'center',
+    width: '100%',
   },
   overstayWarning: {
     ...Type.label,
@@ -536,11 +546,33 @@ const styles = StyleSheet.create({
   },
   cancelBtn: {
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    marginHorizontal: 40,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+    backgroundColor: Colors.glass1,
+    overflow: 'hidden',
+    gap: 8,
+  },
+  cancelProgressTrack: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
+  },
+  cancelProgressFill: {
+    height: '100%',
+    backgroundColor: 'rgba(212,175,55,0.12)',
   },
   cancelBtnText: {
-    ...Type.caption,
+    ...Type.label,
     color: Colors.text3,
+    fontSize: 10,
+    letterSpacing: 1.5,
   },
   milestoneBanner: {
     position: 'absolute',

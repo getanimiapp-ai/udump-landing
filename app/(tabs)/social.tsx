@@ -368,6 +368,7 @@ export default function SocialScreen() {
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.filters}
+            style={styles.filtersScroll}
           >
             {FEED_FILTERS.map((f) => (
               <TouchableOpacity
@@ -485,18 +486,25 @@ const styles = StyleSheet.create({
   mainTabLabelActive: {
     color: Colors.gold,
   },
+  filtersScroll: {
+    flexGrow: 0,
+  },
   filters: {
+    flexDirection: 'row',
     paddingHorizontal: 20,
     paddingVertical: 10,
     gap: 8,
+    alignItems: 'center',
   },
   filterChip: {
+    height: 32,
     paddingHorizontal: 16,
-    paddingVertical: 7,
-    borderRadius: 20,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: Colors.glassBorder,
     backgroundColor: Colors.glass1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   filterChipActive: {
     borderColor: Colors.gold,

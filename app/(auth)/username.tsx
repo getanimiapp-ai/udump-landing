@@ -43,11 +43,12 @@ export default function UsernameScreen() {
       return;
     }
 
-    // Check availability
+    // Check availability (exclude own profile)
     const { data: existing } = await supabase
       .from('profiles')
       .select('id')
       .eq('username', trimmed)
+      .neq('id', user.id)
       .single();
 
     if (existing) {
@@ -56,12 +57,15 @@ export default function UsernameScreen() {
       return;
     }
 
-    // Create profile
-    const { error } = await supabase.from('profiles').upsert({
-      id: user.id,
-      username: trimmed,
-      display_name: user.user_metadata.display_name ?? trimmed,
-    });
+    // Update profile (trigger may have auto-created it on signup)
+    const { error } = await supabase.from('profiles').upsert(
+      {
+        id: user.id,
+        username: trimmed,
+        display_name: user.user_metadata.display_name ?? trimmed,
+      },
+      { onConflict: 'id' }
+    );
 
     if (error) {
       Alert.alert('Error', 'Failed to save username. Try again.');

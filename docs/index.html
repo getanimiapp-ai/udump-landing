@@ -573,16 +573,16 @@ nav {
 
 /* FOUNDERS */
 .founders-sec { padding: 60px 60px; background: var(--base); }
-.founders-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; max-width: 820px; margin-top: 36px; }
-.founder-card {
-  background: var(--g1); border: 1px solid var(--gb); border-radius: 20px; padding: 22px;
-  display: flex; align-items: center; gap: 16px;
-  transition: all .3s; position: relative; overflow: hidden;
+.founders-layout {
+  display: flex; align-items: center; gap: 40px; max-width: 820px; margin-top: 36px;
 }
-.founder-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.09), transparent); }
-.founder-card:hover { background: var(--g2); border-color: rgba(212,175,55,.18); }
-.founder-av { width: 56px; height: 56px; border-radius: 50%; overflow: hidden; border: 2px solid var(--gb2); flex-shrink: 0; }
-.founder-av svg { width: 100%; height: 100%; }
+.founders-photo {
+  width: 400px; flex-shrink: 0; border-radius: 20px; overflow: hidden;
+  border: 1px solid var(--gb);
+}
+.founders-photo img { width: 100%; height: auto; display: block; }
+.founders-list { display: flex; flex-direction: column; gap: 20px; }
+.founder-item { position: relative; }
 .founder-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 22px; letter-spacing: .01em; }
 .founder-title { font-size: 12px; color: var(--t3); margin-top: 3px; }
 .founder-badge {
@@ -590,6 +590,10 @@ nav {
   font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
   background: rgba(212,175,55,.12); color: var(--gold);
   border: 1px solid rgba(212,175,55,.2);
+}
+@media (max-width: 768px) {
+  .founders-layout { flex-direction: column; }
+  .founders-photo { width: 100%; max-width: 400px; }
 }
 
 /* ORIGIN */
@@ -1474,55 +1478,24 @@ footer {
   <div class="sec-eyebrow">The Team</div>
   <div class="sec-h2" style="margin-bottom:8px;">Built from<br><em>nothing.</em></div>
   <p style="font-size:16px;font-weight:300;color:var(--t2);margin-bottom:0;max-width:620px;">Three guys. No funding. No AI. No help from anyone. They struggled. It was hard. They built the whole thing from the ground up anyway — before the tools existed to make it easy — and they have absolutely zero interest in hearing that it couldn't be done.</p>
-  <div class="founders-grid">
-
-    <div class="founder-card">
-      <div class="founder-av">
-        <svg viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
-          <rect width="56" height="56" fill="#0E1820"/>
-          <circle cx="28" cy="22" r="12" fill="#1A3040"/>
-          <ellipse cx="28" cy="52" rx="20" ry="13" fill="#1A3040"/>
-          <circle cx="28" cy="22" r="9" fill="#2A5060"/>
-          <ellipse cx="28" cy="52" rx="16" ry="10" fill="#2A5060"/>
-        </svg>
-      </div>
-      <div>
+  <div class="founders-layout">
+    <div class="founders-photo">
+      <img src="founders.png" alt="Aaron, Shelden, and Bobby — the U-DUMP founding team" />
+    </div>
+    <div class="founders-list">
+      <div class="founder-item">
         <div class="founder-name">Aaron</div>
         <div class="founder-title">Co-Founder &amp; CEO</div>
         <div class="founder-badge">Since 2016</div>
       </div>
-    </div>
-
-    <div class="founder-card">
-      <div class="founder-av">
-        <svg viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
-          <rect width="56" height="56" fill="#100E18"/>
-          <circle cx="28" cy="22" r="12" fill="#20183A"/>
-          <ellipse cx="28" cy="52" rx="20" ry="13" fill="#20183A"/>
-          <circle cx="28" cy="22" r="9" fill="#30286A"/>
-          <ellipse cx="28" cy="52" rx="16" ry="10" fill="#30286A"/>
-        </svg>
-      </div>
-      <div>
+      <div class="founder-item">
         <div class="founder-name">Shelden</div>
         <div class="founder-title">Co-Founder &amp; Chief Throne Officer</div>
         <div class="founder-badge">Since 2016</div>
       </div>
-    </div>
-
-    <div class="founder-card">
-      <div class="founder-av">
-        <svg viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
-          <rect width="56" height="56" fill="#0E180E"/>
-          <circle cx="28" cy="22" r="12" fill="#1A3020"/>
-          <ellipse cx="28" cy="52" rx="20" ry="13" fill="#1A3020"/>
-          <circle cx="28" cy="22" r="9" fill="#2A5030"/>
-          <ellipse cx="28" cy="52" rx="16" ry="10" fill="#2A5030"/>
-        </svg>
-      </div>
-      <div>
-        <div class="founder-name">Nick</div>
-        <div class="founder-title">Co-Founder · Lead Developer · Actually Built The Whole Thing</div>
+      <div class="founder-item">
+        <div class="founder-name">Bobby</div>
+        <div class="founder-title">Co-Founder &amp; VP of Excuses</div>
         <div class="founder-badge">Equity: Pending Review</div>
       </div>
     </div>
@@ -1626,7 +1599,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 // ── RENDERER ──
 const canvas = document.getElementById('c');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -1702,7 +1675,7 @@ scene.environment = envMap;
 // ── WAYPOINTS ──
 // Hero: camera above and in front, looking down at the toilet
 const W = {
-  hero:  { p: new THREE.Vector3(0,    1.8,  2.8), l: new THREE.Vector3(0, 0.0, 0) },
+  hero:  { p: new THREE.Vector3(0,    0.6,  1.2), l: new THREE.Vector3(0, 0.3, 0) },
   // Orbit: dramatic 360° sweep around the toilet
   prod1: { p: new THREE.Vector3(3.5,  0.8,  2.5), l: new THREE.Vector3(0, 0.4, 0) },  // front-right, eye level
   prod2: { p: new THREE.Vector3(4.0,  1.2, -1.5), l: new THREE.Vector3(0, 0.5, 0) },  // side-right, looking across
@@ -1728,7 +1701,7 @@ loader.load('./golden_toilet.glb', (gltf) => {
   const box = new THREE.Box3().setFromObject(model);
   const center = box.getCenter(new THREE.Vector3());
   const size = box.getSize(new THREE.Vector3());
-  const s = 2.0 / Math.max(size.x, size.y, size.z);
+  const s = 3.5 / Math.max(size.x, size.y, size.z);
   model.scale.setScalar(s);
   model.position.set(-center.x * s, -box.min.y * s, -center.z * s);
 

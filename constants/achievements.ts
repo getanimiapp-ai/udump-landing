@@ -203,4 +203,24 @@ export const NOTIFICATION_COPY = {
     title: (days: number) => `STREAK: ${days} DAYS`,
     body: () => 'Consistency is the foundation of greatness.',
   },
+  challenger_nearby: {
+    title: 'CHALLENGER APPROACHING',
+    body: (name: string, location: string) =>
+      `${name} is active near ${location}. Your territory is at risk. Defend the throne.`,
+  },
+  throne_under_attack: {
+    title: 'YOUR THRONE IS UNDER ATTACK',
+    body: (attacker: string, throne: string) =>
+      `${attacker} is attempting to claim ${throne}. Their session is LIVE. Get to the throne NOW.`,
+  },
+  territory_invaded: {
+    title: 'TERRITORY INVADED',
+    body: (invader: string, zone: string) =>
+      `${invader} has entered ${zone} and started a session. This is an act of war.`,
+  },
+  revenge_available: {
+    title: 'REVENGE OPPORTUNITY',
+    body: (rival: string, throne: string) =>
+      `${rival} who took ${throne} from you is nearby. This is your chance. Reclaim what is yours.`,
+  },
 } as const;

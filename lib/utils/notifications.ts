@@ -48,7 +48,11 @@ export type NotificationType =
   | 'overstay_60'
   | 'overstay_120'
   | 'friend_active'
-  | 'streak_milestone';
+  | 'streak_milestone'
+  | 'challenger_nearby'
+  | 'throne_under_attack'
+  | 'territory_invaded'
+  | 'revenge_available';
 
 interface NotificationContent {
   title: string;
@@ -114,6 +118,38 @@ function buildContent(
       return {
         title: NOTIFICATION_COPY.streak_milestone.title(days),
         body: NOTIFICATION_COPY.streak_milestone.body(),
+      };
+    }
+    case 'challenger_nearby': {
+      const challenger = (payload.name as string) ?? 'Someone';
+      const location = (payload.location as string) ?? 'your area';
+      return {
+        title: NOTIFICATION_COPY.challenger_nearby.title,
+        body: NOTIFICATION_COPY.challenger_nearby.body(challenger, location),
+      };
+    }
+    case 'throne_under_attack': {
+      const attacker = (payload.name as string) ?? 'Someone';
+      const throne = (payload.throne as string) ?? 'your throne';
+      return {
+        title: NOTIFICATION_COPY.throne_under_attack.title,
+        body: NOTIFICATION_COPY.throne_under_attack.body(attacker, throne),
+      };
+    }
+    case 'territory_invaded': {
+      const invader = (payload.name as string) ?? 'Someone';
+      const zone = (payload.zone as string) ?? 'your territory';
+      return {
+        title: NOTIFICATION_COPY.territory_invaded.title,
+        body: NOTIFICATION_COPY.territory_invaded.body(invader, zone),
+      };
+    }
+    case 'revenge_available': {
+      const rival = (payload.name as string) ?? 'Someone';
+      const throne = (payload.throne as string) ?? 'a throne';
+      return {
+        title: NOTIFICATION_COPY.revenge_available.title,
+        body: NOTIFICATION_COPY.revenge_available.body(rival, throne),
       };
     }
     default:

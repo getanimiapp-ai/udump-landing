@@ -57,6 +57,12 @@ export default function RootLayout() {
           case 'streak_milestone':
             router.push('/profile/achievements');
             break;
+          case 'challenger_nearby':
+          case 'throne_under_attack':
+          case 'territory_invaded':
+          case 'revenge_available':
+            router.push('/(tabs)/thrones');
+            break;
           default:
             break;
         }

@@ -1,5 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { MOCK_ENABLED, MOCK_ACHIEVEMENTS } from '../../lib/mock-data';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { formatDistanceToNow } from 'date-fns';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -11,10 +13,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { AnimatedNumber } from '../../components/ui/AnimatedNumber';
+import { FadeInView } from '../../components/ui/FadeInView';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { ACHIEVEMENTS, AchievementTier } from '../../constants/achievements';
 import { Colors, TIER_COLORS } from '../../constants/colors';
-import { Type } from '../../constants/typography';
+import { Fonts, Type } from '../../constants/typography';
 
 type TierFilter = 'all' | AchievementTier;
 
@@ -70,17 +74,50 @@ export default function AchievementsScreen() {
     return u?.unlocked_at;
   };
 
+  const totalXP = unlocked.length * 50; // 50 XP per achievement
+  const bronzeCount = ACHIEVEMENTS.filter((a) => a.tier === 'bronze' && unlockedKeys.has(a.key)).length;
+  const silverCount = ACHIEVEMENTS.filter((a) => a.tier === 'silver' && unlockedKeys.has(a.key)).length;
+  const goldCount = ACHIEVEMENTS.filter((a) => a.tier === 'gold' && unlockedKeys.has(a.key)).length;
+  const platCount = ACHIEVEMENTS.filter((a) => a.tier === 'platinum' && unlockedKeys.has(a.key)).length;
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backText}>← Back</Text>
+          <Ionicons name="chevron-back" size={20} color={Colors.gold} />
+          <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Achievements</Text>
-        <Text style={styles.subtitle}>
-          {unlockedKeys.size} / {ACHIEVEMENTS.length} unlocked
-        </Text>
+        <View style={styles.headerStats}>
+          <View style={styles.headerStatBadge}>
+            <Ionicons name="flash" size={12} color={Colors.gold} />
+            <AnimatedNumber value={totalXP} style={styles.headerStatValue} suffix=" XP" />
+          </View>
+          <Text style={styles.subtitle}>
+            {unlockedKeys.size} / {ACHIEVEMENTS.length} unlocked
+          </Text>
+        </View>
       </View>
+
+      {/* Tier Progress */}
+      <FadeInView delay={0}>
+        <View style={styles.tierProgress}>
+          {[
+            { label: 'BRONZE', count: bronzeCount, total: ACHIEVEMENTS.filter((a) => a.tier === 'bronze').length, color: '#CD7F32' },
+            { label: 'SILVER', count: silverCount, total: ACHIEVEMENTS.filter((a) => a.tier === 'silver').length, color: '#C0C0C0' },
+            { label: 'GOLD', count: goldCount, total: ACHIEVEMENTS.filter((a) => a.tier === 'gold').length, color: Colors.gold },
+            { label: 'PLAT', count: platCount, total: ACHIEVEMENTS.filter((a) => a.tier === 'platinum').length, color: '#64B4FF' },
+          ].map((tier) => (
+            <View key={tier.label} style={styles.tierItem}>
+              <Text style={[styles.tierCount, { color: tier.color }]}>{tier.count}/{tier.total}</Text>
+              <View style={styles.tierTrack}>
+                <View style={[styles.tierFill, { width: `${tier.total > 0 ? (tier.count / tier.total) * 100 : 0}%`, backgroundColor: tier.color }]} />
+              </View>
+              <Text style={[styles.tierLabel, { color: tier.color }]}>{tier.label}</Text>
+            </View>
+          ))}
+        </View>
+      </FadeInView>
 
       {/* Recently Unlocked */}
       {unlocked.length > 0 && (
@@ -120,7 +157,7 @@ export default function AchievementsScreen() {
         {TIER_FILTERS.map((f) => (
           <TouchableOpacity
             key={f.key}
-            onPress={() => setFilter(f.key)}
+            onPress={() => { Haptics.selectionAsync(); setFilter(f.key); }}
             style={[styles.filterChip, filter === f.key && styles.filterChipActive]}
           >
             <Text style={[styles.filterLabel, filter === f.key && styles.filterLabelActive]}>
@@ -131,15 +168,15 @@ export default function AchievementsScreen() {
       </ScrollView>
 
       <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
-        {filteredAchievements.map((achievement) => {
+        {filteredAchievements.map((achievement, i) => {
           const isUnlocked = unlockedKeys.has(achievement.key);
           const unlockDate = getUnlockDate(achievement.key);
           const tierColors = TIER_COLORS[achievement.tier];
           const isSecret = achievement.secret && !isUnlocked;
 
           return (
+            <FadeInView key={achievement.key} delay={i * 50} slideDistance={12}>
             <GlassCard
-              key={achievement.key}
               style={[
                 styles.achievementCard,
                 isUnlocked && { borderColor: tierColors.border, backgroundColor: tierColors.bg },
@@ -170,6 +207,7 @@ export default function AchievementsScreen() {
                 </View>
               </View>
             </GlassCard>
+            </FadeInView>
           );
         })}
         <View style={styles.bottomPad} />
@@ -190,12 +228,67 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     paddingVertical: 4,
     marginBottom: 8,
   },
   backText: {
     ...Type.body,
     color: Colors.gold,
+  },
+  headerStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerStatBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.goldDim,
+    borderWidth: 1,
+    borderColor: Colors.gold,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  headerStatValue: {
+    fontFamily: Fonts.monoMediumFamily,
+    fontSize: 12,
+    color: Colors.gold,
+  },
+  tierProgress: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingBottom: 14,
+    gap: 8,
+  },
+  tierItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+  },
+  tierCount: {
+    fontFamily: Fonts.monoMediumFamily,
+    fontSize: 12,
+  },
+  tierTrack: {
+    height: 4,
+    width: '100%',
+    backgroundColor: Colors.glass2,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  tierFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  tierLabel: {
+    fontFamily: Fonts.bodySemiBoldFamily,
+    fontSize: 8,
+    letterSpacing: 1,
   },
   title: {
     ...Type.display,

@@ -1605,7 +1605,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.6;
+renderer.toneMappingExposure = 2.8;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setClearColor(0x06060A, 1);
@@ -1621,62 +1621,71 @@ camera.lookAt(0, 0.5, 0);
 
 // ── LIGHTS (GOLD LUXURY — EVEN DISTRIBUTION, NO HOTSPOTS) ──
 // High ambient so nothing is ever dark
-const ambient = new THREE.AmbientLight(0xffffff, 1.8);
+const ambient = new THREE.AmbientLight(0xffffff, 3.0);
 scene.add(ambient);
 
-// Hemisphere light for natural sky/ground fill
-const hemi = new THREE.HemisphereLight(0xF0CE60, 0x1a1a22, 1.5);
+// Hemisphere: warm gold sky, cool ground — lifts everything
+const hemi = new THREE.HemisphereLight(0xF0CE60, 0x3a3a42, 2.5);
 scene.add(hemi);
 
-// White key from above-front-right
-const keyLight = new THREE.DirectionalLight(0xffffff, 3.0);
+// Strong white key from above-front-right
+const keyLight = new THREE.DirectionalLight(0xffffff, 5.0);
 keyLight.position.set(3, 6, 4);
 keyLight.castShadow = true;
 keyLight.shadow.mapSize.setScalar(2048);
 scene.add(keyLight);
 
 // Gold key from front-left
-const goldKey = new THREE.DirectionalLight(0xD4AF37, 3.0);
+const goldKey = new THREE.DirectionalLight(0xF0CE60, 5.0);
 goldKey.position.set(-4, 3, 4);
 scene.add(goldKey);
 
 // Gold key from front-right
-const goldKey2 = new THREE.DirectionalLight(0xF0CE60, 2.5);
+const goldKey2 = new THREE.DirectionalLight(0xF0CE60, 4.0);
 goldKey2.position.set(4, 2, 3);
 scene.add(goldKey2);
 
 // Gold rim from behind for edge glow
-const goldRim = new THREE.DirectionalLight(0xF0CE60, 2.0);
-goldRim.position.set(0, 2, -4);
+const goldRim = new THREE.DirectionalLight(0xF0CE60, 3.0);
+goldRim.position.set(0, 3, -4);
 scene.add(goldRim);
 
-// Warm fill from below — lift the underside
-const warmFill = new THREE.DirectionalLight(0xFFE0B2, 1.5);
-warmFill.position.set(0, -3, 1);
+// Warm fill from below — no dark underside
+const warmFill = new THREE.DirectionalLight(0xFFE0B2, 3.0);
+warmFill.position.set(0, -3, 2);
 scene.add(warmFill);
+
+// Extra front fill — directly at the camera angle
+const frontFill = new THREE.DirectionalLight(0xFFF0D0, 3.0);
+frontFill.position.set(0, 1.5, 5);
+scene.add(frontFill);
 
 // ── ENVIRONMENT MAP FOR REFLECTIONS ──
 const pmremGenerator = new THREE.PMREMGenerator(renderer);
 const envScene = new THREE.Scene();
-const envLight1 = new THREE.DirectionalLight(0xD4AF37, 8);
+// Bright env map = mirror-like gold reflections
+const envLight1 = new THREE.DirectionalLight(0xF0CE60, 20);
 envLight1.position.set(1, 1, 1);
 envScene.add(envLight1);
-const envLight2 = new THREE.DirectionalLight(0xFFFFFF, 5);
+const envLight2 = new THREE.DirectionalLight(0xFFFFFF, 15);
 envLight2.position.set(-1, 0.5, -1);
 envScene.add(envLight2);
-const envLight3 = new THREE.DirectionalLight(0xF0CE60, 6);
+const envLight3 = new THREE.DirectionalLight(0xF0CE60, 18);
 envLight3.position.set(0, -1, 0.5);
 envScene.add(envLight3);
-const envLight4 = new THREE.DirectionalLight(0xFFE0B2, 4);
+const envLight4 = new THREE.DirectionalLight(0xFFE0B2, 12);
 envLight4.position.set(0.5, 1, -0.5);
 envScene.add(envLight4);
+const envLight5 = new THREE.DirectionalLight(0xFFFFFF, 15);
+envLight5.position.set(0, 1, 1);
+envScene.add(envLight5);
 const envMap = pmremGenerator.fromScene(envScene).texture;
 scene.environment = envMap;
 
 // ── WAYPOINTS ──
 // Hero: camera above and in front, looking down at the toilet
 const W = {
-  hero:  { p: new THREE.Vector3(0,    1.2,  3.8), l: new THREE.Vector3(0, 0.6, 0) },
+  hero:  { p: new THREE.Vector3(0,    2.8,  2.0), l: new THREE.Vector3(0, 0.3, 0) },
   // Orbit: dramatic 360° sweep around the toilet
   prod1: { p: new THREE.Vector3(3.5,  0.8,  2.5), l: new THREE.Vector3(0, 0.4, 0) },  // front-right, eye level
   prod2: { p: new THREE.Vector3(4.0,  1.2, -1.5), l: new THREE.Vector3(0, 0.5, 0) },  // side-right, looking across
@@ -1713,9 +1722,9 @@ loader.load('./golden_toilet.glb', (gltf) => {
       child.receiveShadow = true;
       if (child.material) {
         const mat = child.material;
-        mat.metalness = Math.max(mat.metalness || 0, 0.8);
-        mat.roughness = Math.min(mat.roughness !== undefined ? mat.roughness : 0.25, 0.25);
-        mat.envMapIntensity = 2.0;
+        mat.metalness = 1.0;
+        mat.roughness = 0.15;
+        mat.envMapIntensity = 3.5;
         mat.needsUpdate = true;
       }
     }

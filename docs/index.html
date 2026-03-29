@@ -1676,7 +1676,7 @@ scene.environment = envMap;
 // ── WAYPOINTS ──
 // Hero: camera above and in front, looking down at the toilet
 const W = {
-  hero:  { p: new THREE.Vector3(0,    2.2,  1.6), l: new THREE.Vector3(0, 0.0, 0) },
+  hero:  { p: new THREE.Vector3(0,    1.0,  2.2), l: new THREE.Vector3(0, 0.7, 0) },
   // Orbit: dramatic 360° sweep around the toilet
   prod1: { p: new THREE.Vector3(3.5,  0.8,  2.5), l: new THREE.Vector3(0, 0.4, 0) },  // front-right, eye level
   prod2: { p: new THREE.Vector3(4.0,  1.2, -1.5), l: new THREE.Vector3(0, 0.5, 0) },  // side-right, looking across
@@ -1702,7 +1702,7 @@ loader.load('./golden_toilet.glb', (gltf) => {
   const box = new THREE.Box3().setFromObject(model);
   const center = box.getCenter(new THREE.Vector3());
   const size = box.getSize(new THREE.Vector3());
-  const s = 3.0 / Math.max(size.x, size.y, size.z);
+  const s = 4.0 / Math.max(size.x, size.y, size.z);
   model.scale.setScalar(s);
   model.position.set(-center.x * s, -box.min.y * s, -center.z * s);
 

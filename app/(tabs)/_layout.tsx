@@ -32,20 +32,13 @@ function TabIcon({ iconOutline, iconFilled, label, focused }: TabIconProps) {
   useEffect(() => {
     if (focused && !prevFocused.current) {
       scale.value = withSequence(
-        withSpring(1.25, { damping: 6, stiffness: 250 }),
-        withSpring(1, { damping: 12, stiffness: 180 }),
+        withTiming(1.12, { duration: 100 }),
+        withTiming(1, { duration: 150 }),
       );
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     glowOpacity.value = focused
-      ? withRepeat(
-          withSequence(
-            withTiming(0.5, { duration: 1000 }),
-            withTiming(0.15, { duration: 1000 }),
-          ),
-          -1,
-          true,
-        )
+      ? withTiming(0.35, { duration: 300 })
       : withTiming(0, { duration: 300 });
     prevFocused.current = focused;
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -162,9 +155,11 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontFamily: Fonts.displaySemiBoldFamily,
     fontSize: 9,
-    letterSpacing: 1.5,
+    letterSpacing: 1,
     textTransform: 'uppercase',
     color: Colors.text3,
+    width: 50,
+    textAlign: 'center',
   },
   tabLabelFocused: {
     color: Colors.gold,

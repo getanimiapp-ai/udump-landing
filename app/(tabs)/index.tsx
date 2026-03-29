@@ -90,19 +90,12 @@ export default function HomeScreen() {
       -1,
       true
     );
-    glowScale.value = withRepeat(
-      withSequence(
-        withTiming(1.04, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
-        withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.ease) })
-      ),
-      -1,
-      true
-    );
+    glowScale.value = 1; // no scale pulse
     crownRotate.value = withRepeat(
       withSequence(
-        withTiming(-5, { duration: 800 }),
-        withTiming(5, { duration: 1600 }),
-        withTiming(0, { duration: 800 })
+        withTiming(-3, { duration: 1200 }),
+        withTiming(3, { duration: 2400 }),
+        withTiming(0, { duration: 1200 })
       ),
       -1,
       true

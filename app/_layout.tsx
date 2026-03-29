@@ -129,6 +129,7 @@ export default function RootLayout() {
         <Stack.Screen name="profile/index" />
         <Stack.Screen name="profile/achievements" />
         <Stack.Screen name="profile/analytics" />
+        <Stack.Screen name="profile/hall-of-stench" />
         <Stack.Screen name="+not-found" />
       </Stack>
     </>

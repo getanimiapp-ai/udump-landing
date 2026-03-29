@@ -34,9 +34,9 @@ export function FadeInView({
   useEffect(() => {
     opacity.value = withDelay(delay, withTiming(1, { duration }));
     if (slideFrom === 'bottom') {
-      translateY.value = withDelay(delay, withSpring(0, { damping: 14, stiffness: 120 }));
+      translateY.value = withDelay(delay, withTiming(0, { duration: duration * 0.8 }));
     } else if (slideFrom === 'left' || slideFrom === 'right') {
-      translateX.value = withDelay(delay, withSpring(0, { damping: 14, stiffness: 120 }));
+      translateX.value = withDelay(delay, withTiming(0, { duration: duration * 0.8 }));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

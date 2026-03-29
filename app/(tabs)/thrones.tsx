@@ -1,22 +1,37 @@
 import { supabase } from '@/lib/supabase';
 import { useUserStore } from '@/lib/store/user.store';
 import { MOCK_ENABLED, MOCK_PROFILE, MOCK_THRONES } from '../../lib/mock-data';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
+import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  Dimensions,
+  FlatList,
   SafeAreaView,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import MapView, { Marker, Region } from 'react-native-maps';
+import MapView, { Circle as MapCircle, Marker, Region } from 'react-native-maps';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import { FadeInView } from '../../components/ui/FadeInView';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { GoldButton } from '../../components/ui/GoldButton';
 import { Colors } from '../../constants/colors';
-import { Type } from '../../constants/typography';
+import { Fonts, Type } from '../../constants/typography';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CARD_WIDTH = SCREEN_WIDTH - 64;
+const CARD_GAP = 12;
+const TERRITORY_RADIUS_M = 50; // 50m geofence
 
 interface Throne {
   id: string;
@@ -36,15 +51,20 @@ const DARK_MAP_STYLE = [
   { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
   { elementType: 'labels.text.stroke', stylers: [{ color: '#06060a' }] },
   { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1a1a22' }] },
+  { featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'off' }] },
   { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#06060a' }] },
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
 ];
 
 export default function ThronesScreen() {
+  const router = useRouter();
   const { profile } = useUserStore();
   const mapRef = useRef<MapView>(null);
+  const flatListRef = useRef<FlatList>(null);
   const [thrones, setThrones] = useState<Throne[]>([]);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [selectedThrone, setSelectedThrone] = useState<Throne | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const [region, setRegion] = useState<Region>({
     latitude: 39.7684,
     longitude: -86.1581,
@@ -59,17 +79,30 @@ export default function ThronesScreen() {
       setThrones(MOCK_THRONES);
       return;
     }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Only show thrones from friends + own thrones
+    const { data: friendships } = await supabase
+      .from('friendships')
+      .select('friend_id')
+      .eq('user_id', user.id)
+      .eq('status', 'accepted');
+
+    const friendIds = [user.id, ...(friendships ?? []).map((f) => f.friend_id)];
+
     const { data } = await supabase
       .from('thrones')
       .select('*, profiles!thrones_current_king_id_fkey(username)')
+      .in('owner_user_id', friendIds)
       .not('lat', 'is', null);
 
     if (data) {
-      const enriched: Throne[] = data.map((t) => ({
+      setThrones(data.map((t) => ({
         ...t,
         kingUsername: (t.profiles as { username: string } | null)?.username,
-      }));
-      setThrones(enriched);
+      })));
     }
   }, []);
 
@@ -81,7 +114,6 @@ export default function ThronesScreen() {
   const requestLocation = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') return;
-
     const loc = await Location.getCurrentPositionAsync({});
     const { latitude, longitude } = loc.coords;
     setUserLocation({ lat: latitude, lng: longitude });
@@ -103,30 +135,201 @@ export default function ThronesScreen() {
 
   const canClaim = (throne: Throne): boolean => {
     if (!throne.lat || !throne.lng) return false;
-    return distanceTo(throne.lat, throne.lng) <= 50;
+    return distanceTo(throne.lat, throne.lng) <= TERRITORY_RADIUS_M;
   };
 
-  const handleClaim = async (throne: Throne) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
+  const handleClaim = (throne: Throne) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     Alert.alert(
       `Claim ${throne.name}?`,
-      `You're within range. Start a session here to claim this throne.`,
+      'You\'re within range. Start a session here to claim this throne and dethrone the current king.',
       [
         { text: 'Not now', style: 'cancel' },
         {
           text: 'Start Session',
+          onPress: () => router.push('/session/pre'),
+        },
+      ]
+    );
+  };
+
+  const handleChallenge = (throne: Throne) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Alert.alert(
+      `Challenge ${throne.kingUsername ?? 'the King'}?`,
+      `Send a challenge notification to the current ruler of ${throne.name}. They\'ll know you\'re coming.`,
+      [
+        { text: 'Nevermind', style: 'cancel' },
+        {
+          text: 'Send Challenge',
           onPress: () => {
-            setSelectedThrone(null);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            Alert.alert('Challenge Sent', `${throne.kingUsername ?? 'The king'} has been notified. The throne awaits.`);
           },
         },
       ]
     );
   };
 
+  const onCardScroll = (e: any) => {
+    const x = e.nativeEvent.contentOffset.x;
+    const idx = Math.round(x / (CARD_WIDTH + CARD_GAP));
+    if (idx !== selectedIndex && idx >= 0 && idx < thrones.length) {
+      setSelectedIndex(idx);
+      Haptics.selectionAsync();
+      const throne = thrones[idx];
+      if (throne.lat && throne.lng) {
+        mapRef.current?.animateToRegion({
+          latitude: throne.lat,
+          longitude: throne.lng,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
+        }, 400);
+      }
+    }
+  };
+
+  const selectThrone = (idx: number) => {
+    setSelectedIndex(idx);
+    flatListRef.current?.scrollToIndex({ index: idx, animated: true });
+    const throne = thrones[idx];
+    if (throne.lat && throne.lng) {
+      Haptics.selectionAsync();
+      mapRef.current?.animateToRegion({
+        latitude: throne.lat,
+        longitude: throne.lng,
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005,
+      }, 400);
+    }
+  };
+
   const myThrones = thrones.filter((t) => t.current_king_id === displayProfile?.id);
-  const contestedThrones = thrones.filter((t) => t.owner_user_id === displayProfile?.id && t.current_king_id !== displayProfile?.id);
+  const contestedThrones = thrones.filter(
+    (t) => t.owner_user_id === displayProfile?.id && t.current_king_id !== displayProfile?.id
+  );
+
+  const getTerritoryColor = (throne: Throne): string => {
+    if (throne.current_king_id === displayProfile?.id) return 'rgba(212,175,55,0.15)';
+    if (throne.owner_user_id === displayProfile?.id) return 'rgba(255,59,48,0.12)';
+    return 'rgba(255,255,255,0.06)';
+  };
+
+  const getTerritoryStroke = (throne: Throne): string => {
+    if (throne.current_king_id === displayProfile?.id) return 'rgba(212,175,55,0.4)';
+    if (throne.owner_user_id === displayProfile?.id) return 'rgba(255,59,48,0.3)';
+    return 'rgba(255,255,255,0.12)';
+  };
+
+  const renderThroneCard = ({ item, index }: { item: Throne; index: number }) => {
+    const isSelected = index === selectedIndex;
+    const isMine = item.current_king_id === displayProfile?.id;
+    const isContested = item.owner_user_id === displayProfile?.id && !isMine;
+    const dist = item.lat && item.lng ? distanceTo(item.lat, item.lng) : null;
+    const withinRange = canClaim(item);
+
+    return (
+      <View style={[styles.cardWrapper, { width: CARD_WIDTH }]}>
+        <GlassCard
+          style={[styles.throneCard, isSelected && styles.throneCardSelected]}
+          gold={isMine}
+          intensity={60}
+        >
+          <View style={styles.throneCardContent}>
+            {/* Card Header */}
+            <View style={styles.cardHeader}>
+              <View style={styles.cardHeaderLeft}>
+                <Text style={styles.throneIcon}>
+                  {isMine ? '👑' : isContested ? '⚔️' : '🏰'}
+                </Text>
+                <View style={styles.cardTitleGroup}>
+                  <Text style={styles.throneName} numberOfLines={1}>{item.name}</Text>
+                  {item.is_home && (
+                    <View style={styles.homeBadge}>
+                      <Text style={styles.homeBadgeText}>HOME</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+              {dist != null && dist < 10000 && (
+                <Text style={styles.distText}>
+                  {dist < 1000 ? `${Math.round(dist)}m` : `${(dist / 1000).toFixed(1)}km`}
+                </Text>
+              )}
+            </View>
+
+            {/* Current King */}
+            <View style={styles.kingSection}>
+              <Text style={styles.kingLabel}>CURRENT KING</Text>
+              <Text style={[styles.kingName, isMine && styles.kingNameGold]}>
+                {isMine ? 'You reign here' : item.kingUsername ?? 'Unclaimed'}
+              </Text>
+              {item.current_king_weight_lbs != null && (
+                <Text style={styles.kingRecord}>
+                  Record: {item.current_king_weight_lbs.toFixed(2)} lbs
+                </Text>
+              )}
+            </View>
+
+            {/* Status Badge */}
+            <View style={styles.statusRow}>
+              {isMine && (
+                <View style={styles.statusBadgeGold}>
+                  <Ionicons name="shield-checkmark" size={12} color={Colors.gold} />
+                  <Text style={styles.statusTextGold}>YOUR TERRITORY</Text>
+                </View>
+              )}
+              {isContested && (
+                <View style={styles.statusBadgeRed}>
+                  <Ionicons name="alert-circle" size={12} color={Colors.red} />
+                  <Text style={styles.statusTextRed}>CONTESTED</Text>
+                </View>
+              )}
+              {!isMine && !isContested && item.current_king_id && (
+                <View style={styles.statusBadgeNeutral}>
+                  <Ionicons name="flag" size={12} color={Colors.text3} />
+                  <Text style={styles.statusTextNeutral}>ENEMY TERRITORY</Text>
+                </View>
+              )}
+              {!item.current_king_id && (
+                <View style={styles.statusBadgeGold}>
+                  <Ionicons name="flag-outline" size={12} color={Colors.gold} />
+                  <Text style={styles.statusTextGold}>UNCLAIMED</Text>
+                </View>
+              )}
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.cardActions}>
+              {withinRange && !isMine && (
+                <GoldButton
+                  label="CLAIM THRONE"
+                  onPress={() => handleClaim(item)}
+                  size="md"
+                  style={styles.claimBtn}
+                />
+              )}
+              {!isMine && item.current_king_id && (
+                <TouchableOpacity
+                  onPress={() => handleChallenge(item)}
+                  style={styles.challengeBtn}
+                >
+                  <Ionicons name="flash" size={14} color={Colors.gold} />
+                  <Text style={styles.challengeBtnText}>CHALLENGE</Text>
+                </TouchableOpacity>
+              )}
+              {isMine && (
+                <View style={styles.defendBadge}>
+                  <Ionicons name="shield" size={14} color={Colors.gold} />
+                  <Text style={styles.defendText}>DEFENDING</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        </GlassCard>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -136,21 +339,38 @@ export default function ThronesScreen() {
         region={region}
         onRegionChangeComplete={setRegion}
         customMapStyle={DARK_MAP_STYLE}
+        showsUserLocation
+        showsMyLocationButton={false}
       >
+        {/* Territory boundary circles */}
         {thrones.filter((t) => t.lat && t.lng).map((throne) => (
+          <MapCircle
+            key={`territory-${throne.id}`}
+            center={{ latitude: throne.lat!, longitude: throne.lng! }}
+            radius={TERRITORY_RADIUS_M}
+            fillColor={getTerritoryColor(throne)}
+            strokeColor={getTerritoryStroke(throne)}
+            strokeWidth={1.5}
+          />
+        ))}
+
+        {/* Throne markers */}
+        {thrones.filter((t) => t.lat && t.lng).map((throne, idx) => (
           <Marker
             key={throne.id}
             coordinate={{ latitude: throne.lat!, longitude: throne.lng! }}
-            onPress={() => setSelectedThrone(throne)}
-            title={throne.name}
+            onPress={() => selectThrone(idx)}
           >
-            <View style={styles.pin}>
+            <View style={[
+              styles.pin,
+              throne.current_king_id === displayProfile?.id && styles.pinMine,
+            ]}>
               <Text style={styles.pinIcon}>
                 {throne.current_king_id === displayProfile?.id
                   ? '👑'
                   : throne.owner_user_id === displayProfile?.id
-                    ? '🔴'
-                    : '⚪'}
+                    ? '⚔️'
+                    : '🏰'}
               </Text>
             </View>
           </Marker>
@@ -158,99 +378,75 @@ export default function ThronesScreen() {
       </MapView>
 
       {/* Floating Header */}
-      <SafeAreaView style={styles.floatingHeader} pointerEvents="none">
-        <GlassCard style={styles.headerCard}>
-          <View style={styles.headerContent}>
-            <Text style={styles.headerTitle}>YOUR EMPIRE</Text>
-            <Text style={styles.headerStats}>
-              {myThrones.length} held · {contestedThrones.length} contested
-            </Text>
+      <SafeAreaView style={styles.floatingHeader} pointerEvents="box-none">
+        <FadeInView delay={0}>
+          <View style={styles.headerBar}>
+            <View style={styles.headerCard}>
+              <Ionicons name="crown" size={14} color={Colors.gold} />
+              <Text style={styles.headerTitle}>YOUR EMPIRE</Text>
+            </View>
+            <View style={styles.headerStatsRow}>
+              <View style={styles.headerStat}>
+                <Text style={styles.headerStatNum}>{myThrones.length}</Text>
+                <Text style={styles.headerStatLabel}>held</Text>
+              </View>
+              <View style={styles.headerStatDivider} />
+              <View style={styles.headerStat}>
+                <Text style={[styles.headerStatNum, contestedThrones.length > 0 && styles.headerStatNumRed]}>
+                  {contestedThrones.length}
+                </Text>
+                <Text style={styles.headerStatLabel}>contested</Text>
+              </View>
+              <View style={styles.headerStatDivider} />
+              <View style={styles.headerStat}>
+                <Text style={styles.headerStatNum}>{thrones.length}</Text>
+                <Text style={styles.headerStatLabel}>total</Text>
+              </View>
+            </View>
           </View>
-        </GlassCard>
+        </FadeInView>
       </SafeAreaView>
 
-      {/* Throne List Bottom Sheet */}
-      <View style={styles.bottomSheet}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.throneList}
-        >
-          {thrones.length === 0 ? (
-            <View style={styles.throneEmptyState}>
-              <Text style={styles.throneEmptyTitle}>No thrones claimed.</Text>
-              <Text style={styles.throneEmptySub}>The crown sits unclaimed. That is unacceptable.</Text>
-            </View>
-          ) : (
-            thrones.slice(0, 8).map((t) => (
-              <TouchableOpacity
-                key={t.id}
-                onPress={() => {
-                  setSelectedThrone(t);
-                  if (t.lat && t.lng) {
-                    setRegion({ latitude: t.lat, longitude: t.lng, latitudeDelta: 0.005, longitudeDelta: 0.005 });
-                  }
-                }}
-              >
-                <GlassCard style={styles.throneChip}>
-                  <View style={styles.throneChipContent}>
-                    <Text style={styles.throneChipName}>{t.name}</Text>
-                    <Text style={styles.throneChipKing}>
-                      {t.current_king_id === displayProfile?.id ? 'You' : t.kingUsername ?? 'Unconquered'}
-                    </Text>
-                  </View>
-                </GlassCard>
-              </TouchableOpacity>
-            ))
-          )}
-        </ScrollView>
-      </View>
-
-      {/* Selected Throne Modal */}
-      {selectedThrone && (
-        <View style={styles.throneModal}>
-          <GlassCard style={styles.throneModalCard} intensity={40}>
-            <View style={styles.throneModalContent}>
-              <View style={styles.throneModalHeader}>
-                <Text style={styles.throneModalName}>{selectedThrone.name}</Text>
-                <TouchableOpacity onPress={() => setSelectedThrone(null)}>
-                  <Text style={styles.closeBtn}>✕</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.throneModalStats}>
-                <View style={styles.throneModalStat}>
-                  <Text style={styles.throneModalStatLabel}>CURRENT KING</Text>
-                  <Text style={styles.throneModalStatValue}>
-                    {selectedThrone.current_king_id === displayProfile?.id
-                      ? '👑 You'
-                      : selectedThrone.kingUsername ?? 'None'}
-                  </Text>
-                </View>
-                {selectedThrone.current_king_weight_lbs && (
-                  <View style={styles.throneModalStat}>
-                    <Text style={styles.throneModalStatLabel}>RECORD</Text>
-                    <Text style={[styles.throneModalStatValue, styles.goldText]}>
-                      {selectedThrone.current_king_weight_lbs.toFixed(2)} lbs
-                    </Text>
-                  </View>
-                )}
-              </View>
-              {canClaim(selectedThrone) && selectedThrone.current_king_id !== displayProfile?.id && (
-                <GoldButton
-                  label="CLAIM THIS THRONE"
-                  onPress={() => handleClaim(selectedThrone)}
-                  style={styles.claimBtn}
+      {/* Swipeable Throne Cards */}
+      <View style={styles.cardCarousel}>
+        {thrones.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="flag-outline" size={32} color={Colors.goldDim} />
+            <Text style={styles.emptyTitle}>No thrones in your territory.</Text>
+            <Text style={styles.emptySub}>Add friends or claim a throne to start your empire.</Text>
+          </View>
+        ) : (
+          <>
+            <FlatList
+              ref={flatListRef}
+              data={thrones}
+              renderItem={renderThroneCard}
+              keyExtractor={(item) => item.id}
+              horizontal
+              pagingEnabled={false}
+              snapToInterval={CARD_WIDTH + CARD_GAP}
+              decelerationRate="fast"
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.cardList}
+              onMomentumScrollEnd={onCardScroll}
+              getItemLayout={(_, index) => ({
+                length: CARD_WIDTH + CARD_GAP,
+                offset: (CARD_WIDTH + CARD_GAP) * index,
+                index,
+              })}
+            />
+            {/* Page indicator dots */}
+            <View style={styles.dots}>
+              {thrones.slice(0, 8).map((_, i) => (
+                <View
+                  key={i}
+                  style={[styles.dot, i === selectedIndex && styles.dotActive]}
                 />
-              )}
-              {!canClaim(selectedThrone) && selectedThrone.current_king_id !== displayProfile?.id && (
-                <Text style={styles.tooFarText}>
-                  Get within 50m to claim this throne.
-                </Text>
-              )}
+              ))}
             </View>
-          </GlassCard>
-        </View>
-      )}
+          </>
+        )}
+      </View>
     </View>
   );
 }
@@ -269,126 +465,294 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingHorizontal: 20,
-    paddingTop: 8,
+    paddingTop: 4,
   },
-  headerCard: {
-    alignSelf: 'flex-start',
-  },
-  headerContent: {
+  headerBar: {
+    backgroundColor: 'rgba(6,6,10,0.85)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    gap: 2,
+    gap: 8,
+  },
+  headerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   headerTitle: {
-    ...Type.label,
+    fontFamily: Fonts.displaySemiBoldFamily,
+    fontSize: 11,
+    letterSpacing: 2,
     color: Colors.gold,
   },
-  headerStats: {
-    ...Type.caption,
-    color: Colors.text2,
+  headerStatsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerStat: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 4,
+  },
+  headerStatNum: {
+    fontFamily: Fonts.monoMediumFamily,
+    fontSize: 16,
+    color: Colors.text1,
+  },
+  headerStatNumRed: {
+    color: Colors.red,
+  },
+  headerStatLabel: {
+    fontFamily: Fonts.bodyFamily,
+    fontSize: 11,
+    color: Colors.text3,
+  },
+  headerStatDivider: {
+    width: 1,
+    height: 14,
+    backgroundColor: Colors.glassBorder,
   },
   pin: {
     alignItems: 'center',
     justifyContent: 'center',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(6,6,10,0.7)',
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+  },
+  pinMine: {
+    borderColor: Colors.gold,
+    backgroundColor: 'rgba(212,175,55,0.15)',
   },
   pinIcon: {
-    fontSize: 24,
+    fontSize: 18,
   },
-  bottomSheet: {
+  cardCarousel: {
     position: 'absolute',
-    bottom: 100,
+    bottom: 90,
     left: 0,
     right: 0,
   },
-  throneList: {
-    paddingHorizontal: 20,
-    gap: 10,
+  cardList: {
+    paddingHorizontal: 32,
+    gap: CARD_GAP,
   },
-  throneChip: {
-    marginRight: 0,
+  cardWrapper: {
+    // width set inline
   },
-  throneChipContent: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    gap: 2,
+  throneCard: {
+    backgroundColor: 'rgba(6,6,10,0.88)',
   },
-  throneChipName: {
-    ...Type.body,
-    color: Colors.text1,
-    fontWeight: '600',
-    fontSize: 13,
+  throneCardSelected: {
+    borderColor: Colors.gold,
   },
-  throneChipKing: {
-    ...Type.caption,
-    color: Colors.text3,
+  throneCardContent: {
+    padding: 16,
+    gap: 12,
   },
-  throneModal: {
-    position: 'absolute',
-    bottom: 100,
-    left: 20,
-    right: 20,
-  },
-  throneModalCard: {},
-  throneModalContent: {
-    padding: 20,
-    gap: 16,
-  },
-  throneModalHeader: {
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  throneModalName: {
-    ...Type.display,
-    fontSize: 22,
-    color: Colors.text1,
+  cardHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
     flex: 1,
   },
-  closeBtn: {
-    color: Colors.text3,
-    fontSize: 18,
-    padding: 4,
+  throneIcon: {
+    fontSize: 22,
   },
-  throneModalStats: {
+  cardTitleGroup: {
+    flex: 1,
     flexDirection: 'row',
-    gap: 24,
+    alignItems: 'center',
+    gap: 8,
   },
-  throneModalStat: {
-    gap: 4,
-  },
-  throneModalStatLabel: {
-    ...Type.label,
-    color: Colors.text3,
-    fontSize: 9,
-  },
-  throneModalStatValue: {
-    ...Type.mono,
+  throneName: {
+    fontFamily: Fonts.displayFamily,
     fontSize: 18,
-    fontWeight: '700',
+    letterSpacing: -0.3,
     color: Colors.text1,
+    flexShrink: 1,
   },
-  goldText: {
+  homeBadge: {
+    backgroundColor: Colors.goldDim,
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderWidth: 1,
+    borderColor: Colors.gold,
+  },
+  homeBadgeText: {
+    fontFamily: Fonts.bodySemiBoldFamily,
+    fontSize: 8,
+    letterSpacing: 1,
     color: Colors.gold,
   },
-  claimBtn: {},
-  tooFarText: {
-    ...Type.caption,
+  distText: {
+    fontFamily: Fonts.monoFamily,
+    fontSize: 11,
     color: Colors.text3,
+  },
+  kingSection: {
+    gap: 2,
+  },
+  kingLabel: {
+    fontFamily: Fonts.bodySemiBoldFamily,
+    fontSize: 9,
+    letterSpacing: 1.5,
+    color: Colors.text3,
+  },
+  kingName: {
+    fontFamily: Fonts.bodyFamily,
+    fontSize: 14,
+    color: Colors.text1,
+  },
+  kingNameGold: {
+    color: Colors.gold,
+  },
+  kingRecord: {
+    fontFamily: Fonts.monoFamily,
+    fontSize: 11,
+    color: Colors.text3,
+  },
+  statusRow: {
+    flexDirection: 'row',
+  },
+  statusBadgeGold: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: Colors.goldDim,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(212,175,55,0.2)',
+  },
+  statusTextGold: {
+    fontFamily: Fonts.bodySemiBoldFamily,
+    fontSize: 9,
+    letterSpacing: 1,
+    color: Colors.gold,
+  },
+  statusBadgeRed: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(255,59,48,0.08)',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255,59,48,0.2)',
+  },
+  statusTextRed: {
+    fontFamily: Fonts.bodySemiBoldFamily,
+    fontSize: 9,
+    letterSpacing: 1,
+    color: Colors.red,
+  },
+  statusBadgeNeutral: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: Colors.glass2,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+  },
+  statusTextNeutral: {
+    fontFamily: Fonts.bodySemiBoldFamily,
+    fontSize: 9,
+    letterSpacing: 1,
+    color: Colors.text3,
+  },
+  cardActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  claimBtn: {
+    flex: 1,
+  },
+  challengeBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.gold,
+    backgroundColor: Colors.goldDim,
+  },
+  challengeBtnText: {
+    fontFamily: Fonts.displaySemiBoldFamily,
+    fontSize: 11,
+    letterSpacing: 1.5,
+    color: Colors.gold,
+  },
+  defendBadge: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: 'rgba(212,175,55,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(212,175,55,0.15)',
+  },
+  defendText: {
+    fontFamily: Fonts.bodySemiBoldFamily,
+    fontSize: 11,
+    letterSpacing: 1.5,
+    color: Colors.gold,
+  },
+  dots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 10,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.glass2,
+  },
+  dotActive: {
+    backgroundColor: Colors.gold,
+    width: 16,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: 40,
+    gap: 8,
+  },
+  emptyTitle: {
+    fontFamily: Fonts.displayFamily,
+    fontSize: 16,
+    letterSpacing: -0.3,
+    color: Colors.text2,
     textAlign: 'center',
   },
-  throneEmptyState: {
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-    gap: 6,
-  },
-  throneEmptyTitle: {
-    ...Type.display,
-    fontSize: 18,
-    color: Colors.text2,
-  },
-  throneEmptySub: {
-    ...Type.body,
-    color: Colors.text3,
+  emptySub: {
+    fontFamily: Fonts.bodyFamily,
     fontSize: 12,
+    color: Colors.text3,
+    textAlign: 'center',
   },
 });

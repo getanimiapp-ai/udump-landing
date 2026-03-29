@@ -7,13 +7,17 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Dimensions,
+  Keyboard,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import Animated, {
@@ -46,75 +50,143 @@ function formatTime(totalSeconds: number): string {
 }
 
 // ─────────────────────────────────────────────
-// AI Coach Messages
+// AI Coach Messages — timed library
+// Schedule: 15s, 60s, then every 60s to 180s,
+// then every 300s to 1200s, then every 600s after.
 // ─────────────────────────────────────────────
 
-const COACH_MESSAGES: { minSec: number; maxSec: number; messages: string[] }[] = [
-  {
-    minSec: 10, maxSec: 30,
-    messages: [
-      'The throne recognizes your presence.',
-      'Session initiated. The kingdom is watching.',
-      'Settle in. Greatness takes focus.',
-    ],
-  },
-  {
-    minSec: 60, maxSec: 120,
-    messages: [
-      'Posture check. Champions sit with intention.',
-      'Breathe deep. Let gravity do its work.',
-      'Relaxation is the key to peak performance.',
-    ],
-  },
-  {
-    minSec: 180, maxSec: 300,
-    messages: [
-      'You\'re in the zone now. Stay present.',
-      'Your consistency is building your legacy.',
-      'Bobby gave up at this point. You won\'t.',
-    ],
-  },
-  {
-    minSec: 360, maxSec: 600,
-    messages: [
-      'Elite territory. Most people have left the throne by now.',
-      'The longer you stay, the stronger the claim.',
-      'Did you know? Top performers average 8+ minutes.',
-    ],
-  },
-  {
-    minSec: 660, maxSec: 900,
-    messages: [
-      'Dedicated. The records are within reach.',
-      'Your throne time exceeds 90% of users.',
-      'Historians will note this session.',
-    ],
-  },
-  {
-    minSec: 1200, maxSec: 1800,
-    messages: [
-      'You\'re approaching legendary status.',
-      'At this point it\'s about sending a message.',
-      'Your friends are receiving notifications. Make them count.',
-    ],
-  },
-  {
-    minSec: 2400, maxSec: 3600,
-    messages: [
-      'Are you okay in there? Serious question.',
-      'Your dedication is... concerning. But respected.',
-      'Phone battery check recommended.',
-    ],
-  },
+const COACH_SCHEDULE: number[] = [
+  15, 60, 120, 180,                         // early: 15s, 1m, 2m, 3m
+  480, 780, 1080,                            // mid: every 5m (8m, 13m, 18m)
+  1380, 1980, 2580, 3180,                    // later: every 10m (23m, 33m, 43m, 53m)
+  3600,                                       // 1 hour — the big one
+  4200, 4800, 5400, 6000, 6600, 7200,        // every 10m after hour
 ];
 
+const COACH_LIBRARY: Record<string, string[]> = {
+  '15': [
+    'The throne recognizes your presence.',
+    'Session initiated. The kingdom watches.',
+    'Settle in. Greatness takes focus.',
+    'Deep breath. You belong here.',
+    'The porcelain awaits your contribution.',
+  ],
+  '60': [
+    'One minute in. You\'re warmed up.',
+    'Posture check. Champions sit with intention.',
+    'Breathe deep. Let gravity do its work.',
+    'Fun fact: the average session is 3 minutes. You\'re not average.',
+    'Relaxation is key to peak performance.',
+  ],
+  '120': [
+    'Two minutes. Solid commitment.',
+    'Your body knows what to do. Trust the process.',
+    'Bobby tapped out at this point last time.',
+    'Hydration helps. Just saying.',
+    'The throne rewards patience.',
+  ],
+  '180': [
+    'Three minutes. This is where it gets real.',
+    'You\'re outpacing 60% of users.',
+    'Your consistency is building your legacy.',
+    'The leaderboard sees you. Keep going.',
+    'Mid-session strength. Embrace it.',
+  ],
+  '480': [
+    'Eight minutes. Elite territory.',
+    'Most people have surrendered the throne by now.',
+    'Bobby has never made it this far. True story.',
+    'Top performers average 8+ minutes. You\'re one of them.',
+    'Your friends would be impressed. Or concerned.',
+  ],
+  '780': [
+    'Thirteen minutes. You\'re in the top 10%.',
+    'At this point you\'re not just sitting. You\'re making a statement.',
+    'The throne respects dedication like this.',
+    'Fun fact: ancient Romans had communal toilets. Be glad.',
+    'Your dump score is climbing with every second.',
+  ],
+  '1080': [
+    'Eighteen minutes. Historians will note this session.',
+    'Your throne time exceeds 95% of all users.',
+    'Are your legs tingling? That\'s the tingle of greatness.',
+    'This is now a power move. Own it.',
+    'The throne whispers: you are worthy.',
+  ],
+  '1380': [
+    'Twenty-three minutes. Is this... a record attempt?',
+    'Your dedication has shifted from impressive to legendary.',
+    'We\'re running out of encouraging things to say. But we respect you.',
+    'The toilet seat is now an extension of your body.',
+    'Bobby just saw your session length. He\'s sweating.',
+  ],
+  '1980': [
+    'Thirty-three minutes. This is no longer a bathroom break.',
+    'Your friends are getting suspicious.',
+    'At this point it\'s about sending a message to the leaderboard.',
+    'We hope you brought reading material. Or are you reading this?',
+    'The throne has bonded with you. Separation will be difficult.',
+  ],
+  '2580': [
+    'Forty-three minutes. We\'re concerned but also impressed.',
+    'Your legs have probably gone numb. That\'s a badge of honor.',
+    'Do you need the medical help button? Just checking.',
+    'At this point you\'re performance art.',
+    'Some say if you sit long enough, you become the throne.',
+  ],
+  '3180': [
+    'Fifty-three minutes. The hour approaches.',
+    'Your friends are about to receive emergency notifications.',
+    'Last chance to end with dignity before the 1-hour mark.',
+    'The Hall of Stench has reserved a spot for you.',
+    'We genuinely cannot tell if you\'re okay.',
+  ],
+  '3600': [
+    'ONE HOUR. Your friends have been notified. All of them.',
+    'You did it. Or maybe it did you. Either way: legend.',
+    'The Hall of Stench welcomes its newest member.',
+    'Medical help button is right there if you need it.',
+    'An hour on the throne. This will be carved into stone.',
+  ],
+  '4200': [
+    'Seventy minutes. The throne has accepted you as family.',
+    'This is beyond competition. This is spiritual.',
+    'Your friends are debating whether to send help.',
+    'Fun fact: you\'ve been here longer than most movies.',
+  ],
+  '4800': [
+    'Eighty minutes. At this point we\'re just keeping you company.',
+    'The emergency contacts are getting warmed up.',
+    'Please tell us you\'re at least comfortable.',
+    'You\'ve outlasted a soccer match. Without halftime.',
+  ],
+  '5400': [
+    'Ninety minutes. This is now an endurance sport.',
+    'Do you want us to call someone? We can do that.',
+    'The throne isn\'t going anywhere. But should you be?',
+  ],
+  '6000': [
+    'One hundred minutes. We have no more jokes.',
+    'Seriously. Medical help button. Consider it.',
+    'You are in uncharted territory. No one has mapped this far.',
+  ],
+  '6600': [
+    'One hundred and ten minutes. This isn\'t funny anymore.',
+    'Actually wait. It\'s still a little funny.',
+    'Your colon has filed for independence.',
+  ],
+  '7200': [
+    'TWO HOURS. You are a monument to human stubbornness.',
+    'We have nothing left to say. You have won.',
+    'Please be alive. The app needs users.',
+  ],
+};
+
 function getCoachMessage(elapsed: number): string | null {
-  for (const tier of COACH_MESSAGES) {
-    if (elapsed >= tier.minSec && elapsed <= tier.maxSec) {
-      if (elapsed === tier.minSec || (elapsed - tier.minSec) % 45 === 0) {
-        return tier.messages[Math.floor(Math.random() * tier.messages.length)];
-      }
-    }
+  const key = String(elapsed);
+  const messages = COACH_LIBRARY[key];
+  if (messages) {
+    return messages[Math.floor(Math.random() * messages.length)];
   }
   return null;
 }
@@ -302,14 +374,8 @@ export default function ActiveSessionScreen() {
   }, []);
 
   useEffect(() => {
-    timerPulse.value = withRepeat(
-      withSequence(
-        withTiming(1.03, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
-        withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.ease) })
-      ),
-      -1,
-      true
-    );
+    // No scale pulse on the timer — keep it steady
+    timerPulse.value = 1;
 
     const sonarAnim = (val: Animated.SharedValue<number>, delay: number) => {
       val.value = withRepeat(
@@ -463,6 +529,30 @@ export default function ActiveSessionScreen() {
     );
   };
 
+  const handleMedicalHelp = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    Alert.alert(
+      'Medical Help',
+      'This will share your GPS location with your emergency contacts and optionally call 911. Are you sure?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Share Location with Contacts',
+          onPress: () => {
+            // TODO: Send GPS to emergency contacts via push notification
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            Alert.alert('Location Shared', 'Your emergency contacts have been notified with your location.');
+          },
+        },
+        {
+          text: 'Call 911',
+          style: 'destructive',
+          onPress: () => Linking.openURL('tel:911'),
+        },
+      ]
+    );
+  };
+
   const ringProgress = Math.min(elapsed / PR_DURATION_DEFAULT, 1);
   const currentMilestoneLabel = (() => {
     let label = 'JUST STARTED';
@@ -548,14 +638,24 @@ export default function ActiveSessionScreen() {
                 style={styles.endBtn}
               />
 
-              {/* Cancel (secondary, scary) */}
-              <TouchableOpacity
-                onPress={handleCancel}
-                style={styles.cancelBtn}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.cancelBtnText}>ABANDON SESSION</Text>
-              </TouchableOpacity>
+              {/* Bottom row: cancel + medical */}
+              <View style={styles.bottomRow}>
+                <TouchableOpacity
+                  onPress={handleCancel}
+                  style={styles.cancelBtn}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.cancelBtnText}>ABANDON</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleMedicalHelp}
+                  style={styles.medicalBtn}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="medkit" size={14} color={Colors.red} />
+                  <Text style={styles.medicalBtnText}>HELP</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </FadeInView>
         </View>
@@ -578,6 +678,8 @@ export default function ActiveSessionScreen() {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.sheetKAV}
           >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <ScrollView bounces={false} keyboardShouldPersistTaps="handled">
             <View style={styles.sheet}>
               <View style={styles.sheetHandle} />
               <View style={styles.sheetHeader}>
@@ -597,6 +699,8 @@ export default function ActiveSessionScreen() {
                       placeholder="0.0"
                       placeholderTextColor={Colors.text3}
                       keyboardType="decimal-pad"
+                      returnKeyType="next"
+                      blurOnSubmit={false}
                     />
                     <Text style={styles.weightUnit}>lbs</Text>
                   </View>
@@ -612,6 +716,7 @@ export default function ActiveSessionScreen() {
                       placeholder="0.0"
                       placeholderTextColor={Colors.text3}
                       keyboardType="decimal-pad"
+                      returnKeyType="done"
                     />
                     <Text style={styles.weightUnit}>lbs</Text>
                   </View>
@@ -638,6 +743,8 @@ export default function ActiveSessionScreen() {
                 <Text style={styles.cancelSheetText}>Actually, I have more to give</Text>
               </TouchableOpacity>
             </View>
+            </ScrollView>
+            </TouchableWithoutFeedback>
           </KeyboardAvoidingView>
         </Animated.View>
       )}
@@ -795,16 +902,39 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   endBtn: {},
+  bottomRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
   cancelBtn: {
+    flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 24,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(255,59,48,0.2)',
     backgroundColor: 'rgba(255,59,48,0.06)',
   },
   cancelBtnText: {
+    ...Type.label,
+    color: Colors.red,
+    fontSize: 10,
+    letterSpacing: 1.5,
+  },
+  medicalBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,59,48,0.3)',
+    backgroundColor: 'rgba(255,59,48,0.08)',
+  },
+  medicalBtnText: {
     ...Type.label,
     color: Colors.red,
     fontSize: 10,

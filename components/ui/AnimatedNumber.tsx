@@ -28,7 +28,7 @@ export function AnimatedNumber({
   suffix = '',
   prefix = '',
   hapticOnComplete = false,
-  bounce = true,
+  bounce = false,
 }: AnimatedNumberProps) {
   const [display, setDisplay] = useState(0);
   const scale = useSharedValue(1);

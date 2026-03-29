@@ -461,9 +461,9 @@ nav {
   transition: opacity 0.4s;
 }
 .orbit-hotspot.visible { opacity: 1; }
-.orbit-hs-1 { right: 5%; top: 50%; transform: translateY(-50%); text-align: right; }
-.orbit-hs-2 { left: 5%; top: 45%; text-align: left; }
-.orbit-hs-3 { left: 50%; bottom: 12%; transform: translateX(-50%); text-align: center; }
+.orbit-hs-1 { right: 4%; top: 40%; text-align: right; max-width: 320px; }
+.orbit-hs-2 { left: 4%; top: 35%; text-align: left; max-width: 320px; }
+.orbit-hs-3 { left: 4%; top: 30%; text-align: left; max-width: 320px; }
 
 .hs-label {
   font-family: 'DM Mono', monospace;
@@ -958,23 +958,23 @@ footer {
 <!-- ═══════════════════════════════════════ -->
 <div id="orbit-section" class="canvas-bg">
   <div id="orbit-sticky">
-    <!-- Hotspot 1: Right side -->
+    <!-- Hotspot 1: Right side — seat surface (load cells) -->
     <div class="orbit-hotspot orbit-hs-1" id="hs1">
-      <div class="hs-label">Feature 01</div>
-      <div class="hs-title">Precision<br>Weigh-In System</div>
-      <div class="hs-body">Dual load cells capture your exact weight before and after every session. The mathematics are simple. The bragging rights are not.</div>
+      <div class="hs-label">The Seat</div>
+      <div class="hs-title">Dual Load Cell<br>Weigh System</div>
+      <div class="hs-body">Two precision sensors embedded in the seat ring measure your exact contribution. Before. After. The math does itself. The bragging rights don't.</div>
     </div>
-    <!-- Hotspot 2: Left side -->
+    <!-- Hotspot 2: Left side — rim profile (BLE + GPS) -->
     <div class="orbit-hotspot orbit-hs-2" id="hs2">
-      <div class="hs-label">Feature 02</div>
-      <div class="hs-title">GPS Throne<br>Claiming</div>
-      <div class="hs-body">Visit a friend's toilet. Out-dump them. Their bathroom is now yours. GPS-verified dominance.</div>
+      <div class="hs-label">The Rim</div>
+      <div class="hs-title">Bluetooth 5.0<br>+ GPS Module</div>
+      <div class="hs-body">Integrated BLE syncs every session to your phone instantly. GPS-verified location means when you claim a throne at someone else's house, there's proof.</div>
     </div>
-    <!-- Hotspot 3: Bottom -->
+    <!-- Hotspot 3: Top — full seat overview (Dump Score) -->
     <div class="orbit-hotspot orbit-hs-3" id="hs3">
-      <div class="hs-label">Feature 03</div>
-      <div class="hs-title">Dump Score&#8482;</div>
-      <div class="hs-body">A proprietary composite metric — weight, duration, consistency, throne activity — distilled into one number.</div>
+      <div class="hs-label">The Brain</div>
+      <div class="hs-title">Dump Score&#8482;<br>Engine</div>
+      <div class="hs-body">All sensor data feeds a proprietary algorithm. Weight, duration, consistency, throne activity — distilled into one number that defines your legacy.</div>
     </div>
   </div>
 </div>
@@ -1685,11 +1685,11 @@ scene.environment = envMap;
 // ── WAYPOINTS ──
 // Hero: camera above and in front, looking down at the toilet
 const W = {
-  hero:  { p: new THREE.Vector3(0,    2.8,  2.0), l: new THREE.Vector3(0, 0.3, 0) },
-  // Orbit: dramatic 360° sweep around the toilet
-  prod1: { p: new THREE.Vector3(3.5,  0.8,  2.5), l: new THREE.Vector3(0, 0.4, 0) },  // front-right, eye level
-  prod2: { p: new THREE.Vector3(4.0,  1.2, -1.5), l: new THREE.Vector3(0, 0.5, 0) },  // side-right, looking across
-  prod3: { p: new THREE.Vector3(-3.0, 2.0, -3.0), l: new THREE.Vector3(0, 0.3, 0) },  // behind-left, above
+  hero:  { p: new THREE.Vector3(0,    1.8,  3.2), l: new THREE.Vector3(0, 0.3, 0) },
+  // Orbit: sweep around the toilet seat, each stop focuses on a seat feature
+  prod1: { p: new THREE.Vector3(2.5,  1.4,  2.5), l: new THREE.Vector3(0, 0.5, 0) },  // front-right — see the seat surface (load cells)
+  prod2: { p: new THREE.Vector3(3.5,  1.0, -1.0), l: new THREE.Vector3(0, 0.6, 0) },  // side — see the rim profile (GPS module)
+  prod3: { p: new THREE.Vector3(-2.0, 2.5,  1.5), l: new THREE.Vector3(0, 0.4, 0) },  // above-left — see the whole seat (Dump Score overview)
 };
 
 // Camera state

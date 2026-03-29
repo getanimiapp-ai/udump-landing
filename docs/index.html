@@ -1676,7 +1676,7 @@ scene.environment = envMap;
 // ── WAYPOINTS ──
 // Hero: camera above and in front, looking down at the toilet
 const W = {
-  hero:  { p: new THREE.Vector3(0,    1.0,  2.2), l: new THREE.Vector3(0, 0.7, 0) },
+  hero:  { p: new THREE.Vector3(0,    1.2,  3.8), l: new THREE.Vector3(0, 0.6, 0) },
   // Orbit: dramatic 360° sweep around the toilet
   prod1: { p: new THREE.Vector3(3.5,  0.8,  2.5), l: new THREE.Vector3(0, 0.4, 0) },  // front-right, eye level
   prod2: { p: new THREE.Vector3(4.0,  1.2, -1.5), l: new THREE.Vector3(0, 0.5, 0) },  // side-right, looking across
@@ -1702,7 +1702,7 @@ loader.load('./golden_toilet.glb', (gltf) => {
   const box = new THREE.Box3().setFromObject(model);
   const center = box.getCenter(new THREE.Vector3());
   const size = box.getSize(new THREE.Vector3());
-  const s = 4.0 / Math.max(size.x, size.y, size.z);
+  const s = 2.8 / Math.max(size.x, size.y, size.z);
   model.scale.setScalar(s);
   model.position.set(-center.x * s, -box.min.y * s, -center.z * s);
 
@@ -1876,6 +1876,33 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ── TEMPORARY: Camera debug controls ──
+// Arrow keys: move camera. Hold Shift for Y axis. Press P to print position.
+const debugStep = 0.2;
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowUp')    { if (e.shiftKey) W.hero.p.y += debugStep; else W.hero.p.z -= debugStep; }
+  if (e.key === 'ArrowDown')  { if (e.shiftKey) W.hero.p.y -= debugStep; else W.hero.p.z += debugStep; }
+  if (e.key === 'ArrowLeft')  W.hero.p.x -= debugStep;
+  if (e.key === 'ArrowRight') W.hero.p.x += debugStep;
+  if (e.key === 'w') W.hero.l.y += 0.1;
+  if (e.key === 's') W.hero.l.y -= 0.1;
+  if (e.key === '+' || e.key === '=') { const sc = model?.scale.x; if (model && sc) model.scale.setScalar(sc * 1.1); }
+  if (e.key === '-') { const sc = model?.scale.x; if (model && sc) model.scale.setScalar(sc * 0.9); }
+  if (e.key === 'p' || e.key === 'P') {
+    const p = W.hero.p, l = W.hero.l;
+    const sc = model ? model.scale.x.toFixed(3) : '?';
+    const msg = `Camera: (${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)}) → Look: (${l.x.toFixed(1)}, ${l.y.toFixed(1)}, ${l.z.toFixed(1)}) | Scale: ${sc}`;
+    console.log(msg);
+    // Show on screen too
+    let dbg = document.getElementById('cam-debug');
+    if (!dbg) { dbg = document.createElement('div'); dbg.id = 'cam-debug'; dbg.style.cssText = 'position:fixed;bottom:20px;left:20px;z-index:9999;background:rgba(0,0,0,0.85);color:#F0CE60;padding:12px 16px;border-radius:8px;font-family:monospace;font-size:13px;pointer-events:none;'; document.body.appendChild(dbg); }
+    dbg.textContent = msg;
+  }
+  // Update camera immediately
+  targetPos.copy(W.hero.p);
+  targetLook.copy(W.hero.l);
 });
 </script>
 </body>

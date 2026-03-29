@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
@@ -12,7 +13,7 @@ import {
   ViewToken,
 } from 'react-native';
 import { Colors } from '../../constants/colors';
-import { Type } from '../../constants/typography';
+import { Fonts, Type } from '../../constants/typography';
 import { GoldButton } from '../../components/ui/GoldButton';
 
 const { width } = Dimensions.get('window');
@@ -44,9 +45,9 @@ const PANELS = [
     title: 'Track. Compete. Claim.',
     lines: [],
     features: [
-      { icon: '📊', label: 'Log every session with precision' },
-      { icon: '👑', label: 'Claim thrones. Defeat your friends.' },
-      { icon: '🏆', label: 'Compete on the global leaderboard' },
+      { iconName: 'analytics-outline' as const, label: 'Log every session with precision' },
+      { iconName: 'trophy-outline' as const, label: 'Claim thrones. Defeat your friends.' },
+      { iconName: 'podium-outline' as const, label: 'Compete on the global leaderboard' },
     ],
     cta: 'create_account',
   },
@@ -107,9 +108,6 @@ export default function WelcomeScreen() {
                       {line}
                     </Text>
                   ))}
-                  <View style={styles.toiletEmoji}>
-                    <Text style={styles.toiletIcon}>🚽</Text>
-                  </View>
                   <TouchableOpacity onPress={goNext} style={styles.nextBtn}>
                     <Text style={styles.nextBtnText}>Continue →</Text>
                   </TouchableOpacity>
@@ -122,7 +120,7 @@ export default function WelcomeScreen() {
                   <View style={styles.features}>
                     {(item.features ?? []).map((f, i) => (
                       <View key={i} style={styles.featureRow}>
-                        <Text style={styles.featureIcon}>{f.icon}</Text>
+                        <Ionicons name={f.iconName} size={24} color={Colors.gold} />
                         <Text style={styles.featureLabel}>{f.label}</Text>
                       </View>
                     ))}
@@ -177,10 +175,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   wordmark: {
-    ...Type.display,
-    fontSize: 72,
+    fontFamily: Fonts.displayFamily,
+    fontSize: 80,
     color: Colors.gold,
-    letterSpacing: -2,
+    letterSpacing: -3,
     marginBottom: 24,
   },
   splashLine: {
@@ -188,6 +186,7 @@ const styles = StyleSheet.create({
     color: Colors.text2,
     textAlign: 'center',
     fontSize: 17,
+    lineHeight: 28,
   },
   ctaRow: {
     marginTop: 40,
@@ -203,19 +202,13 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   pitchLine: {
-    ...Type.display,
+    fontFamily: Fonts.displayFamily,
     fontSize: 28,
     color: Colors.text1,
     lineHeight: 36,
   },
   spacer: {
     height: 8,
-  },
-  toiletEmoji: {
-    marginTop: 8,
-  },
-  toiletIcon: {
-    fontSize: 48,
   },
   nextBtn: {
     marginTop: 32,
@@ -227,7 +220,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
   },
   pitchTitle: {
-    ...Type.display,
+    fontFamily: Fonts.displayFamily,
     fontSize: 28,
     color: Colors.text1,
     marginBottom: 8,
@@ -245,9 +238,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
-  },
-  featureIcon: {
-    fontSize: 28,
   },
   featureLabel: {
     ...Type.body,
@@ -278,10 +268,12 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: Colors.text3,
+    backgroundColor: Colors.glass3,
   },
   dotActive: {
     backgroundColor: Colors.gold,
-    width: 20,
+    width: 24,
+    height: 6,
+    borderRadius: 3,
   },
 });

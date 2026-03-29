@@ -1,5 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
+import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React, { useEffect } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
@@ -10,15 +11,18 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { Colors } from '../../constants/colors';
-import { Type } from '../../constants/typography';
+import { Fonts } from '../../constants/typography';
+
+type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
 interface TabIconProps {
-  icon: string;
+  iconOutline: IoniconsName;
+  iconFilled: IoniconsName;
   label: string;
   focused: boolean;
 }
 
-function TabIcon({ icon, label, focused }: TabIconProps) {
+function TabIcon({ iconOutline, iconFilled, label, focused }: TabIconProps) {
   const scale = useSharedValue(1);
   const prevFocused = React.useRef(false);
 
@@ -39,10 +43,15 @@ function TabIcon({ icon, label, focused }: TabIconProps) {
 
   return (
     <View style={styles.tabItem}>
-      <Animated.Text style={[styles.tabIcon, focused && styles.tabIconFocused, iconStyle]}>
-        {icon}
-      </Animated.Text>
+      <Animated.View style={iconStyle}>
+        <Ionicons
+          name={focused ? iconFilled : iconOutline}
+          size={22}
+          color={focused ? Colors.gold : Colors.text3}
+        />
+      </Animated.View>
       <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>{label}</Text>
+      {focused && <View style={styles.activeDot} />}
     </View>
   );
 }
@@ -74,7 +83,7 @@ export default function TabLayout() {
         name="index"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon icon="🏠" label="HOME" focused={focused} />
+            <TabIcon iconOutline="crown-outline" iconFilled="crown" label="HOME" focused={focused} />
           ),
         }}
       />
@@ -82,7 +91,7 @@ export default function TabLayout() {
         name="activity"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon icon="📊" label="SCORE" focused={focused} />
+            <TabIcon iconOutline="analytics-outline" iconFilled="analytics" label="SCORE" focused={focused} />
           ),
         }}
       />
@@ -90,7 +99,7 @@ export default function TabLayout() {
         name="social"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon icon="📣" label="FEED" focused={focused} />
+            <TabIcon iconOutline="people-outline" iconFilled="people" label="FEED" focused={focused} />
           ),
         }}
       />
@@ -98,7 +107,7 @@ export default function TabLayout() {
         name="thrones"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon icon="👑" label="THRONES" focused={focused} />
+            <TabIcon iconOutline="location-outline" iconFilled="location" label="THRONES" focused={focused} />
           ),
         }}
       />
@@ -122,19 +131,21 @@ const styles = StyleSheet.create({
     gap: 3,
     paddingTop: 4,
   },
-  tabIcon: {
-    fontSize: 22,
-    opacity: 0.5,
-  },
-  tabIconFocused: {
-    opacity: 1,
-  },
   tabLabel: {
-    ...Type.label,
-    fontSize: 8,
+    fontFamily: Fonts.displaySemiBoldFamily,
+    fontSize: 9,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
     color: Colors.text3,
   },
   tabLabelFocused: {
     color: Colors.gold,
+  },
+  activeDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.gold,
+    marginTop: 1,
   },
 });

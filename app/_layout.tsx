@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { useUserStore } from '@/lib/store/user.store';
 import { Session } from '@supabase/supabase-js';
 import * as Notifications from 'expo-notifications';
+import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
@@ -21,6 +22,17 @@ export default function RootLayout() {
   const segments = useSegments();
   const router = useRouter();
   const notificationResponseListener = useRef<Notifications.EventSubscription | null>(null);
+
+  const [fontsLoaded] = useFonts({
+    'BarlowCondensed-Bold': require('../assets/fonts/BarlowCondensed-Bold.ttf'),
+    'BarlowCondensed-Light': require('../assets/fonts/BarlowCondensed-Light.ttf'),
+    'BarlowCondensed-SemiBold': require('../assets/fonts/BarlowCondensed-SemiBold.ttf'),
+    'Barlow-Regular': require('../assets/fonts/Barlow-Regular.ttf'),
+    'Barlow-Medium': require('../assets/fonts/Barlow-Medium.ttf'),
+    'Barlow-SemiBold': require('../assets/fonts/Barlow-SemiBold.ttf'),
+    'DMMono-Regular': require('../assets/fonts/DMMono-Regular.ttf'),
+    'DMMono-Medium': require('../assets/fonts/DMMono-Medium.ttf'),
+  });
 
   // Deep link handler: route to the right screen based on notification data
   useEffect(() => {
@@ -89,7 +101,7 @@ export default function RootLayout() {
     }
   }, [session, segments, isLoading]);
 
-  if (isLoading) {
+  if (isLoading || !fontsLoaded) {
     return <View style={{ flex: 1, backgroundColor: Colors.void }} />;
   }
 

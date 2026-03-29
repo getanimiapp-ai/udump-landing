@@ -28,7 +28,7 @@ import Svg, { Circle } from 'react-native-svg';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { GoldButton } from '../../components/ui/GoldButton';
 import { Colors } from '../../constants/colors';
-import { Type } from '../../constants/typography';
+import { Fonts, Type } from '../../constants/typography';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -176,7 +176,7 @@ export default function ActiveSessionScreen() {
   useEffect(() => {
     timerOpacity.value = withRepeat(
       withSequence(
-        withTiming(0.75, { duration: 1000 }),
+        withTiming(0.85, { duration: 1000 }),
         withTiming(1, { duration: 1000 })
       ),
       -1,
@@ -508,11 +508,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   timer: {
-    ...Type.mono,
-    fontSize: 64,
-    fontWeight: '700',
+    fontFamily: Fonts.monoFamily,
+    fontSize: 72,
     color: Colors.text1,
-    letterSpacing: -2,
+    letterSpacing: 2,
   },
   overstayWarning: {
     ...Type.label,
@@ -618,8 +617,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   weightInput: {
-    ...Type.mono,
-    fontSize: 20,
+    fontFamily: Fonts.monoMediumFamily,
+    fontSize: 32,
     color: Colors.text1,
     flex: 1,
     backgroundColor: Colors.elevated,
@@ -638,9 +637,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   weightDelta: {
-    ...Type.mono,
-    fontSize: 28,
-    fontWeight: '700',
+    fontFamily: Fonts.monoMediumFamily,
+    fontSize: 36,
     color: Colors.gold,
     textAlign: 'center',
   },

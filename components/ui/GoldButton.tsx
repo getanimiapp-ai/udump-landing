@@ -2,6 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, ViewStyle } from 'react-native';
+import { Fonts } from '../../constants/typography';
 
 interface GoldButtonProps {
   label: string;
@@ -19,7 +20,7 @@ export function GoldButton({ label, onPress, size = 'lg', style, disabled }: Gol
 
   return (
     <LinearGradient
-      colors={['#C9A030', '#F0CE60']}
+      colors={['#D4AF37', '#F0CE60']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={[styles.gradient, size === 'lg' ? styles.lg : styles.md, style, disabled && styles.disabled]}
@@ -65,8 +66,9 @@ const styles = StyleSheet.create({
   },
   label: {
     color: '#000',
-    fontWeight: '800',
-    letterSpacing: 0.5,
+    fontFamily: Fonts.displayFamily,
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
   },
   labelLg: {
     fontSize: 17,

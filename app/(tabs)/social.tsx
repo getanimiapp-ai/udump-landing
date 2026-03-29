@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { useUserStore } from '@/lib/store/user.store';
+import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   RefreshControl,
@@ -14,7 +15,7 @@ import { Avatar } from '../../components/ui/Avatar';
 import { Badge } from '../../components/ui/Badge';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { Colors } from '../../constants/colors';
-import { Type } from '../../constants/typography';
+import { Fonts, Type } from '../../constants/typography';
 import { formatDistanceToNow } from 'date-fns';
 
 // ─────────────────────────────────────────────
@@ -62,14 +63,14 @@ function FeedItemCard({ item }: { item: FeedEntry }) {
       <GlassCard style={styles.alertCard}>
         <View style={styles.alertContent}>
           <View style={styles.alertHeader}>
-            <Text style={styles.alertIcon}>🚨</Text>
+            <Ionicons name="warning-outline" size={16} color={Colors.red} />
             <Text style={styles.alertText}>
               {item.displayName} has been on the toilet for an extended period
             </Text>
           </View>
           <Badge label="WELFARE CHECK RECOMMENDED" color="red" />
           <View style={styles.replyChips}>
-            {['You okay?', 'Need help?', '👑'].map((reply) => (
+            {['You okay?', 'Need help?', 'Crown'].map((reply) => (
               <TouchableOpacity key={reply} style={styles.replyChip}>
                 <Text style={styles.replyChipText}>{reply}</Text>
               </TouchableOpacity>
@@ -80,13 +81,12 @@ function FeedItemCard({ item }: { item: FeedEntry }) {
     );
   }
 
+  const isHighlight = item.type === 'record' || item.type === 'throne_claimed';
+
   return (
     <GlassCard
-      style={[
-        styles.feedCard,
-        item.type === 'record' && styles.feedCardRecord,
-        item.type === 'throne_claimed' && styles.feedCardThrone,
-      ]}
+      style={styles.feedCard}
+      gold={isHighlight}
     >
       <View style={styles.feedContent}>
         <View style={styles.feedHeader}>
@@ -115,7 +115,7 @@ function FeedItemCard({ item }: { item: FeedEntry }) {
           </View>
         )}
         {item.throneName && item.type === 'throne_claimed' && (
-          <Text style={styles.throneText}>👑 Now King of {item.throneName}</Text>
+          <Text style={styles.throneText}>Now King of {item.throneName}</Text>
         )}
       </View>
     </GlassCard>
@@ -127,7 +127,7 @@ function FeedItemCard({ item }: { item: FeedEntry }) {
 // ─────────────────────────────────────────────
 
 function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
-  const rankIcon = entry.rank === 1 ? '👑' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : null;
+  const isTop3 = entry.rank <= 3;
   const isLastPlace = entry.rank > 5 && entry.username === 'bobby';
 
   return (
@@ -135,13 +135,17 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
       style={[
         styles.leaderboardCard,
         entry.isSelf && styles.leaderboardCardSelf,
-        isLastPlace && styles.leaderboardCardBobby,
       ]}
+      gold={isTop3}
     >
-      <View style={styles.leaderboardContent}>
+      <View style={[styles.leaderboardContent, isLastPlace && styles.leaderboardContentBobby]}>
         <View style={styles.rankSection}>
-          {rankIcon ? (
-            <Text style={styles.rankIcon}>{rankIcon}</Text>
+          {isTop3 ? (
+            <Ionicons
+              name="crown"
+              size={20}
+              color={entry.rank === 1 ? Colors.gold : Colors.text3}
+            />
           ) : (
             <Text style={[styles.rankNumber, isLastPlace && styles.rankNumberBobby]}>
               #{entry.rank}
@@ -432,7 +436,7 @@ export default function SocialScreen() {
             </View>
             {leaderboard.length === 0 ? (
               <View style={styles.empty}>
-                <Text style={styles.emptyIcon}>👑</Text>
+                <Ionicons name="crown-outline" size={48} color={Colors.goldDim} />
                 <Text style={styles.emptyTitle}>No data yet.</Text>
                 <Text style={styles.emptyBody}>Log sessions to appear on the leaderboard.</Text>
               </View>
@@ -473,9 +477,10 @@ const styles = StyleSheet.create({
     borderColor: Colors.gold,
   },
   mainTabLabel: {
-    ...Type.label,
-    color: Colors.text3,
+    fontFamily: Fonts.bodySemiBoldFamily,
     fontSize: 12,
+    letterSpacing: 0.5,
+    color: Colors.text3,
   },
   mainTabLabelActive: {
     color: Colors.gold,
@@ -510,23 +515,20 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   feedCard: {},
-  feedCardRecord: { borderColor: 'rgba(212,175,55,0.3)' },
-  feedCardThrone: { borderColor: 'rgba(212,175,55,0.2)' },
   feedContent: { padding: 16, gap: 10 },
   feedHeader: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   feedHeaderText: { flex: 1, gap: 4 },
   feedTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  feedName: { ...Type.body, color: Colors.text1, fontWeight: '600' },
-  feedTime: { ...Type.caption, color: Colors.text3 },
+  feedName: { fontFamily: Fonts.displayFamily, fontSize: 16, letterSpacing: -0.3, color: Colors.text1 },
+  feedTime: { fontFamily: Fonts.monoFamily, fontSize: 11, color: Colors.text3 },
   feedStats: { flexDirection: 'row', gap: 16 },
-  feedStatValue: { ...Type.mono, fontSize: 18, fontWeight: '700', color: Colors.text1 },
+  feedStatValue: { fontFamily: Fonts.monoMediumFamily, fontSize: 20, color: Colors.text1 },
   feedStatGold: { color: Colors.gold },
-  throneText: { ...Type.body, color: Colors.gold, fontSize: 13 },
+  throneText: { fontFamily: Fonts.bodySemiBoldFamily, color: Colors.gold, fontSize: 13, letterSpacing: 0.3 },
   alertCard: { borderColor: 'rgba(255,59,48,0.3)' },
   alertContent: { padding: 16, gap: 10, backgroundColor: 'rgba(255,59,48,0.04)' },
   alertHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  alertIcon: { fontSize: 16 },
-  alertText: { ...Type.body, color: Colors.red, fontWeight: '600', flex: 1 },
+  alertText: { fontFamily: Fonts.bodySemiBoldFamily, color: Colors.red, flex: 1, fontSize: 14, lineHeight: 20 },
   replyChips: { flexDirection: 'row', gap: 8, marginTop: 4 },
   replyChip: {
     paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20,
@@ -551,9 +553,10 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.gold,
   },
   subTabLabel: {
-    ...Type.label,
-    color: Colors.text3,
+    fontFamily: Fonts.bodySemiBoldFamily,
     fontSize: 11,
+    letterSpacing: 0.3,
+    color: Colors.text3,
   },
   subTabLabelActive: {
     color: Colors.gold,
@@ -574,26 +577,22 @@ const styles = StyleSheet.create({
   leaderboardCardSelf: {
     borderColor: Colors.gold,
   },
-  leaderboardCardBobby: {
-    borderColor: 'rgba(255,59,48,0.3)',
-  },
   leaderboardContent: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 14,
     gap: 12,
   },
+  leaderboardContentBobby: {
+    opacity: 0.7,
+  },
   rankSection: {
     width: 36,
     alignItems: 'center',
   },
-  rankIcon: {
-    fontSize: 22,
-  },
   rankNumber: {
-    ...Type.mono,
-    fontSize: 14,
-    fontWeight: '700',
+    fontFamily: Fonts.monoMediumFamily,
+    fontSize: 16,
     color: Colors.text3,
   },
   rankNumberBobby: {
@@ -604,16 +603,17 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   leaderboardName: {
-    ...Type.body,
+    fontFamily: Fonts.displayFamily,
+    fontSize: 16,
+    letterSpacing: -0.3,
     color: Colors.text1,
-    fontWeight: '600',
-    fontSize: 15,
   },
   leaderboardNameSelf: {
     color: Colors.gold,
   },
   leaderboardUsername: {
-    ...Type.caption,
+    fontFamily: Fonts.monoFamily,
+    fontSize: 11,
     color: Colors.text3,
   },
   leaderboardStats: {
@@ -621,10 +621,9 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   leaderboardWeight: {
-    ...Type.mono,
-    fontSize: 18,
-    fontWeight: '700',
-    color: Colors.text1,
+    fontFamily: Fonts.monoMediumFamily,
+    fontSize: 16,
+    color: Colors.gold,
   },
   leaderboardWeightBobby: {
     color: Colors.red,
@@ -638,8 +637,7 @@ const styles = StyleSheet.create({
     paddingVertical: 60,
     gap: 12,
   },
-  emptyIcon: { fontSize: 48 },
-  emptyTitle: { ...Type.display, fontSize: 20, color: Colors.text2 },
+  emptyTitle: { fontFamily: Fonts.displayFamily, fontSize: 20, letterSpacing: -0.3, color: Colors.text2 },
   emptyBody: { ...Type.body, color: Colors.text3, textAlign: 'center' },
   bottomPad: { height: 100 },
 });

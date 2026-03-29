@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { useUserStore } from '@/lib/store/user.store';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -24,7 +25,7 @@ import { Badge } from '../../components/ui/Badge';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { StatCard } from '../../components/ui/StatCard';
 import { Colors } from '../../constants/colors';
-import { Type } from '../../constants/typography';
+import { Fonts, Type } from '../../constants/typography';
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -54,31 +55,31 @@ export default function HomeScreen() {
   const [lastSession, setLastSession] = useState<LastSession | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const pulseOpacity = useSharedValue(1);
+  const glowOpacity = useSharedValue(0.3);
   const greetingOpacity = useSharedValue(0);
   const stat0Opacity = useSharedValue(0);
   const stat1Opacity = useSharedValue(0);
   const stat2Opacity = useSharedValue(0);
 
   useEffect(() => {
-    pulseOpacity.value = withRepeat(
+    glowOpacity.value = withRepeat(
       withSequence(
-        withTiming(0.75, { duration: 1000 }),
-        withTiming(1, { duration: 1000 })
+        withTiming(0.6, { duration: 1200 }),
+        withTiming(0.3, { duration: 1200 })
       ),
       -1,
       true
     );
-    // Greeting fade
     greetingOpacity.value = withTiming(1, { duration: 500 });
-    // Stats stagger
     stat0Opacity.value = withDelay(0, withTiming(1, { duration: 400 }));
     stat1Opacity.value = withDelay(100, withTiming(1, { duration: 400 }));
     stat2Opacity.value = withDelay(200, withTiming(1, { duration: 400 }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const pulseStyle = useAnimatedStyle(() => ({ opacity: pulseOpacity.value }));
+  const glowStyle = useAnimatedStyle(() => ({
+    shadowOpacity: glowOpacity.value,
+  }));
   const greetingStyle = useAnimatedStyle(() => ({ opacity: greetingOpacity.value }));
   const stat0Style = useAnimatedStyle(() => ({ opacity: stat0Opacity.value }));
   const stat1Style = useAnimatedStyle(() => ({ opacity: stat1Opacity.value }));
@@ -162,11 +163,11 @@ export default function HomeScreen() {
             </Text>
           </Animated.View>
 
-          {/* START SESSION Button */}
-          <Animated.View style={[styles.startButtonWrapper, pulseStyle]}>
+          {/* START SESSION Button — glow pulses, button stays steady */}
+          <Animated.View style={[styles.startButtonWrapper, glowStyle]}>
             <PressScale onPress={() => router.push('/session/pre')}>
               <LinearGradient
-                colors={['#C49A20', '#F0CE60']}
+                colors={['#D4AF37', '#F0CE60']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.startButton}
@@ -207,7 +208,10 @@ export default function HomeScreen() {
 
           {/* Last Session Card */}
           {lastSession && (
-            <GlassCard style={styles.lastSessionCard}>
+            <GlassCard
+              style={styles.lastSessionCard}
+              gold={lastSession.is_personal_record}
+            >
               <View style={styles.lastSessionContent}>
                 <View style={styles.lastSessionHeader}>
                   <Text style={styles.lastSessionTitle}>
@@ -239,6 +243,7 @@ export default function HomeScreen() {
 
           {todayStats.sessionCount === 0 && !lastSession && (
             <View style={styles.emptyState}>
+              <Ionicons name="crown-outline" size={48} color={Colors.goldDim} />
               <Text style={styles.emptyTitle}>Your throne awaits.</Text>
               <Text style={styles.emptySub}>Tap BEGIN SESSION to start your first session.</Text>
             </View>
@@ -273,18 +278,18 @@ const styles = StyleSheet.create({
     color: Colors.text3,
   },
   greetingName: {
-    ...Type.display,
-    fontSize: 34,
+    fontFamily: Fonts.displayFamily,
+    fontSize: 38,
+    letterSpacing: -0.5,
     color: Colors.text1,
   },
   dumpScore: {
-    ...Type.mono,
-    fontSize: 12,
+    fontFamily: Fonts.monoFamily,
+    fontSize: 13,
     color: Colors.gold,
   },
   startButtonWrapper: {
     shadowColor: Colors.gold,
-    shadowOpacity: 0.4,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 4 },
   },
@@ -318,15 +323,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   startButtonLabel: {
+    fontFamily: Fonts.displayFamily,
     color: '#000',
-    fontSize: 19,
-    fontWeight: '800',
-    letterSpacing: 0.5,
+    fontSize: 20,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
   },
   startButtonSub: {
+    fontFamily: Fonts.bodyFamily,
     color: 'rgba(0,0,0,0.5)',
     fontSize: 11,
-    fontWeight: '500',
     marginTop: 2,
   },
   statsRow: {
@@ -360,9 +366,8 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   lastSessionStatValue: {
-    ...Type.mono,
-    fontSize: 24,
-    fontWeight: '700',
+    fontFamily: Fonts.monoMediumFamily,
+    fontSize: 28,
     color: Colors.text1,
   },
   lastSessionWeight: {
@@ -382,9 +387,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emptyTitle: {
-    ...Type.display,
-    fontSize: 20,
-    color: Colors.text2,
+    fontFamily: Fonts.displayFamily,
+    fontSize: 24,
+    letterSpacing: -0.5,
+    color: Colors.text1,
     textAlign: 'center',
   },
   emptySub: {

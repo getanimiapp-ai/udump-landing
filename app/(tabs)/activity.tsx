@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { Colors } from '../../constants/colors';
-import { Type } from '../../constants/typography';
+import { Fonts, Type } from '../../constants/typography';
 
 interface SessionLog {
   id: string;
@@ -48,18 +48,18 @@ function FactorBar({ label, value, max = 10 }: { label: string; value: number; m
 const factorStyles = StyleSheet.create({
   container: { gap: 6 },
   labelRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  label: { ...Type.label, color: Colors.text3, fontSize: 10 },
-  value: { ...Type.mono, fontSize: 12, color: Colors.text1, fontWeight: '700' },
+  label: { fontFamily: Fonts.bodySemiBoldFamily, fontSize: 13, color: Colors.text3 },
+  value: { fontFamily: Fonts.monoMediumFamily, fontSize: 13, color: Colors.gold },
   track: {
-    height: 4,
+    height: 6,
     backgroundColor: Colors.glass2,
-    borderRadius: 2,
+    borderRadius: 3,
     overflow: 'hidden',
   },
   fill: {
-    height: '100%',
+    height: 6,
     backgroundColor: Colors.gold,
-    borderRadius: 2,
+    borderRadius: 3,
   },
 });
 
@@ -233,14 +233,14 @@ const styles = StyleSheet.create({
     color: Colors.text3,
   },
   scoreValue: {
-    ...Type.mono,
-    fontSize: 64,
-    fontWeight: '700',
+    fontFamily: Fonts.monoFamily,
+    fontSize: 72,
     color: Colors.gold,
-    lineHeight: 72,
+    lineHeight: 80,
   },
   scoreSubtitle: {
-    ...Type.caption,
+    fontFamily: Fonts.monoFamily,
+    fontSize: 13,
     color: Colors.text3,
   },
   factorsCard: {},
@@ -281,13 +281,14 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   logDate: {
-    ...Type.body,
-    color: Colors.text2,
-    fontWeight: '600',
+    fontFamily: Fonts.displayFamily,
     fontSize: 14,
+    letterSpacing: -0.3,
+    color: Colors.text2,
   },
   logTime: {
-    ...Type.caption,
+    fontFamily: Fonts.monoFamily,
+    fontSize: 11,
     color: Colors.text3,
   },
   logRight: {
@@ -295,13 +296,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   logDuration: {
-    ...Type.mono,
+    fontFamily: Fonts.monoMediumFamily,
     fontSize: 14,
     color: Colors.text1,
-    fontWeight: '600',
   },
   logWeight: {
-    ...Type.mono,
+    fontFamily: Fonts.monoMediumFamily,
     fontSize: 13,
     color: Colors.gold,
   },
@@ -314,8 +314,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emptyTitle: {
-    ...Type.display,
+    fontFamily: Fonts.displayFamily,
     fontSize: 20,
+    letterSpacing: -0.3,
     color: Colors.text2,
     textAlign: 'center',
   },

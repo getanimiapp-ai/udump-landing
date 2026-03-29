@@ -7,8 +7,8 @@ export const Colors = {
   glass1: 'rgba(255,255,255,0.03)',
   glass2: 'rgba(255,255,255,0.06)',
   glass3: 'rgba(255,255,255,0.10)',
-  glassBorder: 'rgba(255,255,255,0.08)',
-  glassBorderHi: 'rgba(255,255,255,0.14)',
+  glassBorder: 'rgba(255,255,255,0.10)',
+  glassBorderHi: 'rgba(255,255,255,0.18)',
 
   gold: '#D4AF37',
   goldBright: '#F0CE60',
@@ -20,8 +20,8 @@ export const Colors = {
   blue: '#0A84FF',
 
   text1: '#FFFFFF',
-  text2: 'rgba(255,255,255,0.58)',
-  text3: 'rgba(255,255,255,0.28)',
+  text2: 'rgba(255,255,255,0.72)',
+  text3: 'rgba(255,255,255,0.42)',
   textGold: '#D4AF37',
 } as const;
 

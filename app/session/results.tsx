@@ -1,4 +1,5 @@
 import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
@@ -21,7 +22,7 @@ import { GlassCard } from '../../components/ui/GlassCard';
 import { GoldButton } from '../../components/ui/GoldButton';
 import { ACHIEVEMENTS } from '../../constants/achievements';
 import { Colors, TIER_COLORS } from '../../constants/colors';
-import { Type } from '../../constants/typography';
+import { Fonts, Type } from '../../constants/typography';
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -293,7 +294,7 @@ export default function ResultsScreen() {
 
       <View style={styles.content}>
         <Animated.View style={[styles.heroSection, crownStyle]}>
-          <Text style={styles.crownIcon}>👑</Text>
+          <Ionicons name="trophy" size={56} color={Colors.gold} />
           {badge && (
             <Badge
               label={badge}
@@ -381,19 +382,16 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
-  crownIcon: {
-    fontSize: 64,
-  },
   resultTitle: {
-    ...Type.display,
+    fontFamily: Fonts.displayFamily,
     fontSize: 28,
+    letterSpacing: -0.5,
     color: Colors.text1,
     textAlign: 'center',
   },
   weightBig: {
-    ...Type.mono,
+    fontFamily: Fonts.monoFamily,
     fontSize: 96,
-    fontWeight: '700',
     color: Colors.text1,
     letterSpacing: -3,
     lineHeight: 100,
@@ -427,10 +425,9 @@ const styles = StyleSheet.create({
     color: Colors.text3,
   },
   statValue: {
-    ...Type.mono,
+    fontFamily: Fonts.monoMediumFamily,
     fontSize: 16,
     color: Colors.text1,
-    fontWeight: '700',
   },
   statValueGold: {
     color: Colors.gold,
@@ -485,17 +482,18 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   overlayTitle: {
-    ...Type.display,
+    fontFamily: Fonts.displayFamily,
     fontSize: 24,
+    letterSpacing: -0.5,
     color: Colors.text1,
     textAlign: 'center',
   },
   overlayDesc: {
-    ...Type.body,
+    fontFamily: Fonts.bodyFamily,
+    fontSize: 14,
     color: Colors.text2,
     textAlign: 'center',
     lineHeight: 22,
-    fontSize: 14,
   },
   overlayDismiss: {
     ...Type.caption,

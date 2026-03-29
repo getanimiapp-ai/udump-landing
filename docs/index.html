@@ -706,9 +706,25 @@ footer {
   .hero-btns { justify-content: center; }
   .hero-body { margin: 0 auto 28px; }
   .phone-wrap { display: none; }
-  footer { flex-direction: column; text-align: center; gap: 12px; }
+  footer { flex-direction: column; text-align: center; gap: 12px; padding: 40px 20px; }
   .store-row { flex-direction: column; align-items: center; }
   .cta-form { flex-direction: column; }
+
+  /* Hardware + Throne Pro sections */
+  #hardware { padding: 60px 20px !important; }
+  .hw-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
+  .throne-pro-sec { padding: 60px 20px !important; }
+  .throne-pro-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+
+  /* Spec card header rows — stack badge below title on small screens */
+  .spec-header { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
+
+  /* Press logos */
+  .press-logos { gap: 24px; }
+  .press-sec { padding: 40px 20px !important; }
+
+  /* Notification cards */
+  .notif-stage { padding: 0 4px; }
 }
 </style>
 </head>
@@ -984,7 +1000,7 @@ footer {
 <!-- ═══════════════════════════════════════ -->
 
 <!-- HARDWARE SECTION -->
-<section style="padding:100px 60px;background:var(--void);position:relative;overflow:hidden;" class="above-canvas" id="hardware">
+<section style="padding:100px 60px;background:var(--void);position:relative;overflow:hidden;" class="above-canvas" id="hardware" >
   <!-- ambient blooms -->
   <div style="position:absolute;top:30%;left:10%;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(48,209,88,0.04) 0%,transparent 65%);pointer-events:none;"></div>
   <div style="position:absolute;bottom:10%;right:10%;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.05) 0%,transparent 65%);pointer-events:none;"></div>
@@ -997,7 +1013,7 @@ footer {
   <p style="font-size:18px;font-weight:300;line-height:1.7;color:var(--t2);max-width:520px;margin-bottom:72px;">The U·Dump Sensor Kit attaches to any standard toilet seat in under 10 minutes. No plumbing. No drilling. No grossness. Just load cells, Bluetooth, and competitive glory.</p>
 
   <!-- HARDWARE LAYOUT: diagram left, specs right -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+  <div class="hw-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
 
     <!-- SENSOR RING DIAGRAM -->
     <div style="background:var(--g1);border:1px solid var(--gb);border-radius:28px;padding:40px;display:flex;flex-direction:column;align-items:center;position:relative;overflow:hidden;">
@@ -1044,7 +1060,7 @@ footer {
       <!-- Load Cell -->
       <div style="background:var(--g1);border:1px solid var(--gb);border-radius:20px;padding:24px;position:relative;overflow:hidden;transition:all .3s;">
         <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.10),transparent);"></div>
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+        <div class="spec-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
           <div style="display:flex;align-items:center;gap:12px;">
             <div style="width:40px;height:40px;border-radius:12px;background:var(--g3);border:1px solid var(--gb2);display:flex;align-items:center;justify-content:center;font-size:18px;">&#x2696;&#xFE0F;</div>
             <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;letter-spacing:.01em;">Load Cell Array</div>
@@ -1057,7 +1073,7 @@ footer {
       <!-- BLE / Processor -->
       <div style="background:var(--g1);border:1px solid var(--gb);border-radius:20px;padding:24px;position:relative;overflow:hidden;transition:all .3s;">
         <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.10),transparent);"></div>
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+        <div class="spec-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
           <div style="display:flex;align-items:center;gap:12px;">
             <div style="width:40px;height:40px;border-radius:12px;background:var(--g3);border:1px solid var(--gb2);display:flex;align-items:center;justify-content:center;font-size:18px;">&#x1F4E1;</div>
             <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;letter-spacing:.01em;">BLE 5.0 + ESP32</div>
@@ -1070,7 +1086,7 @@ footer {
       <!-- Battery -->
       <div style="background:var(--g1);border:1px solid var(--gb);border-radius:20px;padding:24px;position:relative;overflow:hidden;transition:all .3s;">
         <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.10),transparent);"></div>
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+        <div class="spec-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
           <div style="display:flex;align-items:center;gap:12px;">
             <div style="width:40px;height:40px;border-radius:12px;background:var(--g3);border:1px solid var(--gb2);display:flex;align-items:center;justify-content:center;font-size:18px;">&#x1F50B;</div>
             <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;letter-spacing:.01em;">Battery Module</div>
@@ -1115,7 +1131,7 @@ footer {
 </section>
 
 <!-- U·THRONE PRO UPGRADE -->
-<section style="padding:80px 60px;background:var(--base);position:relative;overflow:hidden;border-top:1px solid var(--gb);" class="above-canvas">
+<section style="padding:80px 60px;background:var(--base);position:relative;overflow:hidden;border-top:1px solid var(--gb);" class="above-canvas throne-pro-sec">
   <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);"></div>
   <div style="position:absolute;top:20%;right:5%;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(10,132,255,0.04) 0%,transparent 65%);pointer-events:none;"></div>
   <div style="position:absolute;bottom:10%;left:5%;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.04) 0%,transparent 65%);pointer-events:none;"></div>
@@ -1126,7 +1142,7 @@ footer {
     <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#0A84FF;">Optional Upgrade</span>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;">
+  <div class="throne-pro-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;">
     <div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:clamp(52px,7vw,88px);line-height:0.88;letter-spacing:-0.01em;margin-bottom:20px;">
         U·THRONE<br><em style="font-style:italic;color:#0A84FF;">PRO</em>
@@ -1155,7 +1171,7 @@ footer {
       <!-- Spatial Audio -->
       <div style="background:var(--g1);border:1px solid var(--gb);border-radius:20px;padding:22px;position:relative;overflow:hidden;">
         <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(10,132,255,0.15),transparent);"></div>
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+        <div class="spec-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
           <div style="display:flex;align-items:center;gap:12px;">
             <div style="width:40px;height:40px;border-radius:12px;background:rgba(10,132,255,0.12);border:1px solid rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;">&#x1F50A;</div>
             <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:19px;">Spatial Audio System</div>
@@ -1168,7 +1184,7 @@ footer {
       <!-- Thermal Comfort -->
       <div style="background:var(--g1);border:1px solid var(--gb);border-radius:20px;padding:22px;position:relative;overflow:hidden;">
         <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,159,10,0.15),transparent);"></div>
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+        <div class="spec-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
           <div style="display:flex;align-items:center;gap:12px;">
             <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,159,10,0.12);border:1px solid rgba(255,159,10,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;">&#x1F321;&#xFE0F;</div>
             <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:19px;">Thermal Comfort Suite</div>
@@ -1181,7 +1197,7 @@ footer {
       <!-- Victory Vibration -->
       <div style="background:var(--g1);border:1px solid var(--gb);border-radius:20px;padding:22px;position:relative;overflow:hidden;">
         <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);"></div>
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+        <div class="spec-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
           <div style="display:flex;align-items:center;gap:12px;">
             <div style="width:40px;height:40px;border-radius:12px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;">&#x1F4F3;</div>
             <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:19px;">Victory Vibration Engine</div>
@@ -1194,7 +1210,7 @@ footer {
       <!-- DumpMind AI Coach -->
       <div style="background:var(--g1);border:1px solid var(--gb);border-radius:20px;padding:22px;position:relative;overflow:hidden;">
         <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);"></div>
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+        <div class="spec-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
           <div style="display:flex;align-items:center;gap:12px;">
             <div style="width:40px;height:40px;border-radius:12px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;">&#x1F916;</div>
             <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:19px;">DumpMind&#8482; AI Coach</div>

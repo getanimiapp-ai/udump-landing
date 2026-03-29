@@ -350,6 +350,7 @@ export default function ActiveSessionScreen() {
   const hourNotifiedRef = useRef(false);
   const [weightBefore, setWeightBefore] = useState('');
   const [weightAfter, setWeightAfter] = useState('');
+  const afterInputRef = useRef<TextInput>(null);
   const [isEnding, setIsEnding] = useState(false);
   const [sheetVisible, setSheetVisible] = useState(false);
   const [activeMilestone, setActiveMilestone] = useState<{ label: string; points: number } | null>(null);
@@ -685,77 +686,84 @@ export default function ActiveSessionScreen() {
       {/* Weight entry bottom sheet */}
       {sheetVisible && (
         <Animated.View style={[styles.sheetOverlay, sheetStyle]}>
+          {/* Tapping the dark scrim area dismisses keyboard */}
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.sheetScrim} />
+          </TouchableWithoutFeedback>
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.sheetKAV}
           >
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <ScrollView bounces={false} keyboardShouldPersistTaps="handled">
-            <View style={styles.sheet}>
-              <View style={styles.sheetHandle} />
-              <View style={styles.sheetHeader}>
-                <Ionicons name="scale-outline" size={20} color={Colors.gold} />
-                <Text style={styles.sheetTitle}>WEIGH IN</Text>
-              </View>
-              <Text style={styles.sheetSub}>Optional. Step on the scale before and after for weight tracking.</Text>
-
-              <View style={styles.weightRow}>
-                <View style={styles.weightField}>
-                  <Text style={styles.weightLabel}>BEFORE</Text>
-                  <View style={styles.weightInputRow}>
-                    <TextInput
-                      style={styles.weightInput}
-                      value={weightBefore}
-                      onChangeText={setWeightBefore}
-                      placeholder="0.0"
-                      placeholderTextColor={Colors.text3}
-                      keyboardType="decimal-pad"
-                      returnKeyType="next"
-                      blurOnSubmit={false}
-                    />
-                    <Text style={styles.weightUnit}>lbs</Text>
+              <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <View style={styles.sheet}>
+                  <View style={styles.sheetHandle} />
+                  <View style={styles.sheetHeader}>
+                    <Ionicons name="scale-outline" size={20} color={Colors.gold} />
+                    <Text style={styles.sheetTitle}>WEIGH IN</Text>
                   </View>
-                </View>
-                <Ionicons name="arrow-forward" size={18} color={Colors.text3} />
-                <View style={styles.weightField}>
-                  <Text style={styles.weightLabel}>AFTER</Text>
-                  <View style={styles.weightInputRow}>
-                    <TextInput
-                      style={styles.weightInput}
-                      value={weightAfter}
-                      onChangeText={setWeightAfter}
-                      placeholder="0.0"
-                      placeholderTextColor={Colors.text3}
-                      keyboardType="decimal-pad"
-                      returnKeyType="done"
-                    />
-                    <Text style={styles.weightUnit}>lbs</Text>
+                  <Text style={styles.sheetSub}>Optional. Step on the scale before and after for weight tracking.</Text>
+
+                  <View style={styles.weightRow}>
+                    <View style={styles.weightField}>
+                      <Text style={styles.weightLabel}>BEFORE</Text>
+                      <View style={styles.weightInputRow}>
+                        <TextInput
+                          style={styles.weightInput}
+                          value={weightBefore}
+                          onChangeText={setWeightBefore}
+                          placeholder="0.0"
+                          placeholderTextColor={Colors.text3}
+                          keyboardType="decimal-pad"
+                          returnKeyType="next"
+                          blurOnSubmit={false}
+                          onSubmitEditing={() => afterInputRef.current?.focus()}
+                        />
+                        <Text style={styles.weightUnit}>lbs</Text>
+                      </View>
+                    </View>
+                    <Ionicons name="arrow-forward" size={18} color={Colors.text3} />
+                    <View style={styles.weightField}>
+                      <Text style={styles.weightLabel}>AFTER</Text>
+                      <View style={styles.weightInputRow}>
+                        <TextInput
+                          ref={afterInputRef}
+                          style={styles.weightInput}
+                          value={weightAfter}
+                          onChangeText={setWeightAfter}
+                          placeholder="0.0"
+                          placeholderTextColor={Colors.text3}
+                          keyboardType="decimal-pad"
+                          returnKeyType="done"
+                          onSubmitEditing={Keyboard.dismiss}
+                        />
+                        <Text style={styles.weightUnit}>lbs</Text>
+                      </View>
+                    </View>
                   </View>
+
+                  {weightDelta !== null && (
+                    <View style={styles.weightDeltaRow}>
+                      <Ionicons name="trending-down" size={18} color={Colors.gold} />
+                      <Text style={styles.weightDelta}>
+                        {weightDelta >= 0 ? '+' : ''}{weightDelta.toFixed(2)} lbs
+                      </Text>
+                    </View>
+                  )}
+
+                  <GoldButton
+                    label={isEnding ? 'SAVING...' : 'CONFIRM & CLAIM GLORY'}
+                    onPress={handleEnd}
+                    disabled={isEnding}
+                    style={styles.confirmBtn}
+                  />
+
+                  <TouchableOpacity onPress={closeSheet} style={styles.cancelSheetBtn}>
+                    <Text style={styles.cancelSheetText}>Actually, I have more to give</Text>
+                  </TouchableOpacity>
                 </View>
-              </View>
-
-              {weightDelta !== null && (
-                <View style={styles.weightDeltaRow}>
-                  <Ionicons name="trending-down" size={18} color={Colors.gold} />
-                  <Text style={styles.weightDelta}>
-                    {weightDelta >= 0 ? '+' : ''}{weightDelta.toFixed(2)} lbs
-                  </Text>
-                </View>
-              )}
-
-              <GoldButton
-                label={isEnding ? 'SAVING...' : 'CONFIRM & CLAIM GLORY'}
-                onPress={handleEnd}
-                disabled={isEnding}
-                style={styles.confirmBtn}
-              />
-
-              <TouchableOpacity onPress={closeSheet} style={styles.cancelSheetBtn}>
-                <Text style={styles.cancelSheetText}>Actually, I have more to give</Text>
-              </TouchableOpacity>
-            </View>
+              </TouchableWithoutFeedback>
             </ScrollView>
-            </TouchableWithoutFeedback>
           </KeyboardAvoidingView>
         </Animated.View>
       )}
@@ -987,17 +995,22 @@ const styles = StyleSheet.create({
   },
   sheetOverlay: {
     position: 'absolute',
+    top: 0,
     bottom: 0,
     left: 0,
     right: 0,
+    justifyContent: 'flex-end',
+  },
+  sheetScrim: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  sheetKAV: {
     backgroundColor: Colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderTopWidth: 1,
     borderColor: Colors.glassBorder,
-  },
-  sheetKAV: {
-    flex: 0,
   },
   sheet: {
     padding: 24,

@@ -68,8 +68,14 @@ export default function RootLayout() {
   }, [router]);
 
   useEffect(() => {
+    // Timeout fallback — don't hang on black screen forever
+    const timeout = setTimeout(() => setIsLoading(false), 3000);
     supabase.auth.getSession().then(({ data: { session } }) => {
+      clearTimeout(timeout);
       setSession(session);
+      setIsLoading(false);
+    }).catch(() => {
+      clearTimeout(timeout);
       setIsLoading(false);
     });
 

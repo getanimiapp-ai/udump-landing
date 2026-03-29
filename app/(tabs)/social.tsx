@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { useUserStore } from '@/lib/store/user.store';
+import { MOCK_ENABLED, MOCK_FEED_ITEMS, MOCK_LEADERBOARD } from '../../lib/mock-data';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -190,7 +191,16 @@ export default function SocialScreen() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Initialize with mock data if enabled
+  useEffect(() => {
+    if (MOCK_ENABLED) {
+      setFeed(MOCK_FEED_ITEMS);
+      setLeaderboard(MOCK_LEADERBOARD);
+    }
+  }, []);
+
   const fetchFeed = useCallback(async () => {
+    if (MOCK_ENABLED) return;
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
@@ -239,6 +249,7 @@ export default function SocialScreen() {
   }, []);
 
   const fetchLeaderboard = useCallback(async () => {
+    if (MOCK_ENABLED) return;
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 

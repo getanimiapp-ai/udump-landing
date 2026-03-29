@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { MOCK_ENABLED, MOCK_ACHIEVEMENTS } from '../../lib/mock-data';
 import { formatDistanceToNow } from 'date-fns';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -35,7 +36,14 @@ export default function AchievementsScreen() {
   const [unlocked, setUnlocked] = useState<UnlockedAchievement[]>([]);
   const [filter, setFilter] = useState<TierFilter>('all');
 
+  useEffect(() => {
+    if (MOCK_ENABLED) {
+      setUnlocked(MOCK_ACHIEVEMENTS);
+    }
+  }, []);
+
   const fetchAchievements = useCallback(async () => {
+    if (MOCK_ENABLED) return;
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 

@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { useUserStore } from '@/lib/store/user.store';
+import { MOCK_ENABLED, MOCK_PROFILE, MOCK_THRONES } from '../../lib/mock-data';
 import * as Location from 'expo-location';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -51,7 +52,13 @@ export default function ThronesScreen() {
     longitudeDelta: 0.02,
   });
 
+  const displayProfile = MOCK_ENABLED ? MOCK_PROFILE : profile;
+
   const fetchThrones = useCallback(async () => {
+    if (MOCK_ENABLED) {
+      setThrones(MOCK_THRONES);
+      return;
+    }
     const { data } = await supabase
       .from('thrones')
       .select('*, profiles!thrones_current_king_id_fkey(username)')
@@ -118,8 +125,8 @@ export default function ThronesScreen() {
     );
   };
 
-  const myThrones = thrones.filter((t) => t.current_king_id === profile?.id);
-  const contestedThrones = thrones.filter((t) => t.owner_user_id === profile?.id && t.current_king_id !== profile?.id);
+  const myThrones = thrones.filter((t) => t.current_king_id === displayProfile?.id);
+  const contestedThrones = thrones.filter((t) => t.owner_user_id === displayProfile?.id && t.current_king_id !== displayProfile?.id);
 
   return (
     <View style={styles.container}>
@@ -139,9 +146,9 @@ export default function ThronesScreen() {
           >
             <View style={styles.pin}>
               <Text style={styles.pinIcon}>
-                {throne.current_king_id === profile?.id
+                {throne.current_king_id === displayProfile?.id
                   ? '👑'
-                  : throne.owner_user_id === profile?.id
+                  : throne.owner_user_id === displayProfile?.id
                     ? '🔴'
                     : '⚪'}
               </Text>
@@ -189,7 +196,7 @@ export default function ThronesScreen() {
                   <View style={styles.throneChipContent}>
                     <Text style={styles.throneChipName}>{t.name}</Text>
                     <Text style={styles.throneChipKing}>
-                      {t.current_king_id === profile?.id ? 'You' : t.kingUsername ?? 'Unconquered'}
+                      {t.current_king_id === displayProfile?.id ? 'You' : t.kingUsername ?? 'Unconquered'}
                     </Text>
                   </View>
                 </GlassCard>
@@ -214,7 +221,7 @@ export default function ThronesScreen() {
                 <View style={styles.throneModalStat}>
                   <Text style={styles.throneModalStatLabel}>CURRENT KING</Text>
                   <Text style={styles.throneModalStatValue}>
-                    {selectedThrone.current_king_id === profile?.id
+                    {selectedThrone.current_king_id === displayProfile?.id
                       ? '👑 You'
                       : selectedThrone.kingUsername ?? 'None'}
                   </Text>
@@ -228,14 +235,14 @@ export default function ThronesScreen() {
                   </View>
                 )}
               </View>
-              {canClaim(selectedThrone) && selectedThrone.current_king_id !== profile?.id && (
+              {canClaim(selectedThrone) && selectedThrone.current_king_id !== displayProfile?.id && (
                 <GoldButton
                   label="CLAIM THIS THRONE"
                   onPress={() => handleClaim(selectedThrone)}
                   style={styles.claimBtn}
                 />
               )}
-              {!canClaim(selectedThrone) && selectedThrone.current_king_id !== profile?.id && (
+              {!canClaim(selectedThrone) && selectedThrone.current_king_id !== displayProfile?.id && (
                 <Text style={styles.tooFarText}>
                   Get within 50m to claim this throne.
                 </Text>

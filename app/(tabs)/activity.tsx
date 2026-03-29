@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { useUserStore } from '@/lib/store/user.store';
 import { calculateDumpScore, getDumpScoreInsight } from '@/lib/utils/dumpScore';
+import { MOCK_ENABLED, MOCK_DUMP_SCORE, MOCK_SESSION_LOG } from '../../lib/mock-data';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   RefreshControl,
@@ -71,7 +72,31 @@ export default function ActivityScreen() {
   const [insight, setInsight] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
+  // Initialize with mock data if enabled
+  useEffect(() => {
+    if (MOCK_ENABLED) {
+      const mockSessions: SessionLog[] = MOCK_SESSION_LOG.map((s) => ({
+        id: s.id,
+        started_at: s.started_at,
+        duration_seconds: s.duration_seconds,
+        weight_delta_lbs: s.weight_delta_lbs,
+        throne_claimed: false,
+        throneName: null,
+      }));
+      setSessions(mockSessions);
+      setScore(MOCK_DUMP_SCORE.overall);
+      setFactors({
+        consistency: MOCK_DUMP_SCORE.factors.consistency,
+        weight: MOCK_DUMP_SCORE.factors.weightTrend,
+        length: MOCK_DUMP_SCORE.factors.sessionLength,
+        throne: MOCK_DUMP_SCORE.factors.throneActivity,
+      });
+      setInsight(MOCK_DUMP_SCORE.insight);
+    }
+  }, []);
+
   const fetchData = useCallback(async () => {
+    if (MOCK_ENABLED) return;
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 

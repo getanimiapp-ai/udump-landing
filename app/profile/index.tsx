@@ -1,4 +1,5 @@
 import { useUserStore } from '@/lib/store/user.store';
+import { MOCK_ENABLED, MOCK_PROFILE, MOCK_ACHIEVEMENTS, MOCK_FRIENDS } from '../../lib/mock-data';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -81,7 +82,19 @@ export default function ProfileScreen() {
   } | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
+  const displayProfile = MOCK_ENABLED ? MOCK_PROFILE : profile;
+
+  useEffect(() => {
+    if (MOCK_ENABLED) {
+      setUnlocked(MOCK_ACHIEVEMENTS);
+      setFriends(MOCK_FRIENDS as unknown as Friend[]);
+      setGlobalRank(2);
+      setThroneCount(2);
+    }
+  }, []);
+
   const fetchData = useCallback(async () => {
+    if (MOCK_ENABLED) return;
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -268,8 +281,8 @@ export default function ProfileScreen() {
         <View style={styles.header}>
           <TouchableOpacity onPress={handleAvatarPress} disabled={uploadingAvatar}>
             <Avatar
-              uri={profile?.avatar_url}
-              username={profile?.display_name ?? profile?.username}
+              uri={displayProfile?.avatar_url}
+              username={displayProfile?.display_name ?? displayProfile?.username}
               size={80}
             />
             <View style={styles.avatarEditBadge}>
@@ -277,10 +290,10 @@ export default function ProfileScreen() {
             </View>
           </TouchableOpacity>
           <View style={styles.headerInfo}>
-            <Text style={styles.displayName}>{profile?.display_name ?? profile?.username}</Text>
-            <Text style={styles.username}>@{profile?.username}</Text>
+            <Text style={styles.displayName}>{displayProfile?.display_name ?? displayProfile?.username}</Text>
+            <Text style={styles.username}>@{displayProfile?.username}</Text>
             <Text style={styles.dumpScore}>
-              Dump Score™ {profile?.dump_score?.toFixed(1) ?? '—'}
+              Dump Score™ {displayProfile?.dump_score?.toFixed(1) ?? '—'}
             </Text>
             {globalRank != null && (
               <Text style={styles.globalRank}>#{globalRank} globally</Text>
@@ -292,13 +305,13 @@ export default function ProfileScreen() {
         <GlassCard>
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{profile?.total_sessions ?? 0}</Text>
+              <Text style={styles.statValue}>{displayProfile?.total_sessions ?? 0}</Text>
               <Text style={styles.statLabel}>SESSIONS</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text style={[styles.statValue, styles.goldText]}>
-                {(profile?.total_weight_lbs ?? 0).toFixed(1)}
+                {(displayProfile?.total_weight_lbs ?? 0).toFixed(1)}
               </Text>
               <Text style={styles.statLabel}>TOTAL LBS</Text>
             </View>

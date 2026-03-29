@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { useUserStore } from '@/lib/store/user.store';
+import { MOCK_ENABLED, MOCK_PROFILE, MOCK_TODAY_STATS, MOCK_LAST_SESSION } from '../../lib/mock-data';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -54,6 +55,11 @@ export default function HomeScreen() {
   const [todayStats, setTodayStats] = useState<TodayStats>({ sessionCount: 0, totalWeight: 0, streakDays: 0 });
   const [lastSession, setLastSession] = useState<LastSession | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Use mock data if enabled
+  const displayProfile = MOCK_ENABLED ? MOCK_PROFILE : profile;
+  const displayStats = MOCK_ENABLED ? MOCK_TODAY_STATS : todayStats;
+  const displayLastSession = MOCK_ENABLED ? MOCK_LAST_SESSION : lastSession;
 
   const glowOpacity = useSharedValue(0.3);
   const greetingOpacity = useSharedValue(0);
@@ -157,9 +163,9 @@ export default function HomeScreen() {
           {/* Greeting */}
           <Animated.View style={[styles.greeting, greetingStyle]}>
             <Text style={styles.greetingLabel}>{getGreeting()}</Text>
-            <Text style={styles.greetingName}>{profile?.display_name ?? 'Friend'}.</Text>
+            <Text style={styles.greetingName}>{displayProfile?.display_name ?? 'Friend'}.</Text>
             <Text style={styles.dumpScore}>
-              Dump Score™ {profile?.dump_score.toFixed(1) ?? '—'}
+              Dump Score™ {displayProfile?.dump_score.toFixed(1) ?? '—'}
             </Text>
           </Animated.View>
 
@@ -188,12 +194,12 @@ export default function HomeScreen() {
           {/* Stats Row */}
           <View style={styles.statsRow}>
             <Animated.View style={[styles.statFlex, stat0Style]}>
-              <StatCard label="TODAY" value={todayStats.sessionCount} />
+              <StatCard label="TODAY" value={displayStats.sessionCount} />
             </Animated.View>
             <Animated.View style={[styles.statFlex, stat1Style]}>
               <StatCard
                 label="WEIGHT"
-                value={todayStats.totalWeight.toFixed(1)}
+                value={displayStats.totalWeight.toFixed(1)}
                 unit="lbs"
                 highlight
               />
@@ -201,37 +207,37 @@ export default function HomeScreen() {
             <Animated.View style={[styles.statFlex, stat2Style]}>
               <StatCard
                 label="STREAK"
-                value={`${todayStats.streakDays}d`}
+                value={`${displayStats.streakDays}d`}
               />
             </Animated.View>
           </View>
 
           {/* Last Session Card */}
-          {lastSession && (
+          {displayLastSession && (
             <GlassCard
               style={styles.lastSessionCard}
-              gold={lastSession.is_personal_record}
+              gold={displayLastSession.is_personal_record}
             >
               <View style={styles.lastSessionContent}>
                 <View style={styles.lastSessionHeader}>
                   <Text style={styles.lastSessionTitle}>
-                    Last Session · {formatTime(lastSession.ended_at)}
+                    Last Session · {formatTime(displayLastSession.ended_at)}
                   </Text>
-                  {lastSession.is_personal_record && (
+                  {displayLastSession.is_personal_record && (
                     <Badge label="RECORD" color="gold" />
                   )}
                 </View>
                 <View style={styles.lastSessionStats}>
                   <View style={styles.lastSessionStat}>
                     <Text style={styles.lastSessionStatValue}>
-                      {formatDuration(lastSession.duration_seconds)}
+                      {formatDuration(displayLastSession.duration_seconds)}
                     </Text>
                     <Text style={styles.lastSessionStatLabel}>DURATION</Text>
                   </View>
-                  {lastSession.weight_delta_lbs != null && (
+                  {displayLastSession.weight_delta_lbs != null && (
                     <View style={styles.lastSessionStat}>
                       <Text style={[styles.lastSessionStatValue, styles.lastSessionWeight]}>
-                        {lastSession.weight_delta_lbs.toFixed(2)}
+                        {displayLastSession.weight_delta_lbs.toFixed(2)}
                       </Text>
                       <Text style={styles.lastSessionStatLabel}>LBS</Text>
                     </View>
@@ -241,7 +247,7 @@ export default function HomeScreen() {
             </GlassCard>
           )}
 
-          {todayStats.sessionCount === 0 && !lastSession && (
+          {!MOCK_ENABLED && todayStats.sessionCount === 0 && !lastSession && (
             <View style={styles.emptyState}>
               <Ionicons name="crown-outline" size={48} color={Colors.goldDim} />
               <Text style={styles.emptyTitle}>Your throne awaits.</Text>

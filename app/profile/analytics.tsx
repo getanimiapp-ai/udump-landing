@@ -1,3 +1,4 @@
+import { MOCK_ENABLED, MOCK_SESSION_LOG } from '../../lib/mock-data';
 import { formatDistanceToNow } from 'date-fns';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -221,6 +222,26 @@ export default function AnalyticsScreen() {
   const scoreProgress = useSharedValue(0);
 
   const fetchData = useCallback(async () => {
+    if (MOCK_ENABLED) {
+      const mockSessions: SessionRow[] = MOCK_SESSION_LOG.map((s) => ({
+        id: s.id,
+        started_at: s.started_at,
+        duration_seconds: s.duration_seconds,
+        weight_delta_lbs: s.weight_delta_lbs,
+        is_personal_record: s.is_personal_record,
+        throne_claimed: s.throne_claimed,
+      }));
+      setSessions(mockSessions);
+      setThrones([
+        { current_king_id: 'mock-aaron' },
+        { current_king_id: 'mock-aaron' },
+        { current_king_id: 'mock-nick' },
+      ]);
+      setUserId('mock-aaron');
+      setLoading(false);
+      return;
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     setUserId(user.id);

@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { useUserStore } from '@/lib/store/user.store';
 import { MOCK_ENABLED, MOCK_FEED_ITEMS, MOCK_LEADERBOARD } from '../../lib/mock-data';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   RefreshControl,
@@ -12,8 +13,17 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { Avatar } from '../../components/ui/Avatar';
 import { Badge } from '../../components/ui/Badge';
+import { FadeInView } from '../../components/ui/FadeInView';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { Colors } from '../../constants/colors';
 import { Fonts, Type } from '../../constants/typography';
@@ -56,70 +66,81 @@ interface LeaderboardEntry {
 // Feed Item Component
 // ─────────────────────────────────────────────
 
-function FeedItemCard({ item }: { item: FeedEntry }) {
+function FeedItemCard({ item, index }: { item: FeedEntry; index: number }) {
   const formatDuration = (s: number) => `${Math.floor(s / 60)}m ${s % 60}s`;
 
   if (item.type === 'overstay') {
     return (
-      <GlassCard style={styles.alertCard}>
-        <View style={styles.alertContent}>
-          <View style={styles.alertHeader}>
-            <Ionicons name="warning-outline" size={16} color={Colors.red} />
-            <Text style={styles.alertText}>
-              {item.displayName} has been on the toilet for an extended period
-            </Text>
+      <FadeInView delay={index * 80} slideFrom="left" slideDistance={30}>
+        <GlassCard style={styles.alertCard}>
+          <View style={styles.alertContent}>
+            <View style={styles.alertHeader}>
+              <Ionicons name="warning-outline" size={16} color={Colors.red} />
+              <Text style={styles.alertText}>
+                {item.displayName} has been on the toilet for an extended period
+              </Text>
+            </View>
+            <Badge label="WELFARE CHECK RECOMMENDED" color="red" />
+            <View style={styles.replyChips}>
+              {['You okay?', 'Need help?', 'Crown'].map((reply) => (
+                <TouchableOpacity
+                  key={reply}
+                  style={styles.replyChip}
+                  onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+                >
+                  <Text style={styles.replyChipText}>{reply}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
-          <Badge label="WELFARE CHECK RECOMMENDED" color="red" />
-          <View style={styles.replyChips}>
-            {['You okay?', 'Need help?', 'Crown'].map((reply) => (
-              <TouchableOpacity key={reply} style={styles.replyChip}>
-                <Text style={styles.replyChipText}>{reply}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </GlassCard>
+        </GlassCard>
+      </FadeInView>
     );
   }
 
   const isHighlight = item.type === 'record' || item.type === 'throne_claimed';
 
   return (
-    <GlassCard
-      style={styles.feedCard}
-      gold={isHighlight}
-    >
-      <View style={styles.feedContent}>
-        <View style={styles.feedHeader}>
-          <Avatar uri={item.avatarUrl} username={item.displayName} size={36} />
-          <View style={styles.feedHeaderText}>
-            <View style={styles.feedTitleRow}>
-              <Text style={styles.feedName}>{item.displayName}</Text>
-              {item.type === 'record' && <Badge label="RECORD" color="gold" />}
-              {item.type === 'throne_claimed' && <Badge label="THRONE CLAIMED" color="gold" />}
-            </View>
-            <Text style={styles.feedTime}>
-              {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
-            </Text>
-          </View>
-        </View>
-        {(item.durationSeconds != null || item.weightDelta != null) && (
-          <View style={styles.feedStats}>
-            {item.durationSeconds != null && (
-              <Text style={styles.feedStatValue}>{formatDuration(item.durationSeconds)}</Text>
-            )}
-            {item.weightDelta != null && item.weightDelta > 0 && (
-              <Text style={[styles.feedStatValue, styles.feedStatGold]}>
-                {item.weightDelta.toFixed(2)} lbs
+    <FadeInView delay={index * 80} slideFrom="left" slideDistance={30}>
+      <GlassCard
+        style={styles.feedCard}
+        gold={isHighlight}
+      >
+        <View style={styles.feedContent}>
+          <View style={styles.feedHeader}>
+            <Avatar uri={item.avatarUrl} username={item.displayName} size={36} />
+            <View style={styles.feedHeaderText}>
+              <View style={styles.feedTitleRow}>
+                <Text style={styles.feedName}>{item.displayName}</Text>
+                {item.type === 'record' && <Badge label="RECORD" color="gold" />}
+                {item.type === 'throne_claimed' && <Badge label="THRONE CLAIMED" color="gold" />}
+              </View>
+              <Text style={styles.feedTime}>
+                {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
               </Text>
-            )}
+            </View>
           </View>
-        )}
-        {item.throneName && item.type === 'throne_claimed' && (
-          <Text style={styles.throneText}>Now King of {item.throneName}</Text>
-        )}
-      </View>
-    </GlassCard>
+          {(item.durationSeconds != null || item.weightDelta != null) && (
+            <View style={styles.feedStats}>
+              {item.durationSeconds != null && (
+                <Text style={styles.feedStatValue}>{formatDuration(item.durationSeconds)}</Text>
+              )}
+              {item.weightDelta != null && item.weightDelta > 0 && (
+                <Text style={[styles.feedStatValue, styles.feedStatGold]}>
+                  {item.weightDelta.toFixed(2)} lbs
+                </Text>
+              )}
+            </View>
+          )}
+          {item.throneName && item.type === 'throne_claimed' && (
+            <View style={styles.throneClaimRow}>
+              <Ionicons name="crown" size={14} color={Colors.gold} />
+              <Text style={styles.throneText}>Now King of {item.throneName}</Text>
+            </View>
+          )}
+        </View>
+      </GlassCard>
+    </FadeInView>
   );
 }
 
@@ -127,47 +148,71 @@ function FeedItemCard({ item }: { item: FeedEntry }) {
 // Leaderboard Row Component
 // ─────────────────────────────────────────────
 
-function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
+function LeaderboardRow({ entry, index }: { entry: LeaderboardEntry; index: number }) {
   const isTop3 = entry.rank <= 3;
   const isLastPlace = entry.rank > 5 && entry.username === 'bobby';
 
+  const crownBounce = useSharedValue(1);
+
+  useEffect(() => {
+    if (entry.rank === 1) {
+      crownBounce.value = withRepeat(
+        withSequence(
+          withTiming(1.15, { duration: 600 }),
+          withSpring(1, { damping: 8, stiffness: 200 }),
+        ),
+        -1,
+        true,
+      );
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const crownStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: crownBounce.value }],
+  }));
+
   return (
-    <GlassCard
-      style={[
-        styles.leaderboardCard,
-        entry.isSelf && styles.leaderboardCardSelf,
-      ]}
-      gold={isTop3}
-    >
-      <View style={[styles.leaderboardContent, isLastPlace && styles.leaderboardContentBobby]}>
-        <View style={styles.rankSection}>
-          {isTop3 ? (
-            <Ionicons
-              name="crown"
-              size={20}
-              color={entry.rank === 1 ? Colors.gold : Colors.text3}
-            />
-          ) : (
-            <Text style={[styles.rankNumber, isLastPlace && styles.rankNumberBobby]}>
-              #{entry.rank}
+    <FadeInView delay={index * 60} slideFrom="right" slideDistance={25}>
+      <GlassCard
+        style={[
+          styles.leaderboardCard,
+          entry.isSelf && styles.leaderboardCardSelf,
+        ]}
+        gold={isTop3}
+      >
+        <View style={[styles.leaderboardContent, isLastPlace && styles.leaderboardContentBobby]}>
+          <View style={styles.rankSection}>
+            {isTop3 ? (
+              <Animated.View style={crownStyle}>
+                <Ionicons
+                  name="crown"
+                  size={20}
+                  color={entry.rank === 1 ? Colors.gold : entry.rank === 2 ? '#C0C0C0' : '#CD7F32'}
+                />
+              </Animated.View>
+            ) : (
+              <Text style={[styles.rankNumber, isLastPlace && styles.rankNumberBobby]}>
+                #{entry.rank}
+              </Text>
+            )}
+          </View>
+          <Avatar uri={entry.avatarUrl} username={entry.displayName} size={36} />
+          <View style={styles.leaderboardInfo}>
+            <Text style={[styles.leaderboardName, entry.isSelf && styles.leaderboardNameSelf]}>
+              {entry.displayName}
             </Text>
-          )}
+            <Text style={styles.leaderboardUsername}>@{entry.username}</Text>
+          </View>
+          <View style={styles.leaderboardStats}>
+            <Text style={[styles.leaderboardWeight, isLastPlace && styles.leaderboardWeightBobby]}>
+              {entry.totalWeightLbs.toFixed(1)}
+            </Text>
+            <Text style={styles.leaderboardWeightLabel}>lbs</Text>
+          </View>
         </View>
-        <Avatar uri={entry.avatarUrl} username={entry.displayName} size={36} />
-        <View style={styles.leaderboardInfo}>
-          <Text style={[styles.leaderboardName, entry.isSelf && styles.leaderboardNameSelf]}>
-            {entry.displayName}
-          </Text>
-          <Text style={styles.leaderboardUsername}>@{entry.username}</Text>
-        </View>
-        <View style={styles.leaderboardStats}>
-          <Text style={[styles.leaderboardWeight, isLastPlace && styles.leaderboardWeightBobby]}>
-            {entry.totalWeightLbs.toFixed(1)}
-          </Text>
-          <Text style={styles.leaderboardWeightLabel}>lbs</Text>
-        </View>
-      </View>
-    </GlassCard>
+      </GlassCard>
+    </FadeInView>
   );
 }
 
@@ -175,11 +220,11 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
 // Main Screen
 // ─────────────────────────────────────────────
 
-const FEED_FILTERS: { key: FeedFilter; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'records', label: 'Records' },
-  { key: 'thrones', label: 'Thrones' },
-  { key: 'alerts', label: 'Alerts' },
+const FEED_FILTERS: { key: FeedFilter; label: string; icon: string }[] = [
+  { key: 'all', label: 'All', icon: 'grid-outline' },
+  { key: 'records', label: 'Records', icon: 'trophy-outline' },
+  { key: 'thrones', label: 'Thrones', icon: 'crown-outline' },
+  { key: 'alerts', label: 'Alerts', icon: 'warning-outline' },
 ];
 
 export default function SocialScreen() {
@@ -191,7 +236,6 @@ export default function SocialScreen() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Initialize with mock data if enabled
   useEffect(() => {
     if (MOCK_ENABLED) {
       setFeed(MOCK_FEED_ITEMS);
@@ -281,7 +325,6 @@ export default function SocialScreen() {
         isSelf: p.id === user.id,
       }));
 
-      // Bobby always last
       const bobbyIdx = entries.findIndex((e) => e.username === 'bobby');
       if (bobbyIdx >= 0 && bobbyIdx !== entries.length - 1) {
         const bobby = entries.splice(bobbyIdx, 1)[0];
@@ -310,7 +353,6 @@ export default function SocialScreen() {
         isSelf: p.id === user.id,
       }));
 
-      // Bobby always last
       const bobbyIdx = entries.findIndex((e) => e.username === 'bobby');
       if (bobbyIdx >= 0 && bobbyIdx !== entries.length - 1) {
         const bobby = entries.splice(bobbyIdx, 1)[0];
@@ -340,6 +382,7 @@ export default function SocialScreen() {
     setRefreshing(true);
     if (mainTab === 'feed') await fetchFeed();
     else await fetchLeaderboard();
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setRefreshing(false);
   }, [mainTab, fetchFeed, fetchLeaderboard]);
 
@@ -351,12 +394,22 @@ export default function SocialScreen() {
     return true;
   });
 
+  const handleTabSwitch = (tab: MainTab) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setMainTab(tab);
+  };
+
+  const handleFilterSwitch = (filter: FeedFilter) => {
+    Haptics.selectionAsync();
+    setFeedFilter(filter);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Main Tab Switcher */}
       <View style={styles.mainTabRow}>
         <TouchableOpacity
-          onPress={() => setMainTab('feed')}
+          onPress={() => handleTabSwitch('feed')}
           style={[styles.mainTab, mainTab === 'feed' && styles.mainTabActive]}
         >
           <Text style={[styles.mainTabLabel, mainTab === 'feed' && styles.mainTabLabelActive]}>
@@ -364,7 +417,7 @@ export default function SocialScreen() {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => setMainTab('leaderboard')}
+          onPress={() => handleTabSwitch('leaderboard')}
           style={[styles.mainTab, mainTab === 'leaderboard' && styles.mainTabActive]}
         >
           <Text style={[styles.mainTabLabel, mainTab === 'leaderboard' && styles.mainTabLabelActive]}>
@@ -384,9 +437,14 @@ export default function SocialScreen() {
             {FEED_FILTERS.map((f) => (
               <TouchableOpacity
                 key={f.key}
-                onPress={() => setFeedFilter(f.key)}
+                onPress={() => handleFilterSwitch(f.key)}
                 style={[styles.filterChip, feedFilter === f.key && styles.filterChipActive]}
               >
+                <Ionicons
+                  name={f.icon as any}
+                  size={12}
+                  color={feedFilter === f.key ? Colors.gold : Colors.text3}
+                />
                 <Text style={[styles.filterLabel, feedFilter === f.key && styles.filterLabelActive]}>
                   {f.label}
                 </Text>
@@ -403,11 +461,12 @@ export default function SocialScreen() {
           >
             {filteredFeed.length === 0 ? (
               <View style={styles.empty}>
+                <Ionicons name="people-outline" size={48} color={Colors.goldDim} />
                 <Text style={styles.emptyTitle}>No friends yet.</Text>
                 <Text style={styles.emptyBody}>Add friends to see who reigns supreme. Bobby will be last.</Text>
               </View>
             ) : (
-              filteredFeed.map((item) => <FeedItemCard key={item.id} item={item} />)
+              filteredFeed.map((item, i) => <FeedItemCard key={item.id} item={item} index={i} />)
             )}
             <View style={styles.bottomPad} />
           </ScrollView>
@@ -417,7 +476,7 @@ export default function SocialScreen() {
           {/* Leaderboard Sub-tabs */}
           <View style={styles.subTabRow}>
             <TouchableOpacity
-              onPress={() => setLeaderboardTab('friends')}
+              onPress={() => { Haptics.selectionAsync(); setLeaderboardTab('friends'); }}
               style={[styles.subTab, leaderboardTab === 'friends' && styles.subTabActive]}
             >
               <Text style={[styles.subTabLabel, leaderboardTab === 'friends' && styles.subTabLabelActive]}>
@@ -425,7 +484,7 @@ export default function SocialScreen() {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => setLeaderboardTab('global')}
+              onPress={() => { Haptics.selectionAsync(); setLeaderboardTab('global'); }}
               style={[styles.subTab, leaderboardTab === 'global' && styles.subTabActive]}
             >
               <Text style={[styles.subTabLabel, leaderboardTab === 'global' && styles.subTabLabelActive]}>
@@ -442,6 +501,7 @@ export default function SocialScreen() {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.leaderboardHeader}>
+              <Ionicons name="trophy" size={14} color={Colors.gold} />
               <Text style={styles.leaderboardHeaderText}>
                 {leaderboardTab === 'friends' ? 'All-time by total weight' : 'Global all-time rankings'}
               </Text>
@@ -453,7 +513,7 @@ export default function SocialScreen() {
                 <Text style={styles.emptyBody}>Log sessions to appear on the leaderboard.</Text>
               </View>
             ) : (
-              leaderboard.map((entry) => <LeaderboardRow key={entry.userId} entry={entry} />)
+              leaderboard.map((entry, i) => <LeaderboardRow key={entry.userId} entry={entry} index={i} />)
             )}
             <View style={styles.bottomPad} />
           </ScrollView>
@@ -509,13 +569,15 @@ const styles = StyleSheet.create({
   },
   filterChip: {
     height: 32,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: Colors.glassBorder,
     backgroundColor: Colors.glass1,
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 6,
   },
   filterChipActive: {
     borderColor: Colors.gold,
@@ -543,6 +605,7 @@ const styles = StyleSheet.create({
   feedStats: { flexDirection: 'row', gap: 16 },
   feedStatValue: { fontFamily: Fonts.monoMediumFamily, fontSize: 20, color: Colors.text1 },
   feedStatGold: { color: Colors.gold },
+  throneClaimRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   throneText: { fontFamily: Fonts.bodySemiBoldFamily, color: Colors.gold, fontSize: 13, letterSpacing: 0.3 },
   alertCard: { borderColor: 'rgba(255,59,48,0.3)' },
   alertContent: { padding: 16, gap: 10, backgroundColor: 'rgba(255,59,48,0.04)' },
@@ -587,6 +650,9 @@ const styles = StyleSheet.create({
   },
   leaderboardHeader: {
     paddingBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   leaderboardHeaderText: {
     ...Type.caption,

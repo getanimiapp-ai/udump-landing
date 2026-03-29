@@ -1,5 +1,7 @@
 import { useSessionStore } from '@/lib/store/session.store';
 import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -24,13 +26,14 @@ import Animated, {
   Easing,
   runOnJS,
 } from 'react-native-reanimated';
-import Svg, { Circle } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { GoldButton } from '../../components/ui/GoldButton';
+import { FadeInView } from '../../components/ui/FadeInView';
 import { Colors } from '../../constants/colors';
 import { Fonts, Type } from '../../constants/typography';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
 function formatTime(totalSeconds: number): string {
   const h = Math.floor(totalSeconds / 3600);
@@ -42,40 +45,120 @@ function formatTime(totalSeconds: number): string {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
-const MILESTONES: { seconds: number; label: string; haptic: Haptics.ImpactFeedbackStyle }[] = [
-  { seconds: 60, label: 'WARMING UP', haptic: Haptics.ImpactFeedbackStyle.Light },
-  { seconds: 300, label: 'COMMITTED', haptic: Haptics.ImpactFeedbackStyle.Medium },
-  { seconds: 600, label: 'ELITE TERRITORY', haptic: Haptics.ImpactFeedbackStyle.Rigid },
-  { seconds: 900, label: 'DEDICATED', haptic: Haptics.ImpactFeedbackStyle.Heavy },
-  { seconds: 1800, label: 'LEGENDARY', haptic: Haptics.ImpactFeedbackStyle.Heavy },
+// ─────────────────────────────────────────────
+// AI Coach Messages
+// ─────────────────────────────────────────────
+
+const COACH_MESSAGES: { minSec: number; maxSec: number; messages: string[] }[] = [
+  {
+    minSec: 10, maxSec: 30,
+    messages: [
+      'The throne recognizes your presence.',
+      'Session initiated. The kingdom is watching.',
+      'Settle in. Greatness takes focus.',
+    ],
+  },
+  {
+    minSec: 60, maxSec: 120,
+    messages: [
+      'Posture check. Champions sit with intention.',
+      'Breathe deep. Let gravity do its work.',
+      'Relaxation is the key to peak performance.',
+    ],
+  },
+  {
+    minSec: 180, maxSec: 300,
+    messages: [
+      'You\'re in the zone now. Stay present.',
+      'Your consistency is building your legacy.',
+      'Bobby gave up at this point. You won\'t.',
+    ],
+  },
+  {
+    minSec: 360, maxSec: 600,
+    messages: [
+      'Elite territory. Most people have left the throne by now.',
+      'The longer you stay, the stronger the claim.',
+      'Did you know? Top performers average 8+ minutes.',
+    ],
+  },
+  {
+    minSec: 660, maxSec: 900,
+    messages: [
+      'Dedicated. The records are within reach.',
+      'Your throne time exceeds 90% of users.',
+      'Historians will note this session.',
+    ],
+  },
+  {
+    minSec: 1200, maxSec: 1800,
+    messages: [
+      'You\'re approaching legendary status.',
+      'At this point it\'s about sending a message.',
+      'Your friends are receiving notifications. Make them count.',
+    ],
+  },
+  {
+    minSec: 2400, maxSec: 3600,
+    messages: [
+      'Are you okay in there? Serious question.',
+      'Your dedication is... concerning. But respected.',
+      'Phone battery check recommended.',
+    ],
+  },
+];
+
+function getCoachMessage(elapsed: number): string | null {
+  for (const tier of COACH_MESSAGES) {
+    if (elapsed >= tier.minSec && elapsed <= tier.maxSec) {
+      if (elapsed === tier.minSec || (elapsed - tier.minSec) % 45 === 0) {
+        return tier.messages[Math.floor(Math.random() * tier.messages.length)];
+      }
+    }
+  }
+  return null;
+}
+
+// ─────────────────────────────────────────────
+// Milestones
+// ─────────────────────────────────────────────
+
+const MILESTONES: { seconds: number; label: string; points: number; haptic: Haptics.ImpactFeedbackStyle }[] = [
+  { seconds: 60, label: 'WARMING UP', points: 5, haptic: Haptics.ImpactFeedbackStyle.Light },
+  { seconds: 300, label: 'COMMITTED', points: 15, haptic: Haptics.ImpactFeedbackStyle.Medium },
+  { seconds: 600, label: 'ELITE TERRITORY', points: 30, haptic: Haptics.ImpactFeedbackStyle.Rigid },
+  { seconds: 900, label: 'DEDICATED', points: 50, haptic: Haptics.ImpactFeedbackStyle.Heavy },
+  { seconds: 1800, label: 'LEGENDARY', points: 100, haptic: Haptics.ImpactFeedbackStyle.Heavy },
 ];
 
 const PR_DURATION_DEFAULT = 600;
-const RING_SIZE = 220;
-const RING_STROKE = 3;
+const RING_SIZE = 240;
+const RING_STROKE = 5;
 const RING_RADIUS = (RING_SIZE - RING_STROKE * 2) / 2;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
-interface ProgressRingProps {
-  progress: number;
-}
+// ─────────────────────────────────────────────
+// Progress Ring
+// ─────────────────────────────────────────────
 
-function ProgressRing({ progress }: ProgressRingProps) {
+function ProgressRing({ progress }: { progress: number }) {
   const clamped = Math.min(Math.max(progress, 0), 1);
   const dashOffset = RING_CIRCUMFERENCE * (1 - clamped);
-  const r = Math.round(255 + (212 - 255) * clamped);
-  const g = Math.round(255 + (175 - 255) * clamped);
-  const b = Math.round(255 + (55 - 255) * clamped);
-  const a = (0.08 + 0.92 * clamped).toFixed(2);
-  const color = `rgba(${r},${g},${b},${a})`;
 
   return (
     <Svg width={RING_SIZE} height={RING_SIZE} style={ringStyles.svg}>
+      <Defs>
+        <SvgGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+          <Stop offset="0" stopColor={Colors.gold} stopOpacity="0.3" />
+          <Stop offset="0.5" stopColor={Colors.goldBright} stopOpacity="1" />
+          <Stop offset="1" stopColor={Colors.gold} stopOpacity="0.6" />
+        </SvgGradient>
+      </Defs>
       <Circle
         cx={RING_SIZE / 2}
         cy={RING_SIZE / 2}
         r={RING_RADIUS}
-        stroke="rgba(255,255,255,0.06)"
+        stroke="rgba(255,255,255,0.04)"
         strokeWidth={RING_STROKE}
         fill="none"
       />
@@ -83,7 +166,7 @@ function ProgressRing({ progress }: ProgressRingProps) {
         cx={RING_SIZE / 2}
         cy={RING_SIZE / 2}
         r={RING_RADIUS}
-        stroke={color}
+        stroke="url(#ringGrad)"
         strokeWidth={RING_STROKE}
         fill="none"
         strokeDasharray={RING_CIRCUMFERENCE}
@@ -97,24 +180,20 @@ function ProgressRing({ progress }: ProgressRingProps) {
 }
 
 const ringStyles = StyleSheet.create({
-  svg: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-  },
+  svg: { position: 'absolute', top: 0, left: 0 },
 });
 
-interface MilestoneBannerProps {
-  label: string;
-  onDone: () => void;
-}
+// ─────────────────────────────────────────────
+// Milestone Banner
+// ─────────────────────────────────────────────
 
-function MilestoneBanner({ label, onDone }: MilestoneBannerProps) {
+function MilestoneBanner({ label, points, onDone }: { label: string; points: number; onDone: () => void }) {
   const translateY = useSharedValue(30);
   const opacity = useSharedValue(0);
+  const scale = useSharedValue(0.8);
 
   const style = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
+    transform: [{ translateY: translateY.value }, { scale: scale.value }],
     opacity: opacity.value,
   }));
 
@@ -123,23 +202,71 @@ function MilestoneBanner({ label, onDone }: MilestoneBannerProps) {
   useEffect(() => {
     translateY.value = withSpring(0, { damping: 14, stiffness: 180 });
     opacity.value = withTiming(1, { duration: 200 });
+    scale.value = withSpring(1, { damping: 10, stiffness: 200 });
 
     const timeout = setTimeout(() => {
       opacity.value = withTiming(0, { duration: 500 }, (finished) => {
         if (finished) runOnJS(dismiss)();
       });
-    }, 2000);
+    }, 2500);
 
     return () => clearTimeout(timeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <Animated.View style={[styles.milestoneBanner, style]} pointerEvents="none">
+      <LinearGradient
+        colors={[Colors.goldDim, 'rgba(212,175,55,0.08)']}
+        style={styles.milestoneBg}
+      />
+      <Ionicons name="trophy" size={16} color={Colors.gold} />
       <Text style={styles.milestoneText}>{label}</Text>
+      <View style={styles.milestonePoints}>
+        <Text style={styles.milestonePointsText}>+{points} XP</Text>
+      </View>
     </Animated.View>
   );
 }
+
+// ─────────────────────────────────────────────
+// Coach Bubble
+// ─────────────────────────────────────────────
+
+function CoachBubble({ message, onDone }: { message: string; onDone: () => void }) {
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(10);
+
+  const style = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  useEffect(() => {
+    opacity.value = withTiming(1, { duration: 400 });
+    translateY.value = withSpring(0, { damping: 14 });
+
+    const timeout = setTimeout(() => {
+      opacity.value = withTiming(0, { duration: 600 }, (finished) => {
+        if (finished) runOnJS(onDone)();
+      });
+    }, 4000);
+
+    return () => clearTimeout(timeout);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <Animated.View style={[styles.coachBubble, style]}>
+      <Ionicons name="chatbubble-ellipses" size={14} color={Colors.gold} />
+      <Text style={styles.coachText}>{message}</Text>
+    </Animated.View>
+  );
+}
+
+// ─────────────────────────────────────────────
+// Main Screen
+// ─────────────────────────────────────────────
 
 export default function ActiveSessionScreen() {
   const router = useRouter();
@@ -149,17 +276,18 @@ export default function ActiveSessionScreen() {
   const [weightAfter, setWeightAfter] = useState('');
   const [isEnding, setIsEnding] = useState(false);
   const [sheetVisible, setSheetVisible] = useState(false);
-  const [activeMilestone, setActiveMilestone] = useState<string | null>(null);
+  const [activeMilestone, setActiveMilestone] = useState<{ label: string; points: number } | null>(null);
+  const [coachMessage, setCoachMessage] = useState<string | null>(null);
+  const [totalXP, setTotalXP] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const cancelPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [cancelProgress, setCancelProgress] = useState(0);
   const triggeredMilestonesRef = useRef<Set<number>>(new Set());
 
-  const timerOpacity = useSharedValue(1);
+  const timerPulse = useSharedValue(1);
   const sonar1Scale = useSharedValue(1);
   const sonar2Scale = useSharedValue(1);
   const sonar3Scale = useSharedValue(1);
   const sheetTranslateY = useSharedValue(SCREEN_HEIGHT);
+  const xpScale = useSharedValue(1);
 
   const weightDelta =
     weightBefore && weightAfter
@@ -170,14 +298,14 @@ export default function ActiveSessionScreen() {
     if (!activeSession) {
       startSession();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    timerOpacity.value = withRepeat(
+    timerPulse.value = withRepeat(
       withSequence(
-        withTiming(0.85, { duration: 1000 }),
-        withTiming(1, { duration: 1000 })
+        withTiming(1.03, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.ease) })
       ),
       -1,
       true
@@ -187,7 +315,7 @@ export default function ActiveSessionScreen() {
       val.value = withRepeat(
         withSequence(
           withTiming(delay > 0 ? 1 : 1, { duration: delay }),
-          withTiming(2.5, { duration: 2000, easing: Easing.out(Easing.quad) }),
+          withTiming(2.5, { duration: 2500, easing: Easing.out(Easing.quad) }),
           withTiming(1, { duration: 0 })
         ),
         -1,
@@ -198,7 +326,7 @@ export default function ActiveSessionScreen() {
     sonarAnim(sonar1Scale, 0);
     sonarAnim(sonar2Scale, 1333);
     sonarAnim(sonar3Scale, 2666);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -210,19 +338,28 @@ export default function ActiveSessionScreen() {
           if (next === milestone.seconds && !triggeredMilestonesRef.current.has(milestone.seconds)) {
             triggeredMilestonesRef.current.add(milestone.seconds);
             Haptics.impactAsync(milestone.haptic);
-            if (milestone.seconds === 1800) {
+            if (milestone.seconds >= 900) {
               setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 200);
             }
-            setActiveMilestone(milestone.label);
+            setActiveMilestone({ label: milestone.label, points: milestone.points });
+            setTotalXP((xp) => xp + milestone.points);
           }
         }
 
+        // Coach messages
+        const msg = getCoachMessage(next);
+        if (msg) {
+          setCoachMessage(msg);
+        }
+
+        // Overstay haptics
         if (next === 3600) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
         }
         if (next === 7200) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
+
         return next;
       });
     }, 1000);
@@ -233,19 +370,17 @@ export default function ActiveSessionScreen() {
   }, []);
 
   const timerStyle = useAnimatedStyle(() => ({
-    opacity: timerOpacity.value,
+    transform: [{ scale: timerPulse.value }],
   }));
 
   const sonar1Style = useAnimatedStyle(() => ({
     transform: [{ scale: sonar1Scale.value }],
     opacity: 2.5 - sonar1Scale.value,
   }));
-
   const sonar2Style = useAnimatedStyle(() => ({
     transform: [{ scale: sonar2Scale.value }],
     opacity: 2.5 - sonar2Scale.value,
   }));
-
   const sonar3Style = useAnimatedStyle(() => ({
     transform: [{ scale: sonar3Scale.value }],
     opacity: 2.5 - sonar3Scale.value,
@@ -266,10 +401,25 @@ export default function ActiveSessionScreen() {
     setTimeout(() => setSheetVisible(false), 320);
   };
 
+  const handleEndPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Alert.alert(
+      'Finished Already?',
+      'Are you sure you\'re done? You might have more to give. Champions push through.',
+      [
+        { text: 'Keep Going', style: 'cancel' },
+        {
+          text: 'I\'m Done',
+          onPress: openSheet,
+        },
+      ]
+    );
+  };
+
   const handleEnd = async () => {
     if (isEnding) return;
     setIsEnding(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
     const wBefore = weightBefore ? parseFloat(weightBefore) : null;
     const wAfter = weightAfter ? parseFloat(weightAfter) : null;
@@ -293,43 +443,45 @@ export default function ActiveSessionScreen() {
     }
   };
 
-  const handleCancelPressIn = () => {
-    cancelPressRef.current = setTimeout(() => {
-      Alert.alert(
-        'Cancel Session',
-        'This session will not be saved.',
-        [
-          { text: 'Keep Going', style: 'cancel' },
-          {
-            text: 'Cancel Session',
-            style: 'destructive',
-            onPress: async () => {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-              await cancelSession();
-              router.back();
-            },
+  const handleCancel = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    Alert.alert(
+      'Abandon Session?',
+      'Don\'t be a quitter. This session will NOT be saved and your streak may suffer. The throne remembers cowards.',
+      [
+        { text: 'You\'re Right, Keep Going', style: 'cancel' },
+        {
+          text: 'Abandon Ship',
+          style: 'destructive',
+          onPress: async () => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            await cancelSession();
+            router.back();
           },
-        ]
-      );
-    }, 2000);
-
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 0.05;
-      setCancelProgress(Math.min(progress, 1));
-      if (progress >= 1) clearInterval(interval);
-    }, 100);
-  };
-
-  const handleCancelPressOut = () => {
-    if (cancelPressRef.current) clearTimeout(cancelPressRef.current);
-    setCancelProgress(0);
+        },
+      ]
+    );
   };
 
   const ringProgress = Math.min(elapsed / PR_DURATION_DEFAULT, 1);
+  const currentMilestoneLabel = (() => {
+    let label = 'JUST STARTED';
+    for (const m of MILESTONES) {
+      if (elapsed >= m.seconds) label = m.label;
+    }
+    return label;
+  })();
 
   return (
     <View style={styles.container}>
+      {/* Background gradient */}
+      <LinearGradient
+        colors={['rgba(212,175,55,0.04)', 'transparent', 'rgba(212,175,55,0.02)']}
+        style={StyleSheet.absoluteFillObject}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
+
       {/* Sonar rings */}
       <View style={styles.sonarContainer}>
         <Animated.View style={[styles.sonarRing, sonar1Style]} />
@@ -339,63 +491,82 @@ export default function ActiveSessionScreen() {
 
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
+          {/* Top bar: XP + Status */}
+          <FadeInView delay={200}>
+            <View style={styles.topBar}>
+              <View style={styles.xpBadge}>
+                <Ionicons name="flash" size={12} color={Colors.gold} />
+                <Text style={styles.xpText}>{totalXP} XP</Text>
+              </View>
+              <View style={styles.statusBadge}>
+                <View style={styles.statusDot} />
+                <Text style={styles.statusText}>{currentMilestoneLabel}</Text>
+              </View>
+            </View>
+          </FadeInView>
+
           {/* Timer with progress ring */}
           <Animated.View style={[styles.timerContainer, timerStyle]}>
             <View style={styles.ringWrapper}>
               <ProgressRing progress={ringProgress} />
               <View style={styles.timerInner}>
-                <Text style={styles.timer} numberOfLines={1} adjustsFontSizeToFit>{formatTime(elapsed)}</Text>
+                <Text style={styles.timerLabel}>SESSION TIME</Text>
+                <Text style={styles.timer} numberOfLines={1} adjustsFontSizeToFit>
+                  {formatTime(elapsed)}
+                </Text>
                 {elapsed >= 3600 && (
-                  <Text style={styles.overstayWarning}>
-                    {elapsed >= 7200 ? '2+ HOURS' : '60+ MINUTES'}
-                  </Text>
+                  <View style={styles.overstayBadge}>
+                    <Ionicons name="warning" size={12} color={Colors.red} />
+                    <Text style={styles.overstayWarning}>
+                      {elapsed >= 7200 ? '2+ HOURS' : '60+ MINUTES'}
+                    </Text>
+                  </View>
                 )}
               </View>
             </View>
           </Animated.View>
 
-          {/* End Session Button */}
-          <TouchableOpacity
-            onPress={openSheet}
-            disabled={isEnding}
-            style={styles.endBtn}
-          >
-            <GlassCard style={styles.endBtnCard} intensity={30}>
-              <View style={styles.endBtnContent}>
-                <Text style={styles.endBtnLabel}>END SESSION</Text>
-              </View>
-            </GlassCard>
-          </TouchableOpacity>
-
-          {/* Cancel (hold 2s) */}
-          <TouchableOpacity
-            onPressIn={handleCancelPressIn}
-            onPressOut={handleCancelPressOut}
-            style={styles.cancelBtn}
-            activeOpacity={0.7}
-          >
-            <View style={styles.cancelProgressTrack}>
-              <View
-                style={[
-                  styles.cancelProgressFill,
-                  { width: `${Math.round(cancelProgress * 100)}%` },
-                ]}
+          {/* Coach message area */}
+          <View style={styles.coachArea}>
+            {coachMessage && (
+              <CoachBubble
+                key={coachMessage + elapsed}
+                message={coachMessage}
+                onDone={() => setCoachMessage(null)}
               />
+            )}
+          </View>
+
+          {/* Action buttons */}
+          <FadeInView delay={400}>
+            <View style={styles.actions}>
+              {/* End Session (primary) */}
+              <GoldButton
+                label={isEnding ? 'SAVING...' : 'FINISH SESSION'}
+                onPress={handleEndPress}
+                disabled={isEnding}
+                style={styles.endBtn}
+              />
+
+              {/* Cancel (secondary, scary) */}
+              <TouchableOpacity
+                onPress={handleCancel}
+                style={styles.cancelBtn}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.cancelBtnText}>ABANDON SESSION</Text>
+              </TouchableOpacity>
             </View>
-            <Text style={styles.cancelBtnText}>
-              {cancelProgress > 0
-                ? `CANCELLING... ${Math.round(cancelProgress * 100)}%`
-                : 'HOLD 2S TO CANCEL'}
-            </Text>
-          </TouchableOpacity>
+          </FadeInView>
         </View>
       </SafeAreaView>
 
       {/* Milestone banner */}
       {activeMilestone && (
         <MilestoneBanner
-          key={activeMilestone}
-          label={activeMilestone}
+          key={activeMilestone.label}
+          label={activeMilestone.label}
+          points={activeMilestone.points}
           onDone={() => setActiveMilestone(null)}
         />
       )}
@@ -409,8 +580,11 @@ export default function ActiveSessionScreen() {
           >
             <View style={styles.sheet}>
               <View style={styles.sheetHandle} />
-              <Text style={styles.sheetTitle}>WEIGHT ENTRY</Text>
-              <Text style={styles.sheetSub}>Optional. Enter your weight before and after.</Text>
+              <View style={styles.sheetHeader}>
+                <Ionicons name="scale-outline" size={20} color={Colors.gold} />
+                <Text style={styles.sheetTitle}>WEIGH IN</Text>
+              </View>
+              <Text style={styles.sheetSub}>Optional. Step on the scale before and after for weight tracking.</Text>
 
               <View style={styles.weightRow}>
                 <View style={styles.weightField}>
@@ -427,7 +601,7 @@ export default function ActiveSessionScreen() {
                     <Text style={styles.weightUnit}>lbs</Text>
                   </View>
                 </View>
-                <Text style={styles.weightArrow}>→</Text>
+                <Ionicons name="arrow-forward" size={18} color={Colors.text3} />
                 <View style={styles.weightField}>
                   <Text style={styles.weightLabel}>AFTER</Text>
                   <View style={styles.weightInputRow}>
@@ -445,20 +619,23 @@ export default function ActiveSessionScreen() {
               </View>
 
               {weightDelta !== null && (
-                <Text style={styles.weightDelta}>
-                  {weightDelta >= 0 ? '+' : ''}{weightDelta.toFixed(2)} lbs
-                </Text>
+                <View style={styles.weightDeltaRow}>
+                  <Ionicons name="trending-down" size={18} color={Colors.gold} />
+                  <Text style={styles.weightDelta}>
+                    {weightDelta >= 0 ? '+' : ''}{weightDelta.toFixed(2)} lbs
+                  </Text>
+                </View>
               )}
 
               <GoldButton
-                label={isEnding ? 'SAVING...' : 'CONFIRM & END'}
+                label={isEnding ? 'SAVING...' : 'CONFIRM & CLAIM GLORY'}
                 onPress={handleEnd}
                 disabled={isEnding}
                 style={styles.confirmBtn}
               />
 
               <TouchableOpacity onPress={closeSheet} style={styles.cancelSheetBtn}>
-                <Text style={styles.cancelSheetText}>Keep going</Text>
+                <Text style={styles.cancelSheetText}>Actually, I have more to give</Text>
               </TouchableOpacity>
             </View>
           </KeyboardAvoidingView>
@@ -487,7 +664,7 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 100,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.15)',
+    borderColor: 'rgba(212,175,55,0.12)',
   },
   safeArea: {
     flex: 1,
@@ -497,6 +674,51 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     justifyContent: 'space-between',
     paddingBottom: 24,
+  },
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 8,
+  },
+  xpBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.goldDim,
+    borderWidth: 1,
+    borderColor: Colors.gold,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  xpText: {
+    fontFamily: Fonts.monoMediumFamily,
+    fontSize: 12,
+    color: Colors.gold,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.glass2,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.green,
+  },
+  statusText: {
+    fontFamily: Fonts.bodySemiBoldFamily,
+    fontSize: 10,
+    letterSpacing: 1,
+    color: Colors.text2,
   },
   timerContainer: {
     flex: 1,
@@ -513,83 +735,114 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: RING_SIZE - RING_STROKE * 4,
-    gap: 8,
+    gap: 4,
+  },
+  timerLabel: {
+    ...Type.label,
+    color: Colors.text3,
+    fontSize: 10,
+    letterSpacing: 2,
   },
   timer: {
     fontFamily: Fonts.monoFamily,
-    fontSize: 56,
+    fontSize: 52,
     color: Colors.text1,
     letterSpacing: 2,
     textAlign: 'center',
     width: '100%',
   },
+  overstayBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,59,48,0.12)',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
   overstayWarning: {
     ...Type.label,
     color: Colors.red,
-    fontSize: 12,
+    fontSize: 10,
   },
-  endBtn: {
+  coachArea: {
+    minHeight: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 8,
   },
-  endBtnCard: {
-    borderColor: Colors.glassBorderHi,
-  },
-  endBtnContent: {
-    paddingVertical: 18,
+  coachBubble: {
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  endBtnLabel: {
-    ...Type.label,
-    color: Colors.text1,
-    fontSize: 15,
-    letterSpacing: 2,
-  },
-  cancelBtn: {
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    marginHorizontal: 40,
-    borderRadius: 12,
+    gap: 8,
+    backgroundColor: Colors.glass2,
     borderWidth: 1,
     borderColor: Colors.glassBorder,
-    backgroundColor: Colors.glass1,
-    overflow: 'hidden',
-    gap: 8,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    maxWidth: '90%',
   },
-  cancelProgressTrack: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'transparent',
+  coachText: {
+    fontFamily: Fonts.bodyFamily,
+    fontSize: 13,
+    color: Colors.text2,
+    fontStyle: 'italic',
+    flex: 1,
+    lineHeight: 18,
   },
-  cancelProgressFill: {
-    height: '100%',
-    backgroundColor: 'rgba(212,175,55,0.12)',
+  actions: {
+    gap: 12,
+  },
+  endBtn: {},
+  cancelBtn: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,59,48,0.2)',
+    backgroundColor: 'rgba(255,59,48,0.06)',
   },
   cancelBtnText: {
     ...Type.label,
-    color: Colors.text3,
+    color: Colors.red,
     fontSize: 10,
     letterSpacing: 1.5,
   },
   milestoneBanner: {
     position: 'absolute',
-    top: '45%',
+    top: '42%',
     alignSelf: 'center',
-    backgroundColor: Colors.goldDim,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     borderWidth: 1,
     borderColor: Colors.gold,
-    borderRadius: 8,
-    paddingHorizontal: 20,
+    borderRadius: 12,
+    paddingHorizontal: 16,
     paddingVertical: 10,
+    overflow: 'hidden',
+  },
+  milestoneBg: {
+    ...StyleSheet.absoluteFillObject,
   },
   milestoneText: {
     ...Type.label,
     color: Colors.gold,
     fontSize: 13,
     letterSpacing: 2,
+  },
+  milestonePoints: {
+    backgroundColor: Colors.gold,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  milestonePointsText: {
+    fontFamily: Fonts.monoMediumFamily,
+    fontSize: 10,
+    color: '#000',
   },
   sheetOverlay: {
     position: 'absolute',
@@ -618,6 +871,11 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 8,
   },
+  sheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   sheetTitle: {
     ...Type.label,
     color: Colors.text1,
@@ -628,6 +886,7 @@ const styles = StyleSheet.create({
     ...Type.caption,
     color: Colors.text3,
     marginTop: -8,
+    lineHeight: 18,
   },
   weightRow: {
     flexDirection: 'row',
@@ -664,9 +923,11 @@ const styles = StyleSheet.create({
     ...Type.caption,
     color: Colors.text3,
   },
-  weightArrow: {
-    color: Colors.text3,
-    fontSize: 18,
+  weightDeltaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
   weightDelta: {
     fontFamily: Fonts.monoMediumFamily,
@@ -684,5 +945,6 @@ const styles = StyleSheet.create({
   cancelSheetText: {
     ...Type.caption,
     color: Colors.text3,
+    fontStyle: 'italic',
   },
 });

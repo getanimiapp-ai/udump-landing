@@ -7,8 +7,10 @@ import { Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
+  withRepeat,
   withSequence,
   withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/typography';
@@ -24,15 +26,27 @@ interface TabIconProps {
 
 function TabIcon({ iconOutline, iconFilled, label, focused }: TabIconProps) {
   const scale = useSharedValue(1);
+  const glowOpacity = useSharedValue(0);
   const prevFocused = React.useRef(false);
 
   useEffect(() => {
     if (focused && !prevFocused.current) {
       scale.value = withSequence(
-        withSpring(1.18, { damping: 8, stiffness: 200 }),
+        withSpring(1.25, { damping: 6, stiffness: 250 }),
         withSpring(1, { damping: 12, stiffness: 180 }),
       );
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+    glowOpacity.value = focused
+      ? withRepeat(
+          withSequence(
+            withTiming(0.5, { duration: 1000 }),
+            withTiming(0.15, { duration: 1000 }),
+          ),
+          -1,
+          true,
+        )
+      : withTiming(0, { duration: 300 });
     prevFocused.current = focused;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focused]);
@@ -41,8 +55,14 @@ function TabIcon({ iconOutline, iconFilled, label, focused }: TabIconProps) {
     transform: [{ scale: scale.value }],
   }));
 
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
+  }));
+
   return (
     <View style={styles.tabItem}>
+      {/* Gold glow behind active icon */}
+      <Animated.View style={[styles.glowDot, glowStyle]} />
       <Animated.View style={iconStyle}>
         <Ionicons
           name={focused ? iconFilled : iconOutline}
@@ -130,6 +150,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 3,
     paddingTop: 4,
+  },
+  glowDot: {
+    position: 'absolute',
+    top: -2,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.goldDim,
   },
   tabLabel: {
     fontFamily: Fonts.displaySemiBoldFamily,

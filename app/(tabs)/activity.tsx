@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { useUserStore } from '@/lib/store/user.store';
 import { calculateDumpScore, getDumpScoreInsight } from '@/lib/utils/dumpScore';
 import { MOCK_ENABLED, MOCK_DUMP_SCORE, MOCK_SESSION_LOG } from '../../lib/mock-data';
+import * as Haptics from 'expo-haptics';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   RefreshControl,
@@ -11,6 +12,19 @@ import {
   Text,
   View,
 } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withSequence,
+  withSpring,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
+import { AnimatedNumber } from '../../components/ui/AnimatedNumber';
+import { FadeInView } from '../../components/ui/FadeInView';
+import { LevelRing } from '../../components/ui/LevelRing';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { Colors } from '../../constants/colors';
 import { Fonts, Type } from '../../constants/typography';
@@ -31,16 +45,47 @@ interface ScoreFactors {
   throne: number;
 }
 
-function FactorBar({ label, value, max = 10 }: { label: string; value: number; max?: number }) {
+function getRankTitle(score: number): string {
+  if (score >= 9.5) return 'LEGENDARY';
+  if (score >= 9) return 'ELITE';
+  if (score >= 8) return 'CHAMPION';
+  if (score >= 7) return 'VETERAN';
+  if (score >= 5) return 'CONTENDER';
+  if (score >= 3) return 'ROOKIE';
+  return 'UNRANKED';
+}
+
+function getNextRankScore(score: number): number {
+  if (score >= 9.5) return 10;
+  if (score >= 9) return 9.5;
+  if (score >= 8) return 9;
+  if (score >= 7) return 8;
+  if (score >= 5) return 7;
+  if (score >= 3) return 5;
+  return 3;
+}
+
+function FactorBar({ label, value, max = 10, delay = 0 }: { label: string; value: number; max?: number; delay?: number }) {
   const pct = Math.min(value / max, 1);
+  const width = useSharedValue(0);
+
+  useEffect(() => {
+    width.value = withDelay(delay, withTiming(pct * 100, { duration: 800, easing: Easing.out(Easing.cubic) }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pct]);
+
+  const barStyle = useAnimatedStyle(() => ({
+    width: `${width.value}%`,
+  }));
+
   return (
     <View style={factorStyles.container}>
       <View style={factorStyles.labelRow}>
         <Text style={factorStyles.label}>{label}</Text>
-        <Text style={factorStyles.value}>{value.toFixed(1)}</Text>
+        <AnimatedNumber value={value} decimals={1} style={factorStyles.value} duration={800} />
       </View>
       <View style={factorStyles.track}>
-        <View style={[factorStyles.fill, { width: `${pct * 100}%` }]} />
+        <Animated.View style={[factorStyles.fill, barStyle]} />
       </View>
     </View>
   );
@@ -72,7 +117,6 @@ export default function ActivityScreen() {
   const [insight, setInsight] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
-  // Initialize with mock data if enabled
   useEffect(() => {
     if (MOCK_ENABLED) {
       const mockSessions: SessionLog[] = MOCK_SESSION_LOG.map((s) => ({
@@ -134,7 +178,6 @@ export default function ActivityScreen() {
     setScore(calcScore);
     setInsight(getDumpScoreInsight(calcScore));
 
-    // Calculate factors
     const last30 = sessionList.filter((s) => {
       const daysAgo = (Date.now() - new Date(s.started_at).getTime()) / 86400000;
       return daysAgo <= 30;
@@ -157,6 +200,7 @@ export default function ActivityScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchData();
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setRefreshing(false);
   }, [fetchData]);
 
@@ -167,6 +211,10 @@ export default function ActivityScreen() {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
+  const nextRank = getNextRankScore(score);
+  const prevRank = score >= 9.5 ? 9.5 : score >= 9 ? 9 : score >= 8 ? 8 : score >= 7 ? 7 : score >= 5 ? 5 : score >= 3 ? 3 : 0;
+  const rankProgress = nextRank === prevRank ? 1 : (score - prevRank) / (nextRank - prevRank);
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -174,61 +222,85 @@ export default function ActivityScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.gold} />}
         showsVerticalScrollIndicator={false}
       >
-        {/* Score Header */}
-        <View style={styles.scoreHeader}>
-          <Text style={styles.scoreLabel}>DUMP SCORE™</Text>
-          <Text style={styles.scoreValue}>{score.toFixed(1)}</Text>
-          <Text style={styles.scoreSubtitle}>
-            {score >= 9 ? 'Top 5% globally' : score >= 7 ? 'Top 20% globally' : score >= 5 ? 'Top 50% globally' : 'Below average globally'}
-          </Text>
-        </View>
-
-        {/* Factor Breakdown */}
-        <GlassCard style={styles.factorsCard}>
-          <View style={styles.factorsContent}>
-            <Text style={styles.sectionLabel}>SCORE BREAKDOWN</Text>
-            <FactorBar label="Consistency" value={factors.consistency} />
-            <FactorBar label="Weight Trend" value={factors.weight} />
-            <FactorBar label="Session Length" value={factors.length} />
-            <FactorBar label="Throne Activity" value={factors.throne} />
+        {/* Score Hero with Level Ring */}
+        <FadeInView delay={0}>
+          <View style={styles.scoreHeader}>
+            <Text style={styles.scoreLabel}>DUMP SCORE\u2122</Text>
+            <LevelRing progress={rankProgress} size={200} strokeWidth={4}>
+              <View style={styles.scoreCenter}>
+                <AnimatedNumber
+                  value={score}
+                  decimals={1}
+                  duration={1000}
+                  style={styles.scoreValue}
+                  hapticOnComplete
+                  bounce
+                />
+                <View style={styles.rankBadge}>
+                  <Text style={styles.rankText}>{getRankTitle(score)}</Text>
+                </View>
+              </View>
+            </LevelRing>
+            <Text style={styles.scoreSubtitle}>
+              {score >= 9 ? 'Top 5% globally' : score >= 7 ? 'Top 20% globally' : score >= 5 ? 'Top 50% globally' : 'Keep grinding, champion'}
+            </Text>
           </View>
-        </GlassCard>
+        </FadeInView>
+
+        {/* Factor Breakdown with animated bars */}
+        <FadeInView delay={200}>
+          <GlassCard style={styles.factorsCard}>
+            <View style={styles.factorsContent}>
+              <Text style={styles.sectionLabel}>SCORE BREAKDOWN</Text>
+              <FactorBar label="Consistency" value={factors.consistency} delay={300} />
+              <FactorBar label="Weight Trend" value={factors.weight} delay={400} />
+              <FactorBar label="Session Length" value={factors.length} delay={500} />
+              <FactorBar label="Throne Activity" value={factors.throne} delay={600} />
+            </View>
+          </GlassCard>
+        </FadeInView>
 
         {/* Insight */}
         {insight && (
-          <GlassCard>
-            <View style={styles.insightContent}>
-              <Text style={styles.sectionLabel}>INSIGHT</Text>
-              <Text style={styles.insightText}>{insight}</Text>
-            </View>
-          </GlassCard>
+          <FadeInView delay={400}>
+            <GlassCard>
+              <View style={styles.insightContent}>
+                <Text style={styles.sectionLabel}>INSIGHT</Text>
+                <Text style={styles.insightText}>{insight}</Text>
+              </View>
+            </GlassCard>
+          </FadeInView>
         )}
 
         {/* Session Log */}
-        <Text style={styles.logTitle}>DUMP LOG</Text>
+        <FadeInView delay={500}>
+          <Text style={styles.logTitle}>DUMP LOG</Text>
+        </FadeInView>
         {sessions.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>No sessions recorded yet.</Text>
             <Text style={styles.emptySub}>Champions start somewhere.</Text>
           </View>
         ) : (
-          sessions.map((s) => (
-            <GlassCard key={s.id} style={styles.logItem}>
-              <View style={styles.logContent}>
-                <View style={styles.logLeft}>
-                  <Text style={styles.logDate}>{formatDate(s.started_at)}</Text>
-                  <Text style={styles.logTime}>{formatTime(s.started_at)}</Text>
+          sessions.map((s, i) => (
+            <FadeInView key={s.id} delay={600 + i * 60} slideDistance={12}>
+              <GlassCard style={styles.logItem}>
+                <View style={styles.logContent}>
+                  <View style={styles.logLeft}>
+                    <Text style={styles.logDate}>{formatDate(s.started_at)}</Text>
+                    <Text style={styles.logTime}>{formatTime(s.started_at)}</Text>
+                  </View>
+                  <View style={styles.logRight}>
+                    {s.duration_seconds != null && (
+                      <Text style={styles.logDuration}>{formatDuration(s.duration_seconds)}</Text>
+                    )}
+                    {s.weight_delta_lbs != null && s.weight_delta_lbs > 0 && (
+                      <Text style={styles.logWeight}>{s.weight_delta_lbs.toFixed(2)} lbs</Text>
+                    )}
+                  </View>
                 </View>
-                <View style={styles.logRight}>
-                  {s.duration_seconds != null && (
-                    <Text style={styles.logDuration}>{formatDuration(s.duration_seconds)}</Text>
-                  )}
-                  {s.weight_delta_lbs != null && s.weight_delta_lbs > 0 && (
-                    <Text style={styles.logWeight}>{s.weight_delta_lbs.toFixed(2)} lbs</Text>
-                  )}
-                </View>
-              </View>
-            </GlassCard>
+              </GlassCard>
+            </FadeInView>
           ))
         )}
 
@@ -251,17 +323,36 @@ const styles = StyleSheet.create({
   scoreHeader: {
     alignItems: 'center',
     paddingVertical: 20,
-    gap: 6,
+    gap: 12,
   },
   scoreLabel: {
     ...Type.label,
     color: Colors.text3,
+    letterSpacing: 2,
+  },
+  scoreCenter: {
+    alignItems: 'center',
+    gap: 6,
   },
   scoreValue: {
     fontFamily: Fonts.monoFamily,
-    fontSize: 72,
+    fontSize: 56,
     color: Colors.gold,
-    lineHeight: 80,
+    lineHeight: 62,
+  },
+  rankBadge: {
+    backgroundColor: Colors.goldDim,
+    borderWidth: 1,
+    borderColor: Colors.gold,
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+  },
+  rankText: {
+    fontFamily: Fonts.displaySemiBoldFamily,
+    fontSize: 10,
+    letterSpacing: 1.5,
+    color: Colors.gold,
   },
   scoreSubtitle: {
     fontFamily: Fonts.monoFamily,
@@ -277,6 +368,7 @@ const styles = StyleSheet.create({
     ...Type.label,
     color: Colors.text3,
     marginBottom: 4,
+    letterSpacing: 1.5,
   },
   insightContent: {
     padding: 20,
@@ -292,6 +384,7 @@ const styles = StyleSheet.create({
     ...Type.label,
     color: Colors.text3,
     marginTop: 4,
+    letterSpacing: 1.5,
   },
   logItem: {
     marginBottom: 0,

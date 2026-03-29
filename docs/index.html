@@ -710,21 +710,19 @@ footer {
   .store-row { flex-direction: column; align-items: center; }
   .cta-form { flex-direction: column; }
 
-  /* Hardware + Throne Pro sections */
+  /* Notification cards */
+  .notif-stage { padding: 0 4px; }
+}
+
+/* Stack 2-col grids on anything under 900px — tablets + phones */
+@media (max-width: 900px) {
   #hardware { padding: 60px 20px !important; }
   .hw-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
   .throne-pro-sec { padding: 60px 20px !important; }
   .throne-pro-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
-
-  /* Spec card header rows — stack badge below title on small screens */
   .spec-header { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
-
-  /* Press logos */
   .press-logos { gap: 24px; }
   .press-sec { padding: 40px 20px !important; }
-
-  /* Notification cards */
-  .notif-stage { padding: 0 4px; }
 }
 </style>
 </head>

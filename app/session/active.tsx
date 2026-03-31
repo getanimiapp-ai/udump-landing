@@ -1,6 +1,7 @@
 import { useSessionStore } from '@/lib/store/session.store';
 import { useUserStore } from '@/lib/store/user.store';
 import { notifyFriends } from '../../lib/utils/notifications';
+import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -721,6 +722,7 @@ export default function ActiveSessionScreen() {
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.sheetScrim} />
           </TouchableWithoutFeedback>
+          <BlurView intensity={60} tint="dark" style={styles.sheetBlur}>
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.sheetKAV}
@@ -796,6 +798,7 @@ export default function ActiveSessionScreen() {
               </TouchableWithoutFeedback>
             </ScrollView>
           </KeyboardAvoidingView>
+          </BlurView>
         </Animated.View>
       )}
     </View>
@@ -932,13 +935,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: Colors.glass2,
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: Colors.glassBorderHi,
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 10,
     maxWidth: '90%',
+    overflow: 'hidden',
   },
   coachText: {
     fontFamily: Fonts.bodyFamily,
@@ -1036,12 +1040,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  sheetKAV: {
-    backgroundColor: Colors.surface,
+  sheetBlur: {
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    overflow: 'hidden',
     borderTopWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: Colors.glassBorderHi,
+  },
+  sheetKAV: {
+    backgroundColor: 'rgba(12,12,18,0.55)',
   },
   sheet: {
     padding: 24,

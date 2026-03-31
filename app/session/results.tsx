@@ -159,7 +159,7 @@ function AchievementUnlockOverlay({ achievementKey, onDismiss }: AchievementOver
       <Animated.View
         style={[
           styles.overlayCard,
-          { borderColor: tierColors.border, backgroundColor: tierColors.bg },
+          { borderColor: tierColors.border },
           cardStyle,
         ]}
       >
@@ -465,6 +465,7 @@ const styles = StyleSheet.create({
     padding: 32,
     alignItems: 'center',
     gap: 10,
+    backgroundColor: Colors.surface,
   },
   overlayLabel: {
     ...Type.label,

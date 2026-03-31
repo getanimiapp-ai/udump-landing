@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { useUserStore } from '@/lib/store/user.store';
 import { MOCK_ENABLED, MOCK_PROFILE, MOCK_THRONES } from '../../lib/mock-data';
+import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
@@ -380,7 +381,7 @@ export default function ThronesScreen() {
       {/* Floating Header */}
       <SafeAreaView style={styles.floatingHeader} pointerEvents="box-none">
         <FadeInView delay={0}>
-          <View style={styles.headerBar}>
+          <BlurView intensity={40} tint="dark" style={styles.headerBar}>
             <View style={styles.headerCard}>
               <Ionicons name="crown" size={14} color={Colors.gold} />
               <Text style={styles.headerTitle}>YOUR EMPIRE</Text>
@@ -403,7 +404,7 @@ export default function ThronesScreen() {
                 <Text style={styles.headerStatLabel}>total</Text>
               </View>
             </View>
-          </View>
+          </BlurView>
         </FadeInView>
       </SafeAreaView>
 
@@ -467,13 +468,14 @@ const styles = StyleSheet.create({
     paddingTop: 4,
   },
   headerBar: {
-    backgroundColor: 'rgba(6,6,10,0.85)',
+    backgroundColor: 'rgba(6,6,10,0.45)',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: Colors.glassBorderHi,
     paddingHorizontal: 16,
     paddingVertical: 10,
     gap: 8,
+    overflow: 'hidden',
   },
   headerCard: {
     flexDirection: 'row',

@@ -381,12 +381,22 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        {/* Analytics Nav */}
+        {/* Nav Cards */}
         <TouchableOpacity onPress={() => router.push('/profile/analytics')}>
           <GlassCard style={styles.navCard}>
             <View style={styles.navContent}>
               <Ionicons name="analytics-outline" size={20} color={Colors.gold} />
               <Text style={styles.navLabel}>Analytics</Text>
+              <Text style={styles.navArrow}>›</Text>
+            </View>
+          </GlassCard>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => router.push('/profile/founders')}>
+          <GlassCard style={styles.navCard}>
+            <View style={styles.navContent}>
+              <Ionicons name="people-outline" size={20} color={Colors.gold} />
+              <Text style={styles.navLabel}>From Our Founders</Text>
               <Text style={styles.navArrow}>›</Text>
             </View>
           </GlassCard>

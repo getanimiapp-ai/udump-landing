@@ -159,7 +159,7 @@ function LeaderboardRow({ entry, index }: { entry: LeaderboardEntry; index: numb
       crownBounce.value = withRepeat(
         withSequence(
           withTiming(1.15, { duration: 600 }),
-          withSpring(1, { damping: 8, stiffness: 200 }),
+          withSpring(1, { damping: 14, stiffness: 200 }),
         ),
         -1,
         true,

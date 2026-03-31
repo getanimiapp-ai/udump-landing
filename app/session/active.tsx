@@ -275,9 +275,9 @@ function MilestoneBanner({ label, points, onDone }: { label: string; points: num
   const dismiss = () => onDone();
 
   useEffect(() => {
-    translateY.value = withSpring(0, { damping: 14, stiffness: 180 });
+    translateY.value = withSpring(0, { damping: 20, stiffness: 180 });
     opacity.value = withTiming(1, { duration: 200 });
-    scale.value = withSpring(1, { damping: 10, stiffness: 200 });
+    scale.value = withSpring(1, { damping: 16, stiffness: 200 });
 
     const timeout = setTimeout(() => {
       opacity.value = withTiming(0, { duration: 500 }, (finished) => {
@@ -319,7 +319,7 @@ function CoachBubble({ message, onDone }: { message: string; onDone: () => void 
 
   useEffect(() => {
     opacity.value = withTiming(1, { duration: 400 });
-    translateY.value = withSpring(0, { damping: 14 });
+    translateY.value = withSpring(0, { damping: 20 });
 
     const timeout = setTimeout(() => {
       opacity.value = withTiming(0, { duration: 600 }, (finished) => {
@@ -472,7 +472,7 @@ export default function ActiveSessionScreen() {
   const openSheet = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setSheetVisible(true);
-    sheetTranslateY.value = withSpring(0, { damping: 18, stiffness: 200 });
+    sheetTranslateY.value = withSpring(0, { damping: 24, stiffness: 200 });
   };
 
   const closeSheet = () => {

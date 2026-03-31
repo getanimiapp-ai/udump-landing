@@ -54,8 +54,8 @@ export default function PreSessionScreen() {
 
   const animateBeat = () => {
     numberScale.value = withSequence(
-      withSpring(1.3, { damping: 8, stiffness: 300 }),
-      withSpring(1, { damping: 12, stiffness: 200 })
+      withSpring(1.15, { damping: 14, stiffness: 300 }),
+      withSpring(1, { damping: 16, stiffness: 200 })
     );
     numberOpacity.value = withSequence(
       withTiming(1, { duration: 50 }),
@@ -80,7 +80,7 @@ export default function PreSessionScreen() {
         clearInterval(timerRef.current!);
         setCount(null);
         // Crown reveal
-        crownScale.value = withSpring(1, { damping: 8, stiffness: 200 });
+        crownScale.value = withSpring(1, { damping: 14, stiffness: 200 });
         crownOpacity.value = withTiming(1, { duration: 300 });
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 

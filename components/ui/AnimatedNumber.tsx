@@ -59,8 +59,8 @@ export function AnimatedNumber({
         setDisplay(to);
         if (bounce) {
           scale.value = withSequence(
-            withSpring(1.15, { damping: 6, stiffness: 300 }),
-            withSpring(1, { damping: 10, stiffness: 200 }),
+            withSpring(1.08, { damping: 14, stiffness: 300 }),
+            withSpring(1, { damping: 16, stiffness: 200 }),
           );
         }
         if (hapticOnComplete) {

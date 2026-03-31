@@ -110,7 +110,7 @@ function AchievementUnlockOverlay({ achievementKey, onDismiss }: AchievementOver
 
   useEffect(() => {
     overlayOpacity.value = withTiming(1, { duration: 300 });
-    cardScale.value = withSpring(1, { damping: 12, stiffness: 180 });
+    cardScale.value = withSpring(1, { damping: 18, stiffness: 180 });
     cardOpacity.value = withTiming(1, { duration: 350 });
 
     const timer = setTimeout(() => {
@@ -216,10 +216,10 @@ export default function ResultsScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
-    crownScale.value = withSpring(1, { damping: 10, stiffness: 150 });
+    crownScale.value = withSpring(1, { damping: 16, stiffness: 150 });
     crownOpacity.value = withTiming(1, { duration: 400 });
     contentOpacity.value = withDelay(300, withTiming(1, { duration: 400 }));
-    contentTranslateY.value = withDelay(300, withSpring(0, { damping: 14, stiffness: 120 }));
+    contentTranslateY.value = withDelay(300, withSpring(0, { damping: 20, stiffness: 120 }));
 
     // Weight count-up
     if (weightDelta != null && weightDelta > 0) {

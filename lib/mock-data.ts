@@ -1,7 +1,7 @@
 // Mock data for development — shows what the app looks like fully populated
 // Remove this file before production launch
 
-export const MOCK_ENABLED = true; // flip to false to use real Supabase data
+export const MOCK_ENABLED = false; // flip to true for local-only mock data
 
 export const MOCK_PROFILE = {
   id: 'mock-aaron',

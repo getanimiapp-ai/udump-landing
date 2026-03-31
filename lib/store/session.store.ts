@@ -79,6 +79,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       }
       notifyFriends(user.id, 'friend_active', { name: displayName, location: locationName, mins: 0 });
     } else {
+      console.error('Failed to start session:', error);
       set({ isStarting: false });
     }
   },
@@ -134,7 +135,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       }
     }
 
-    const { data } = await supabase
+    const { data, error: updateError } = await supabase
       .from('dump_sessions')
       .update({
         ended_at: endedAt.toISOString(),
@@ -149,9 +150,12 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       .select()
       .single();
 
-    set({ activeSession: null });
+    if (updateError || !data) {
+      console.error('Failed to save session:', updateError);
+      return null;
+    }
 
-    if (!data) return null;
+    set({ activeSession: null });
 
     // Fetch user display name for notification copy
     const { data: profile } = await supabase

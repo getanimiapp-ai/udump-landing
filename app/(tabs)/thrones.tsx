@@ -462,9 +462,8 @@ const styles = StyleSheet.create({
   floatingHeader: {
     position: 'absolute',
     top: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 20,
+    left: 16,
+    right: 16,
     paddingTop: 4,
   },
   headerBar: {

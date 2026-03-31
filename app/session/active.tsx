@@ -502,22 +502,53 @@ export default function ActiveSessionScreen() {
     const wBefore = weightBefore ? parseFloat(weightBefore) : null;
     const wAfter = weightAfter ? parseFloat(weightAfter) : null;
 
-    const result = await endSession(wBefore, wAfter);
-    if (result) {
-      router.replace({
-        pathname: '/session/results',
-        params: {
-          sessionId: result.id,
-          durationSeconds: result.durationSeconds.toString(),
-          weightDelta: result.weightDelta?.toString() ?? '',
-          isPersonalRecord: result.isPersonalRecord ? '1' : '0',
-          throneClaimed: result.throneClaimed ? '1' : '0',
-          throneId: result.throneId ?? '',
-          newAchievements: JSON.stringify(result.newAchievements),
-        },
-      });
-    } else {
+    try {
+      const result = await endSession(wBefore, wAfter);
+      if (result) {
+        router.replace({
+          pathname: '/session/results',
+          params: {
+            sessionId: result.id,
+            durationSeconds: result.durationSeconds.toString(),
+            weightDelta: result.weightDelta?.toString() ?? '',
+            isPersonalRecord: result.isPersonalRecord ? '1' : '0',
+            throneClaimed: result.throneClaimed ? '1' : '0',
+            throneId: result.throneId ?? '',
+            newAchievements: JSON.stringify(result.newAchievements),
+          },
+        });
+      } else {
+        setIsEnding(false);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        Alert.alert(
+          'Session Error',
+          'Could not save your session. Check your connection and try again.',
+          [
+            { text: 'Try Again', style: 'cancel' },
+            {
+              text: 'Go Home (Unsaved)',
+              style: 'destructive',
+              onPress: () => router.replace('/(tabs)'),
+            },
+          ]
+        );
+      }
+    } catch (err) {
+      console.error('endSession error:', err);
       setIsEnding(false);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert(
+        'Session Error',
+        'Something went wrong saving your session. Check your connection and try again.',
+        [
+          { text: 'Try Again', style: 'cancel' },
+          {
+            text: 'Go Home (Unsaved)',
+            style: 'destructive',
+            onPress: () => router.replace('/(tabs)'),
+          },
+        ]
+      );
     }
   };
 

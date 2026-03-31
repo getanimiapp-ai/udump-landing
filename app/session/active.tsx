@@ -17,6 +17,7 @@ import {
   SafeAreaView,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -352,6 +353,7 @@ export default function ActiveSessionScreen() {
   const [weightBefore, setWeightBefore] = useState('');
   const [weightAfter, setWeightAfter] = useState('');
   const afterInputRef = useRef<TextInput>(null);
+  const [clogged, setClogged] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
   const [sheetVisible, setSheetVisible] = useState(false);
   const [activeMilestone, setActiveMilestone] = useState<{ label: string; points: number } | null>(null);
@@ -506,7 +508,7 @@ export default function ActiveSessionScreen() {
     const wAfter = weightAfter ? parseFloat(weightAfter) : null;
 
     try {
-      const result = await endSession(wBefore, wAfter);
+      const result = await endSession(wBefore, wAfter, clogged);
       if (result) {
         router.replace({
           pathname: '/session/results',
@@ -518,6 +520,7 @@ export default function ActiveSessionScreen() {
             throneClaimed: result.throneClaimed ? '1' : '0',
             throneId: result.throneId ?? '',
             newAchievements: JSON.stringify(result.newAchievements),
+            clogged: clogged ? '1' : '0',
           },
         });
       } else {
@@ -785,6 +788,21 @@ export default function ActiveSessionScreen() {
                       </Text>
                     </View>
                   )}
+
+                  <View style={styles.clogRow}>
+                    <View style={styles.clogInfo}>
+                      <Text style={styles.clogLabel}>🪠 REPORT A CLOG</Text>
+                      <Text style={styles.clogSub}>
+                        {clogged ? 'The damage has been noted. Everyone will know.' : 'Did you... break the toilet?'}
+                      </Text>
+                    </View>
+                    <Switch
+                      value={clogged}
+                      onValueChange={setClogged}
+                      trackColor={{ false: Colors.glass3, true: 'rgba(220, 38, 38, 0.4)' }}
+                      thumbColor={clogged ? '#DC2626' : Colors.text3}
+                    />
+                  </View>
 
                   <GoldButton
                     label={isEnding ? 'SAVING...' : 'CONFIRM & CLAIM GLORY'}
@@ -1128,6 +1146,34 @@ const styles = StyleSheet.create({
     fontSize: 36,
     color: Colors.gold,
     textAlign: 'center',
+  },
+  clogRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.glass1,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+    padding: 14,
+    marginTop: 4,
+  },
+  clogInfo: {
+    flex: 1,
+    gap: 2,
+    marginRight: 12,
+  },
+  clogLabel: {
+    ...Type.label,
+    color: Colors.text2,
+    fontSize: 11,
+    letterSpacing: 1,
+  },
+  clogSub: {
+    ...Type.caption,
+    color: Colors.text3,
+    fontSize: 11,
+    fontStyle: 'italic',
   },
   confirmBtn: {
     marginTop: 4,

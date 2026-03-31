@@ -7,11 +7,14 @@ export interface SessionForAchievements {
   duration_seconds: number;
   weight_delta_lbs: number | null;
   throne_claimed: boolean;
+  clogged?: boolean;
+  cloggedAway?: boolean;
 }
 
 export interface UserStats {
   totalSessions: number;
   streakDays: number;
+  totalClogs?: number;
 }
 
 async function getUnlockedKeys(userId: string): Promise<Set<string>> {
@@ -61,6 +64,11 @@ export async function checkAndUnlockAchievements(
   // Time of day
   if (hour < 7) toUnlock.push('MORNING_PERSON');
   if (hour >= 0 && hour < 4) toUnlock.push('MIDNIGHT_THRONE');
+
+  // Clog achievements
+  if (session.clogged) toUnlock.push('FIRST_CLOG');
+  if (session.cloggedAway) toUnlock.push('CLOG_AWAY');
+  if ((userStats.totalClogs ?? 0) >= 5) toUnlock.push('SERIAL_CLOGGER');
 
   // Filter already-unlocked
   const alreadyUnlocked = await getUnlockedKeys(userId);

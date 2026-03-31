@@ -170,6 +170,30 @@ export const ACHIEVEMENTS: Achievement[] = [
     tier: 'bronze',
     secret: true,
   },
+  {
+    key: 'FIRST_CLOG',
+    title: 'The Incident',
+    description: 'Clog a toilet for the first time. It happens to everyone. But mostly you.',
+    icon: '🪠',
+    tier: 'bronze',
+    secret: false,
+  },
+  {
+    key: 'CLOG_AWAY',
+    title: 'War Crime',
+    description: "Clog someone else's toilet. This is an act of disrespect that cannot be undone. Their toilet. Their home. Your legacy.",
+    icon: '☢️',
+    tier: 'platinum',
+    secret: false,
+  },
+  {
+    key: 'SERIAL_CLOGGER',
+    title: 'Serial Clogger',
+    description: 'Clog 5 toilets. At this point, the toilets fear you.',
+    icon: '🚨',
+    tier: 'gold',
+    secret: true,
+  },
 ];
 
 export const NOTIFICATION_COPY = {
@@ -222,5 +246,20 @@ export const NOTIFICATION_COPY = {
     title: 'REVENGE OPPORTUNITY',
     body: (rival: string, throne: string) =>
       `${rival} who took ${throne} from you is nearby. This is your chance. Reclaim what is yours.`,
+  },
+  clog_own: {
+    title: 'CLOG REPORTED',
+    body: (name: string) =>
+      `${name} clogged their own toilet. Thoughts and prayers.`,
+  },
+  clog_away: {
+    title: 'TOILET DESTROYED',
+    body: (name: string, location: string) =>
+      `${name} clogged the toilet at ${location}. This is not a drill. The disrespect is immeasurable.`,
+  },
+  clog_victim: {
+    title: 'YOUR TOILET HAS BEEN CLOGGED',
+    body: (perpetrator: string) =>
+      `${perpetrator} clogged your toilet. There are no words. Only a plunger and what remains of your dignity.`,
   },
 } as const;

@@ -186,10 +186,12 @@ export default function ResultsScreen() {
     throneClaimed: string;
     throneId: string;
     newAchievements: string;
+    clogged: string;
   }>();
 
   const isPersonalRecord = params.isPersonalRecord === '1';
   const throneClaimed = params.throneClaimed === '1';
+  const isClogged = params.clogged === '1';
   const durationSeconds = parseInt(params.durationSeconds ?? '0', 10);
   const weightDelta = params.weightDelta ? parseFloat(params.weightDelta) : null;
 
@@ -274,6 +276,8 @@ export default function ResultsScreen() {
   const { badge, title } = getHeaderContent();
 
   const getInsightText = () => {
+    if (isClogged && throneClaimed) return 'You claimed the throne AND clogged the toilet. This is violence.';
+    if (isClogged) return 'A clog has been reported. Your friends have been notified. There is no coming back from this.';
     if (isPersonalRecord) return 'New personal best. Bobby has been notified and is devastated.';
     if (throneClaimed) return 'Throne secured. The previous occupant has been dethroned and is embarrassed.';
     if (durationSeconds < 120) return 'Under 2 minutes. Efficient, if not artistic.';

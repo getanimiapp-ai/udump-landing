@@ -52,7 +52,10 @@ export type NotificationType =
   | 'challenger_nearby'
   | 'throne_under_attack'
   | 'territory_invaded'
-  | 'revenge_available';
+  | 'revenge_available'
+  | 'clog_own'
+  | 'clog_away'
+  | 'clog_victim';
 
 interface NotificationContent {
   title: string;
@@ -152,20 +155,72 @@ function buildContent(
         body: NOTIFICATION_COPY.revenge_available.body(rival, throne),
       };
     }
+    case 'clog_own': {
+      const name = (payload.name as string) ?? 'Someone';
+      return {
+        title: NOTIFICATION_COPY.clog_own.title,
+        body: NOTIFICATION_COPY.clog_own.body(name),
+      };
+    }
+    case 'clog_away': {
+      const name = (payload.name as string) ?? 'Someone';
+      const location = (payload.location as string) ?? 'a toilet';
+      return {
+        title: NOTIFICATION_COPY.clog_away.title,
+        body: NOTIFICATION_COPY.clog_away.body(name, location),
+      };
+    }
+    case 'clog_victim': {
+      const perpetrator = (payload.perpetrator as string) ?? 'Someone';
+      return {
+        title: NOTIFICATION_COPY.clog_victim.title,
+        body: NOTIFICATION_COPY.clog_victim.body(perpetrator),
+      };
+    }
     default:
       return null;
   }
 }
 
-// Send a notification to all accepted friends
+// Send a notification to all accepted friends (or a specific user if targetUserId is provided)
 export async function notifyFriends(
   currentUserId: string,
   type: NotificationType,
   payload: Record<string, unknown>,
+  targetUserId?: string,
 ): Promise<void> {
   try {
     const content = buildContent(type, payload);
     if (!content) return;
+
+    // If targeting a specific user, send only to them
+    if (targetUserId) {
+      const { data: targetProfile } = await supabase
+        .from('profiles')
+        .select('expo_push_token')
+        .eq('id', targetUserId)
+        .single();
+
+      if (targetProfile?.expo_push_token) {
+        await supabase.functions.invoke('send-notification', {
+          body: {
+            to: targetProfile.expo_push_token,
+            title: content.title,
+            body: content.body,
+            data: { type, ...payload },
+          },
+        });
+      }
+
+      await supabase.from('notification_events').insert({
+        from_user_id: currentUserId,
+        to_user_id: targetUserId,
+        type,
+        payload,
+      });
+
+      return;
+    }
 
     // Fetch accepted friends with push tokens
     const { data: friendships } = await supabase

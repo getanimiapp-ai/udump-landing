@@ -14,7 +14,7 @@ interface SessionState {
   activeSession: ActiveSession | null;
   isStarting: boolean;
   startSession: (throneId?: string) => Promise<void>;
-  endSession: (weightBefore: number | null, weightAfter: number | null) => Promise<SessionResult | null>;
+  endSession: (weightBefore: number | null, weightAfter: number | null, clogged?: boolean) => Promise<SessionResult | null>;
   cancelSession: () => Promise<void>;
 }
 
@@ -84,7 +84,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
   },
 
-  endSession: async (weightBefore: number | null, weightAfter: number | null) => {
+  endSession: async (weightBefore: number | null, weightAfter: number | null, clogged: boolean = false) => {
     const { activeSession } = get();
     if (!activeSession?.id) return null;
 
@@ -145,6 +145,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         weight_delta_lbs: weightDelta,
         is_personal_record: isPersonalRecord,
         throne_claimed: throneClaimed,
+        clogged,
       })
       .eq('id', activeSession.id)
       .select()
@@ -185,6 +186,35 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       });
     }
 
+    // Clog notifications — maximum shame
+    if (clogged) {
+      let locationName = 'home';
+      let throneOwnerId: string | null = null;
+
+      if (activeSession.throneId) {
+        const { data: throneInfo } = await supabase
+          .from('thrones')
+          .select('name, owner_user_id')
+          .eq('id', activeSession.throneId)
+          .single();
+        if (throneInfo) {
+          locationName = throneInfo.name;
+          throneOwnerId = throneInfo.owner_user_id;
+        }
+      }
+
+      // Is this someone else's throne?
+      if (throneOwnerId && throneOwnerId !== user.id) {
+        // Notify everyone: war crime committed
+        notifyFriends(user.id, 'clog_away', { name: displayName, location: locationName });
+        // Special notification to the throne owner — their toilet was violated
+        notifyFriends(user.id, 'clog_victim', { perpetrator: displayName }, throneOwnerId);
+      } else {
+        // Clogged your own toilet — still shameful
+        notifyFriends(user.id, 'clog_own', { name: displayName });
+      }
+    }
+
     // Count total sessions for achievement checks
     const { count: totalSessions } = await supabase
       .from('dump_sessions')
@@ -214,6 +244,30 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       }
     }
 
+    // Determine if clog was at someone else's throne
+    let cloggedAway = false;
+    if (clogged && activeSession.throneId) {
+      const { data: throneCheck } = await supabase
+        .from('thrones')
+        .select('owner_user_id')
+        .eq('id', activeSession.throneId)
+        .single();
+      if (throneCheck && throneCheck.owner_user_id && throneCheck.owner_user_id !== user.id) {
+        cloggedAway = true;
+      }
+    }
+
+    // Count total clogs for serial clogger achievement
+    let totalClogs = 0;
+    if (clogged) {
+      const { count } = await supabase
+        .from('dump_sessions')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('clogged', true);
+      totalClogs = count ?? 0;
+    }
+
     const newAchievements = await checkAndUnlockAchievements(
       {
         id: data.id,
@@ -222,8 +276,10 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         duration_seconds: durationSeconds,
         weight_delta_lbs: weightDelta,
         throne_claimed: throneClaimed,
+        clogged,
+        cloggedAway,
       },
-      { totalSessions: totalSessions ?? 1, streakDays },
+      { totalSessions: totalSessions ?? 1, streakDays, totalClogs },
     );
 
     // Streak milestone notifications (7, 30 day)

@@ -690,28 +690,72 @@ footer {
 
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
-  nav { padding: 0 20px; }
+  /* Nav */
+  nav { padding: 0 16px; }
   .nav-links { display: none; }
+  .nav-cta { padding: 7px 16px; font-size: 13px; }
+
+  /* Hero */
   .phone-wrap { display: none; }
-  .orbit-hotspot { display: none; }
-  .bento { grid-template-columns: 1fr; }
-  .fc.w2 { grid-column: span 1; }
-  .fc.t2 { grid-row: span 1; }
-  .testi-grid { grid-template-columns: 1fr; }
-  .founders-grid { grid-template-columns: 1fr; }
-  .feat-sec, .notif-sec, .testi-sec, .founders-sec, .origin-sec, .cta-sec, .press-sec { padding: 60px 20px; }
-  .hero-headline { font-size: clamp(60px, 16vw, 120px); }
-  #hero { grid-template-columns: 1fr; padding: 80px 20px 40px; text-align: center; }
+  .hero-headline { font-size: clamp(52px, 14vw, 120px); }
+  #hero { grid-template-columns: 1fr; padding: 80px 20px 40px !important; text-align: center; }
   #hero .eyebrow { justify-content: center; }
   .hero-btns { justify-content: center; }
   .hero-body { margin: 0 auto 28px; }
-  .phone-wrap { display: none; }
-  footer { flex-direction: column; text-align: center; gap: 12px; padding: 40px 20px; }
+
+  /* Orbit hotspots */
+  .orbit-hotspot { display: none; }
+
+  /* Bento grid */
+  .bento { grid-template-columns: 1fr; }
+  .fc.w2 { grid-column: span 1; }
+  .fc.t2 { grid-row: span 1; }
+
+  /* Testimonials + Founders grids */
+  .testi-grid { grid-template-columns: 1fr; }
+  .founders-grid { grid-template-columns: 1fr; }
+
+  /* Section padding — class-based sections */
+  .feat-sec, .notif-sec, .testi-sec, .founders-sec, .origin-sec, .cta-sec, .press-sec { padding: 60px 20px !important; }
+
+  /* Section padding — inline-styled sections need !important */
+  #hardware { padding: 60px 20px !important; }
+  .throne-pro-sec { padding: 60px 20px !important; }
+
+  /* Hardware + Throne Pro grids stack */
+  .hw-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
+  .throne-pro-grid { grid-template-columns: 1fr !important; gap: 28px !important; }
+
+  /* Spec card headers stack vertically */
+  .spec-header { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
+
+  /* Section headings tighter on mobile */
+  .sec-h2 { margin-bottom: 32px; }
+
+  /* Founders */
+  .founders-layout { gap: 24px; }
+  .founders-photo { width: 100% !important; max-width: 400px; }
+
+  /* CTA form stacks */
+  .cta-form { flex-direction: column; border-radius: 16px; }
+  .cta-submit { width: 100%; border-radius: 12px; margin: 4px; }
+  .cta-sec .cta-h2 { font-size: clamp(40px, 10vw, 100px); }
+
+  /* Store buttons stack */
   .store-row { flex-direction: column; align-items: center; }
-  .cta-form { flex-direction: column; }
+
+  /* Press logos */
+  .press-logos { gap: 24px; }
+
+  /* Footer */
+  footer { flex-direction: column; text-align: center; gap: 12px; padding: 40px 20px !important; }
 
   /* Notification cards */
   .notif-stage { padding: 0 4px; }
+
+  /* Ticker items tighter */
+  .tick-item { padding: 0 20px; }
+  .tick-n { font-size: 20px; }
 }
 
 /* Stack 2-col grids on anything under 900px — tablets + phones */

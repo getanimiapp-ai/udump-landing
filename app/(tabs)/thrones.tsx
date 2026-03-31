@@ -463,8 +463,8 @@ const styles = StyleSheet.create({
   floatingHeader: {
     position: 'absolute',
     top: 0,
-    left: 16,
-    right: 16,
+    left: 0,
+    right: 0,
     paddingTop: 4,
   },
   headerBar: {
@@ -476,6 +476,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     gap: 8,
     overflow: 'hidden',
+    marginHorizontal: 16,
   },
   headerCard: {
     flexDirection: 'row',

@@ -173,15 +173,22 @@ export default function ProfileScreen() {
     setUploadingAvatar(true);
     try {
       const asset = result.assets[0];
-      const ext = asset.uri.split('.').pop() ?? 'jpg';
-      const path = `${user.id}/avatar.${ext}`;
+      const path = `${user.id}/avatar.jpg`;
 
-      const response = await fetch(asset.uri);
-      const blob = await response.blob();
+      // React Native: use FormData for reliable file upload
+      const formData = new FormData();
+      formData.append('', {
+        uri: asset.uri,
+        name: 'avatar.jpg',
+        type: 'image/jpeg',
+      } as unknown as Blob);
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(path, blob, { upsert: true, contentType: `image/${ext}` });
+        .upload(path, formData, {
+          upsert: true,
+          contentType: 'multipart/form-data',
+        });
 
       if (uploadError) throw uploadError;
 
@@ -189,9 +196,12 @@ export default function ProfileScreen() {
         data: { publicUrl },
       } = supabase.storage.from('avatars').getPublicUrl(path);
 
-      await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
+      // Append cache-buster so the image refreshes
+      const avatarUrl = `${publicUrl}?t=${Date.now()}`;
+      await supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', user.id);
       await fetchProfile(user.id);
-    } catch {
+    } catch (err) {
+      console.error('Avatar upload error:', err);
       Alert.alert('Upload failed', 'Could not upload avatar. Try again.');
     } finally {
       setUploadingAvatar(false);

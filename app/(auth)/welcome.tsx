@@ -5,6 +5,7 @@ import React, { useRef, useState } from 'react';
 import {
   Dimensions,
   FlatList,
+  Image,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -18,39 +19,14 @@ import { GoldButton } from '../../components/ui/GoldButton';
 
 const { width } = Dimensions.get('window');
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const foundersImage = require('../../assets/founders.png');
+
 const PANELS = [
-  {
-    id: '1',
-    title: 'U·DUMP',
-    lines: [
-      'Originally conceived 2016.',
-      'Finally shipped 2026.',
-      "You're welcome.",
-    ],
-    cta: null,
-  },
-  {
-    id: '2',
-    title: null,
-    lines: [
-      'Every room in the house has gone smart.',
-      'Every room except one.',
-      '',
-      'Until now.',
-    ],
-    cta: null,
-  },
-  {
-    id: '3',
-    title: 'Track. Compete. Claim.',
-    lines: [],
-    features: [
-      { iconName: 'analytics-outline' as const, label: 'Log every session with precision' },
-      { iconName: 'trophy-outline' as const, label: 'Claim thrones. Defeat your friends.' },
-      { iconName: 'podium-outline' as const, label: 'Compete on the global leaderboard' },
-    ],
-    cta: 'create_account',
-  },
+  { id: '1' },
+  { id: '2' },
+  { id: '3' },
+  { id: '4' },
 ];
 
 export default function WelcomeScreen() {
@@ -87,49 +63,69 @@ export default function WelcomeScreen() {
         viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={[styles.panel]}>
+          <View style={styles.panel}>
             <SafeAreaView style={styles.panelContent}>
+
+              {/* ── Panel 1: The Hook ── */}
               {item.id === '1' && (
-                <View style={styles.splashContent}>
-                  <Text style={styles.wordmark}>{item.title}</Text>
-                  {item.lines.map((line, i) => (
-                    <Text key={i} style={styles.splashLine}>{line}</Text>
-                  ))}
+                <View style={styles.centerContent}>
+                  <Text style={styles.bigEmoji}>🚽</Text>
+                  <View style={styles.linesBlock}>
+                    <Text style={styles.pitchLine}>You{"'"}ve tracked your steps.</Text>
+                    <Text style={styles.pitchLine}>Your sleep. Your calories.</Text>
+                    <Text style={styles.spacer}>{' '}</Text>
+                    <Text style={styles.pitchLine}>But never your most</Text>
+                    <Text style={styles.pitchLineGold}>important output.</Text>
+                  </View>
                   <View style={styles.ctaRow}>
-                    <GoldButton label="BEGIN" onPress={goNext} style={styles.beginBtn} />
+                    <GoldButton label="GO ON..." onPress={goNext} />
                   </View>
                 </View>
               )}
 
+              {/* ── Panel 2: The Sell ── */}
               {item.id === '2' && (
-                <View style={styles.pitchContent}>
-                  {item.lines.map((line, i) => (
-                    <Text key={i} style={line === '' ? styles.spacer : styles.pitchLine}>
-                      {line}
-                    </Text>
-                  ))}
+                <View style={styles.centerContent}>
+                  <View style={styles.linesBlock}>
+                    <Text style={styles.sellLine}>Weigh your contributions</Text>
+                    <Text style={styles.sellLine}>to society.</Text>
+                    <Text style={styles.spacer}>{' '}</Text>
+                    <Text style={styles.sellLine}>Claim your friends{"'"} toilets.</Text>
+                    <Text style={styles.spacer}>{' '}</Text>
+                    <Text style={styles.sellLine}>Dethrone the people</Text>
+                    <Text style={styles.sellLine}>you love.</Text>
+                  </View>
+                  <Text style={styles.tagline}>
+                    Originally conceived 2016.{'\n'}Finally shipped 2026.
+                  </Text>
                   <TouchableOpacity onPress={goNext} style={styles.nextBtn}>
-                    <Text style={styles.nextBtnText}>Continue →</Text>
+                    <Text style={styles.nextBtnText}>I{"'"}m listening →</Text>
                   </TouchableOpacity>
                 </View>
               )}
 
+              {/* ── Panel 3: Features + CTA ── */}
               {item.id === '3' && (
                 <View style={styles.setupContent}>
-                  <Text style={styles.pitchTitle}>{item.title}</Text>
+                  <Text style={styles.ctaTitle}>Take Your Rightful Seat</Text>
                   <View style={styles.features}>
-                    {(item.features ?? []).map((f, i) => (
-                      <View key={i} style={styles.featureRow}>
-                        <Ionicons name={f.iconName} size={24} color={Colors.gold} />
-                        <Text style={styles.featureLabel}>{f.label}</Text>
-                      </View>
-                    ))}
+                    <View style={styles.featureRow}>
+                      <Ionicons name="analytics-outline" size={24} color={Colors.gold} />
+                      <Text style={styles.featureLabel}>Log every session with scientific precision</Text>
+                    </View>
+                    <View style={styles.featureRow}>
+                      <Ionicons name="trophy-outline" size={24} color={Colors.gold} />
+                      <Text style={styles.featureLabel}>Claim thrones. Humiliate your friends.</Text>
+                    </View>
+                    <View style={styles.featureRow}>
+                      <Ionicons name="podium-outline" size={24} color={Colors.gold} />
+                      <Text style={styles.featureLabel}>Rise on the global leaderboard</Text>
+                    </View>
                   </View>
                   <View style={styles.authButtons}>
                     <GoldButton
                       label="CREATE ACCOUNT"
                       onPress={() => router.push('/(auth)/signup')}
-                      style={styles.authBtn}
                     />
                     <TouchableOpacity
                       style={styles.loginBtn}
@@ -140,6 +136,45 @@ export default function WelcomeScreen() {
                   </View>
                 </View>
               )}
+
+              {/* ── Panel 4: Founders ── */}
+              {item.id === '4' && (
+                <View style={styles.foundersContent}>
+                  <Text style={styles.foundersLabel}>A MESSAGE FROM OUR FOUNDERS</Text>
+                  <Image
+                    source={foundersImage}
+                    style={styles.foundersImage}
+                    resizeMode="contain"
+                  />
+                  <View style={styles.foundersNames}>
+                    <Text style={styles.founderName}>Nick</Text>
+                    <Text style={styles.founderName}>Aaron</Text>
+                    <Text style={styles.founderName}>Shelden</Text>
+                  </View>
+                  <Text style={styles.foundersQuote}>
+                    Thank you for being an early believer in what we{"'"}re building. We vow to make your bathroom experience
+                    the most tracked, most competitive, and most dignified part of your day.
+                  </Text>
+                  <Text style={styles.foundersQuote}>
+                    Every flush is a data point. Every session, a step toward greatness. We built this for you — and honestly,
+                    for ourselves. We needed this.
+                  </Text>
+                  <Text style={styles.foundersSig}>— The U·Dump Founding Team</Text>
+                  <View style={styles.authButtons}>
+                    <GoldButton
+                      label={"LET'S GO"}
+                      onPress={() => router.push('/(auth)/signup')}
+                    />
+                    <TouchableOpacity
+                      style={styles.loginBtn}
+                      onPress={() => router.push('/(auth)/login')}
+                    >
+                      <Text style={styles.loginBtnText}>I already have an account</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
             </SafeAreaView>
           </View>
         )}
@@ -167,69 +202,83 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
-  splashContent: {
+
+  // ── Panel 1: Hook ──
+  centerContent: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
-    gap: 8,
+    gap: 24,
   },
-  wordmark: {
-    fontFamily: Fonts.displayFamily,
-    fontSize: 80,
-    color: Colors.gold,
-    letterSpacing: -3,
-    marginBottom: 24,
+  bigEmoji: {
+    fontSize: 72,
+    marginBottom: 8,
   },
-  splashLine: {
-    ...Type.body,
-    color: Colors.text2,
-    textAlign: 'center',
-    fontSize: 17,
-    lineHeight: 28,
-  },
-  ctaRow: {
-    marginTop: 40,
-    width: '100%',
-  },
-  beginBtn: {
-    width: '100%',
-  },
-  pitchContent: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-    gap: 16,
+  linesBlock: {
+    alignItems: 'center',
   },
   pitchLine: {
     fontFamily: Fonts.displayFamily,
-    fontSize: 28,
+    fontSize: 22,
     color: Colors.text1,
-    lineHeight: 36,
+    textAlign: 'center',
+    lineHeight: 32,
+  },
+  pitchLineGold: {
+    fontFamily: Fonts.displayFamily,
+    fontSize: 22,
+    color: Colors.gold,
+    textAlign: 'center',
+    lineHeight: 32,
   },
   spacer: {
-    height: 8,
+    height: 12,
+  },
+  ctaRow: {
+    marginTop: 16,
+    width: '100%',
+  },
+
+  // ── Panel 2: Sell ──
+  sellLine: {
+    fontFamily: Fonts.displayFamily,
+    fontSize: 26,
+    color: Colors.text1,
+    lineHeight: 36,
+    textAlign: 'center',
+  },
+  tagline: {
+    ...Type.body,
+    color: Colors.text3,
+    textAlign: 'center',
+    fontSize: 14,
+    lineHeight: 22,
+    fontStyle: 'italic',
+    marginTop: 8,
   },
   nextBtn: {
-    marginTop: 32,
-    alignSelf: 'flex-start',
+    marginTop: 16,
+    alignSelf: 'center',
   },
   nextBtnText: {
     ...Type.body,
     color: Colors.gold,
     fontSize: 17,
   },
-  pitchTitle: {
-    fontFamily: Fonts.displayFamily,
-    fontSize: 28,
-    color: Colors.text1,
-    marginBottom: 8,
-  },
+
+  // ── Panel 3: Features ──
   setupContent: {
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 32,
     gap: 24,
+  },
+  ctaTitle: {
+    fontFamily: Fonts.displayFamily,
+    fontSize: 28,
+    color: Colors.text1,
+    marginBottom: 4,
   },
   features: {
     gap: 16,
@@ -246,9 +295,7 @@ const styles = StyleSheet.create({
   },
   authButtons: {
     gap: 12,
-  },
-  authBtn: {
-    width: '100%',
+    marginTop: 8,
   },
   loginBtn: {
     alignItems: 'center',
@@ -258,6 +305,55 @@ const styles = StyleSheet.create({
     ...Type.body,
     color: Colors.text3,
   },
+
+  // ── Panel 4: Founders ──
+  foundersContent: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    gap: 12,
+  },
+  foundersLabel: {
+    ...Type.label,
+    color: Colors.gold,
+    fontSize: 10,
+    letterSpacing: 2,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  foundersImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 16,
+    alignSelf: 'center',
+  },
+  foundersNames: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: 16,
+  },
+  founderName: {
+    fontFamily: Fonts.bodySemiBoldFamily,
+    fontSize: 13,
+    color: Colors.text2,
+    letterSpacing: 0.5,
+  },
+  foundersQuote: {
+    ...Type.body,
+    color: Colors.text2,
+    fontSize: 14,
+    lineHeight: 22,
+    textAlign: 'center',
+  },
+  foundersSig: {
+    ...Type.body,
+    color: Colors.gold,
+    fontSize: 13,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+
+  // ── Dots ──
   dots: {
     flexDirection: 'row',
     justifyContent: 'center',

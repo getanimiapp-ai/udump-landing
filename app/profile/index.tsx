@@ -507,6 +507,49 @@ export default function ProfileScreen() {
           </GlassCard>
         </View>
 
+        {/* Privacy & Legal — the fine print */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Privacy & Legal</Text>
+          <GlassCard style={styles.privacyCard}>
+            <View style={styles.privacyContent}>
+              <Text style={styles.privacyHeader}>OUR COMMITMENT TO YOUR PRIVACY</Text>
+              <Text style={styles.privacyText}>
+                We will absolutely sell your data. All of it. Your weight, your frequency, your duration — every detail of your bathroom habits will be auctioned to the highest bidder.
+              </Text>
+              <Text style={styles.privacyText}>
+                Nothing is private. We are always watching. Our servers know when you sit down and when you stand up. We know about that 47-minute session on Tuesday. We all know.
+              </Text>
+              <Text style={styles.privacyText}>
+                By using this app, you consent to having your most intimate metrics broadcast on a leaderboard for your closest friends to mock.
+              </Text>
+              <Text style={styles.privacyDisclaimer}>
+                Your data is used solely to calculate your Dump Score{"™"} and humiliate Bobby. We do not actually sell or share your data with third parties. But we do judge you.
+              </Text>
+            </View>
+          </GlassCard>
+          <GlassCard style={styles.privacyCard}>
+            <View style={styles.privacyContent}>
+              <Text style={styles.privacyHeader}>TERMS OF SERVICE</Text>
+              <Text style={styles.privacyText}>
+                By sitting on any toilet while this app is open, you agree to be ranked, scored, and potentially dethroned by someone you thought was your friend.
+              </Text>
+              <Text style={styles.privacyText}>
+                U{"·"}Dump reserves the right to send push notifications about your bowel habits at the least convenient time possible.
+              </Text>
+              <Text style={styles.privacyText}>
+                All records are final. All thrones are temporary. Bobby{"'"}s ranking is permanent.
+              </Text>
+            </View>
+          </GlassCard>
+        </View>
+
+        {/* App Info */}
+        <View style={styles.appInfoSection}>
+          <Text style={styles.appInfoLogo}>U{"·"}DUMP</Text>
+          <Text style={styles.appInfoTagline}>Originally conceived 2016. Finally shipped 2026.</Text>
+          <Text style={styles.appInfoVersion}>v1.0.0 — The Inaugural Flush</Text>
+        </View>
+
         <TouchableOpacity onPress={handleSignOut} style={styles.signOutBtn}>
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
@@ -847,6 +890,59 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     paddingVertical: 8,
+  },
+  privacyCard: {
+    padding: 0,
+  },
+  privacyContent: {
+    padding: 16,
+    gap: 12,
+  },
+  privacyHeader: {
+    ...Type.label,
+    color: Colors.gold,
+    fontSize: 10,
+    letterSpacing: 2,
+  },
+  privacyText: {
+    ...Type.body,
+    color: Colors.text2,
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  privacyDisclaimer: {
+    ...Type.body,
+    color: Colors.text3,
+    fontSize: 11,
+    lineHeight: 18,
+    fontStyle: 'italic',
+    borderTopWidth: 1,
+    borderTopColor: Colors.glassBorder,
+    paddingTop: 12,
+    marginTop: 4,
+  },
+  appInfoSection: {
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 16,
+  },
+  appInfoLogo: {
+    ...Type.display,
+    fontSize: 20,
+    color: Colors.gold,
+    letterSpacing: 4,
+  },
+  appInfoTagline: {
+    ...Type.body,
+    color: Colors.text3,
+    fontSize: 11,
+    fontStyle: 'italic',
+  },
+  appInfoVersion: {
+    ...Type.caption,
+    color: Colors.text3,
+    fontSize: 10,
+    marginTop: 2,
   },
   bottomPad: {
     height: 100,

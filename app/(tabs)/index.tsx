@@ -190,21 +190,13 @@ export default function HomeScreen() {
             <View style={styles.greeting}>
               <View style={styles.greetingTopRow}>
                 <Text style={styles.greetingLabel}>{getGreeting()}</Text>
-                <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
-                  <TouchableOpacity
-                    onPress={() => { Haptics.selectionAsync(); router.push('/notifications'); }}
-                    style={styles.bellBtn}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <Ionicons name="notifications-outline" size={22} color={Colors.gold} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => { useUserStore.getState().signOut(); }}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <Ionicons name="log-out-outline" size={22} color={Colors.text3} />
-                  </TouchableOpacity>
-                </View>
+                <TouchableOpacity
+                  onPress={() => { Haptics.selectionAsync(); router.push('/notifications'); }}
+                  style={styles.bellBtn}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons name="notifications-outline" size={22} color={Colors.gold} />
+                </TouchableOpacity>
               </View>
               <View style={styles.nameRow}>
                 <Text style={styles.greetingName}>{displayProfile?.display_name ?? 'Friend'}.</Text>

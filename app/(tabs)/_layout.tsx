@@ -124,6 +124,14 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <TabIcon iconOutline="person-outline" iconFilled="person" label="PROFILE" focused={focused} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

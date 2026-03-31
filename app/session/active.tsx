@@ -791,7 +791,10 @@ export default function ActiveSessionScreen() {
 
                   <View style={styles.clogRow}>
                     <View style={styles.clogInfo}>
-                      <Text style={styles.clogLabel}>🪠 REPORT A CLOG</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Ionicons name="construct-outline" size={14} color={Colors.text2} />
+                        <Text style={styles.clogLabel}>REPORT A CLOG</Text>
+                      </View>
                       <Text style={styles.clogSub}>
                         {clogged ? 'The damage has been noted. Everyone will know.' : 'Did you... break the toilet?'}
                       </Text>

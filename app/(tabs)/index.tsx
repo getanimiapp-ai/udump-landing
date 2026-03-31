@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { useUserStore } from '@/lib/store/user.store';
 import { MOCK_ENABLED, MOCK_PROFILE, MOCK_TODAY_STATS, MOCK_LAST_SESSION } from '../../lib/mock-data';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -201,7 +201,7 @@ export default function HomeScreen() {
               <View style={styles.nameRow}>
                 <Text style={styles.greetingName}>{displayProfile?.display_name ?? 'Friend'}.</Text>
                 <Animated.View style={crownStyle}>
-                  <Text style={styles.crownIcon}>👑</Text>
+                  <MaterialCommunityIcons name="crown" size={28} color={Colors.gold} />
                 </Animated.View>
               </View>
               <View style={styles.rankRow}>

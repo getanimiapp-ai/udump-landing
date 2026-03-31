@@ -17,6 +17,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { AchievementIcon } from '../../components/ui/AchievementIcon';
 import { Badge } from '../../components/ui/Badge';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { GoldButton } from '../../components/ui/GoldButton';
@@ -164,7 +165,7 @@ function AchievementUnlockOverlay({ achievementKey, onDismiss }: AchievementOver
         ]}
       >
         <Text style={styles.overlayLabel}>ACHIEVEMENT UNLOCKED</Text>
-        <Text style={styles.overlayIcon}>{achievement.icon}</Text>
+        <AchievementIcon icon={achievement.icon} iconSet={achievement.iconSet} size={48} color={tierColors.text} />
         <Text style={[styles.overlayTier, { color: tierColors.text }]}>
           {achievement.tier.toUpperCase()}
         </Text>

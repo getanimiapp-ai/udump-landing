@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { GoldButton } from '../../components/ui/GoldButton';
 import { Colors } from '../../constants/colors';
 import { Type } from '../../constants/typography';
@@ -43,7 +44,7 @@ export default function ThroneNameScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.crown}>👑</Text>
+        <MaterialCommunityIcons name="crown" size={64} color={Colors.gold} />
         <Text style={styles.title}>Name your throne.</Text>
         <Text style={styles.subtitle}>
           Give your home toilet a name. Optional, but encouraged.

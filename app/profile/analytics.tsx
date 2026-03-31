@@ -1,5 +1,5 @@
 import { MOCK_ENABLED, MOCK_SESSION_LOG, MOCK_DUMP_SCORE, MOCK_PROFILE } from '../../lib/mock-data';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { formatDistanceToNow } from 'date-fns';
@@ -329,7 +329,7 @@ export default function AnalyticsScreen() {
             </GlassCard>
             <GlassCard style={styles.statCell}>
               <View style={styles.statCellContent}>
-                <Text style={{ fontSize: 18 }}>👑</Text>
+                <MaterialCommunityIcons name="crown" size={18} color={Colors.gold} />
                 <AnimatedNumber value={totalThrones} style={styles.statBigNum} hapticOnComplete />
                 <Text style={styles.statCellLabel}>THRONES</Text>
               </View>
@@ -496,7 +496,7 @@ export default function AnalyticsScreen() {
                         <Text style={styles.prText}>PR</Text>
                       </View>
                     )}
-                    {item.throne_claimed && <Text style={styles.sessionBadgeThrone}>👑</Text>}
+                    {item.throne_claimed && <MaterialCommunityIcons name="crown" size={12} color={Colors.gold} />}
                   </View>
                 </View>
               </View>

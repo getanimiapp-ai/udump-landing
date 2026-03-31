@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { useUserStore } from '@/lib/store/user.store';
 import { MOCK_ENABLED, MOCK_FEED_ITEMS, MOCK_LEADERBOARD } from '../../lib/mock-data';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -134,7 +134,7 @@ function FeedItemCard({ item, index }: { item: FeedEntry; index: number }) {
           )}
           {item.throneName && item.type === 'throne_claimed' && (
             <View style={styles.throneClaimRow}>
-              <Text style={{ fontSize: 14 }}>👑</Text>
+              <MaterialCommunityIcons name="crown" size={14} color={Colors.gold} />
               <Text style={styles.throneText}>Now King of {item.throneName}</Text>
             </View>
           )}
@@ -185,9 +185,12 @@ function LeaderboardRow({ entry, index }: { entry: LeaderboardEntry; index: numb
           <View style={styles.rankSection}>
             {isTop3 ? (
               <Animated.View style={crownStyle}>
-                <Text style={{ fontSize: 20 }}>
-                  {entry.rank === 1 ? '👑' : entry.rank === 2 ? '🥈' : '🥉'}
-                </Text>
+                {entry.rank === 1
+                  ? <MaterialCommunityIcons name="crown" size={20} color={Colors.gold} />
+                  : entry.rank === 2
+                    ? <Ionicons name="medal" size={20} color="#C0C0C0" />
+                    : <Ionicons name="medal" size={20} color="#CD7F32" />
+                }
               </Animated.View>
             ) : (
               <Text style={[styles.rankNumber, isLastPlace && styles.rankNumberBobby]}>

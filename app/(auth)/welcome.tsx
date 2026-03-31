@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
@@ -69,7 +69,7 @@ export default function WelcomeScreen() {
               {/* ── Panel 1: The Hook ── */}
               {item.id === '1' && (
                 <View style={styles.centerContent}>
-                  <Text style={styles.bigEmoji}>🚽</Text>
+                  <MaterialCommunityIcons name="toilet" size={72} color={Colors.gold} />
                   <View style={styles.linesBlock}>
                     <Text style={styles.pitchLine}>You{"'"}ve tracked your steps.</Text>
                     <Text style={styles.pitchLine}>Your sleep. Your calories.</Text>

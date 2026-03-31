@@ -14,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import { AnimatedNumber } from '../../components/ui/AnimatedNumber';
+import { AchievementIcon } from '../../components/ui/AchievementIcon';
 import { FadeInView } from '../../components/ui/FadeInView';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { ACHIEVEMENTS, AchievementTier } from '../../constants/achievements';
@@ -137,7 +138,7 @@ export default function AchievementsScreen() {
                   key={u.achievement_key}
                   style={[styles.recentCard, { borderColor: tc.border, backgroundColor: tc.bg }]}
                 >
-                  <Text style={styles.recentIcon}>{a.icon}</Text>
+                  <AchievementIcon icon={a.icon} iconSet={a.iconSet} size={24} color={tc.text} />
                   <Text style={[styles.recentTitle, { color: tc.text }]} numberOfLines={1}>
                     {a.title}
                   </Text>
@@ -184,9 +185,17 @@ export default function AchievementsScreen() {
               ]}
             >
               <View style={styles.achievementContent}>
-                <Text style={[styles.achievementIcon, !isUnlocked && styles.iconLocked]}>
-                  {isSecret ? '?' : achievement.icon}
-                </Text>
+                <View style={[styles.achievementIconWrap, !isUnlocked && styles.iconLocked]}>
+                  {isSecret
+                    ? <Ionicons name="help" size={24} color={Colors.text3} />
+                    : <AchievementIcon
+                        icon={achievement.icon}
+                        iconSet={achievement.iconSet}
+                        size={24}
+                        color={isUnlocked ? tierColors.text : Colors.text3}
+                      />
+                  }
+                </View>
                 <View style={styles.achievementInfo}>
                   <Text style={[styles.achievementTitle, !isUnlocked && styles.textLocked]}>
                     {isSecret ? '???' : achievement.title}
@@ -374,6 +383,11 @@ const styles = StyleSheet.create({
   },
   achievementIcon: {
     fontSize: 32,
+  },
+  achievementIconWrap: {
+    width: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   iconLocked: {
     opacity: 0.4,

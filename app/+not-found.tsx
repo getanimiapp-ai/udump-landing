@@ -1,4 +1,5 @@
 import { Link, Stack } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../constants/colors';
@@ -8,7 +9,7 @@ export default function NotFoundScreen() {
     <>
       <Stack.Screen options={{ title: 'Not Found' }} />
       <View style={styles.container}>
-        <Text style={styles.title}>👑</Text>
+        <MaterialCommunityIcons name="crown" size={48} color={Colors.gold} />
         <Text style={styles.heading}>Throne not found.</Text>
         <Text style={styles.body}>This screen doesn&apos;t exist.</Text>
         <Link href="/(tabs)" style={styles.link}>

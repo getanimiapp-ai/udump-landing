@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { useUserStore } from '@/lib/store/user.store';
 import { MOCK_ENABLED, MOCK_PROFILE, MOCK_THRONES } from '../../lib/mock-data';
 import { BlurView } from 'expo-blur';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
@@ -240,9 +240,12 @@ export default function ThronesScreen() {
             {/* Card Header */}
             <View style={styles.cardHeader}>
               <View style={styles.cardHeaderLeft}>
-                <Text style={styles.throneIcon}>
-                  {isMine ? '👑' : isContested ? '⚔️' : '🏰'}
-                </Text>
+                {isMine
+                  ? <MaterialCommunityIcons name="crown" size={22} color={Colors.gold} />
+                  : isContested
+                    ? <MaterialCommunityIcons name="sword-cross" size={22} color={Colors.red} />
+                    : <MaterialCommunityIcons name="castle" size={22} color={Colors.text3} />
+                }
                 <View style={styles.cardTitleGroup}>
                   <Text style={styles.throneName} numberOfLines={1}>{item.name}</Text>
                   {item.is_home && (
@@ -366,13 +369,12 @@ export default function ThronesScreen() {
               styles.pin,
               throne.current_king_id === displayProfile?.id && styles.pinMine,
             ]}>
-              <Text style={styles.pinIcon}>
-                {throne.current_king_id === displayProfile?.id
-                  ? '👑'
-                  : throne.owner_user_id === displayProfile?.id
-                    ? '⚔️'
-                    : '🏰'}
-              </Text>
+              {throne.current_king_id === displayProfile?.id
+                ? <MaterialCommunityIcons name="crown" size={18} color={Colors.gold} />
+                : throne.owner_user_id === displayProfile?.id
+                  ? <MaterialCommunityIcons name="sword-cross" size={18} color={Colors.red} />
+                  : <MaterialCommunityIcons name="castle" size={18} color={Colors.text3} />
+              }
             </View>
           </Marker>
         ))}
@@ -383,7 +385,7 @@ export default function ThronesScreen() {
         <FadeInView delay={0}>
           <BlurView intensity={40} tint="dark" style={styles.headerBar}>
             <View style={styles.headerCard}>
-              <Text style={{ fontSize: 14 }}>👑</Text>
+              <MaterialCommunityIcons name="crown" size={14} color={Colors.gold} />
               <Text style={styles.headerTitle}>YOUR EMPIRE</Text>
             </View>
             <View style={styles.headerStatsRow}>

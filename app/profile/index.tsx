@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useUserStore } from '@/lib/store/user.store';
 import { MOCK_ENABLED, MOCK_PROFILE, MOCK_ACHIEVEMENTS, MOCK_FRIENDS } from '../../lib/mock-data';
 import * as ImagePicker from 'expo-image-picker';
@@ -14,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { AchievementIcon } from '../../components/ui/AchievementIcon';
 import { Avatar } from '../../components/ui/Avatar';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { ACHIEVEMENTS } from '../../constants/achievements';
@@ -367,7 +369,7 @@ export default function ProfileScreen() {
                       { borderColor: tc.border, backgroundColor: tc.bg },
                     ]}
                   >
-                    <Text style={styles.achievementIcon}>{a.icon}</Text>
+                    <AchievementIcon icon={a.icon} iconSet={a.iconSet} size={24} color={tc.text} />
                   </View>
                 );
               })}
@@ -383,7 +385,7 @@ export default function ProfileScreen() {
         <TouchableOpacity onPress={() => router.push('/profile/analytics')}>
           <GlassCard style={styles.navCard}>
             <View style={styles.navContent}>
-              <Text style={styles.navIcon}>📊</Text>
+              <Ionicons name="analytics-outline" size={20} color={Colors.gold} />
               <Text style={styles.navLabel}>Analytics</Text>
               <Text style={styles.navArrow}>›</Text>
             </View>

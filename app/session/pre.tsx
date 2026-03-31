@@ -2,6 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -110,9 +111,9 @@ export default function PreSessionScreen() {
                 {count}
               </Animated.Text>
             ) : (
-              <Animated.Text style={[styles.crownEmoji, crownStyle]}>
-                👑
-              </Animated.Text>
+              <Animated.View style={crownStyle}>
+                <MaterialCommunityIcons name="crown" size={120} color={Colors.gold} />
+              </Animated.View>
             )}
           </View>
 

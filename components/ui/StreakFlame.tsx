@@ -1,3 +1,4 @@
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
@@ -58,9 +59,10 @@ export function StreakFlame({ days, size = 'sm' }: StreakFlameProps) {
     <View style={[styles.container, isLg && styles.containerLg]}>
       <Animated.View style={[styles.glowCircle, isLg && styles.glowCircleLg, glowStyle]} />
       <Animated.View style={flameStyle}>
-        <Text style={[styles.flame, isLg && styles.flameLg]}>
-          {isLegendary ? '👑' : isOnFire ? '🔥' : isHot ? '🔥' : '🔥'}
-        </Text>
+        {isLegendary
+          ? <MaterialCommunityIcons name="crown" size={isLg ? 28 : 18} color={Colors.gold} />
+          : <Ionicons name="flame" size={isLg ? 28 : 18} color={isOnFire ? Colors.gold : '#FF9500'} />
+        }
       </Animated.View>
       <Text style={[
         styles.count,

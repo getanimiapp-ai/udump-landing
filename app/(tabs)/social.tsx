@@ -134,7 +134,7 @@ function FeedItemCard({ item, index }: { item: FeedEntry; index: number }) {
           )}
           {item.throneName && item.type === 'throne_claimed' && (
             <View style={styles.throneClaimRow}>
-              <Ionicons name="crown" size={14} color={Colors.gold} />
+              <Text style={{ fontSize: 14 }}>👑</Text>
               <Text style={styles.throneText}>Now King of {item.throneName}</Text>
             </View>
           )}
@@ -185,11 +185,9 @@ function LeaderboardRow({ entry, index }: { entry: LeaderboardEntry; index: numb
           <View style={styles.rankSection}>
             {isTop3 ? (
               <Animated.View style={crownStyle}>
-                <Ionicons
-                  name="crown"
-                  size={20}
-                  color={entry.rank === 1 ? Colors.gold : entry.rank === 2 ? '#C0C0C0' : '#CD7F32'}
-                />
+                <Text style={{ fontSize: 20 }}>
+                  {entry.rank === 1 ? '👑' : entry.rank === 2 ? '🥈' : '🥉'}
+                </Text>
               </Animated.View>
             ) : (
               <Text style={[styles.rankNumber, isLastPlace && styles.rankNumberBobby]}>

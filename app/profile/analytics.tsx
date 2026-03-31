@@ -329,7 +329,7 @@ export default function AnalyticsScreen() {
             </GlassCard>
             <GlassCard style={styles.statCell}>
               <View style={styles.statCellContent}>
-                <Ionicons name="crown" size={18} color={Colors.gold} />
+                <Text style={{ fontSize: 18 }}>👑</Text>
                 <AnimatedNumber value={totalThrones} style={styles.statBigNum} hapticOnComplete />
                 <Text style={styles.statCellLabel}>THRONES</Text>
               </View>

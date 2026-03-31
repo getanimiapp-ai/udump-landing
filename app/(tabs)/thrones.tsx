@@ -383,7 +383,7 @@ export default function ThronesScreen() {
         <FadeInView delay={0}>
           <BlurView intensity={40} tint="dark" style={styles.headerBar}>
             <View style={styles.headerCard}>
-              <Ionicons name="crown" size={14} color={Colors.gold} />
+              <Text style={{ fontSize: 14 }}>👑</Text>
               <Text style={styles.headerTitle}>YOUR EMPIRE</Text>
             </View>
             <View style={styles.headerStatsRow}>

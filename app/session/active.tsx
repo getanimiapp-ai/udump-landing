@@ -356,6 +356,7 @@ export default function ActiveSessionScreen() {
   const [sheetVisible, setSheetVisible] = useState(false);
   const [activeMilestone, setActiveMilestone] = useState<{ label: string; points: number } | null>(null);
   const [coachMessage, setCoachMessage] = useState<string | null>(null);
+  const coachKeyRef = useRef(0);
   const [totalXP, setTotalXP] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const triggeredMilestonesRef = useRef<Set<number>>(new Set());
@@ -421,6 +422,7 @@ export default function ActiveSessionScreen() {
         // Coach messages
         const msg = getCoachMessage(next);
         if (msg) {
+          coachKeyRef.current += 1;
           setCoachMessage(msg);
         }
 
@@ -664,7 +666,7 @@ export default function ActiveSessionScreen() {
           <View style={styles.coachArea}>
             {coachMessage && (
               <CoachBubble
-                key={coachMessage + elapsed}
+                key={coachKeyRef.current}
                 message={coachMessage}
                 onDone={() => setCoachMessage(null)}
               />

@@ -1,0 +1,1978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>U·DUMP — Claim What's Yours</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700;1,800;1,900&family=Barlow:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.162.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.162.0/examples/jsm/"}}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<style>
+:root {
+  --void: #06060A;
+  --base: #0C0C12;
+  --surface: #131318;
+  --elevated: #1A1A22;
+  --g1: rgba(255,255,255,0.04);
+  --g2: rgba(255,255,255,0.08);
+  --g3: rgba(255,255,255,0.12);
+  --gb: rgba(255,255,255,0.10);
+  --gb2: rgba(255,255,255,0.18);
+  --gold: #D4AF37;
+  --gold2: #F0CE60;
+  --gold-glow: rgba(212,175,55,0.12);
+  --gold-dim: rgba(212,175,55,0.18);
+  --red: #FF3B30;
+  --green: #30D158;
+  --t1: #FFFFFF;
+  --t2: rgba(255,255,255,0.72);
+  --t3: rgba(255,255,255,0.42);
+  --tg: #D4AF37;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: auto; }
+body {
+  background: var(--void);
+  color: var(--t1);
+  font-family: 'Barlow', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+.bc { font-family: 'Barlow Condensed', sans-serif; }
+.mono { font-family: 'DM Mono', monospace; }
+
+/* ── CANVAS ── */
+#c {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ── CONTENT LAYERS ── */
+.above-canvas { position: relative; z-index: 2; }
+.canvas-bg    { position: relative; z-index: 1; }
+
+/* ── LOADER ── */
+#loader {
+  position: fixed; inset: 0;
+  background: var(--void);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  transition: opacity 0.6s ease;
+}
+#loader.gone { opacity: 0; pointer-events: none; }
+.loader-inner { text-align: center; }
+.loader-crown { font-size: 48px; animation: pulse 1.6s ease-in-out infinite; }
+.loader-text {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--t3); margin-top: 16px;
+}
+@keyframes pulse { 0%,100%{opacity:0.3; transform:scale(0.9);} 50%{opacity:1; transform:scale(1.05);} }
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: 58px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 40px;
+  background: rgba(6,6,10,0.80);
+  backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid var(--gb);
+}
+.nav-logo { display: flex; align-items: center; gap: 10px; }
+.nav-orb {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 13px; color: #000;
+  box-shadow: 0 0 14px rgba(212,175,55,0.35);
+}
+.nav-wordmark {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800; font-size: 20px; letter-spacing: 0.06em;
+}
+.nav-links { display: flex; gap: 28px; list-style: none; }
+.nav-links a { font-size: 14px; font-weight: 400; color: var(--t2); text-decoration: none; transition: color .2s; }
+.nav-links a:hover { color: var(--t1); }
+.nav-cta {
+  padding: 9px 22px; border-radius: 22px;
+  background: var(--gold); color: #000;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800; font-size: 15px; letter-spacing: 0.06em; text-transform: uppercase;
+  border: none; cursor: pointer;
+  box-shadow: 0 0 18px rgba(212,175,55,0.28);
+  transition: all .2s;
+}
+.nav-cta:hover { background: var(--gold2); box-shadow: 0 0 28px rgba(212,175,55,0.45); }
+
+/* ── HERO ── */
+#hero {
+  min-height: 100vh;
+  display: grid; grid-template-columns: 1fr auto;
+  align-items: start; gap: 40px;
+  padding: 100px 60px 0;
+  max-width: 1100px; margin: 0 auto;
+  position: relative; overflow: hidden;
+}
+#hero-text { padding-top: 20px; }
+
+/* EDITORIAL EYEBROW */
+.eyebrow {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: 13px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 10px;
+  justify-content: center;
+}
+.eyebrow::before { content: ''; width: 28px; height: 2px; background: var(--gold); }
+#hero .eyebrow { justify-content: flex-start; }
+
+/* BIG IMPACT HEADLINE */
+.hero-headline {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: clamp(64px, 8vw, 120px);
+  line-height: 0.86;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+.hero-headline .line-u {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold2) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  display: block;
+}
+.hero-headline .line-dump { display: block; color: var(--t1); }
+
+.hero-kicker {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-style: italic;
+  font-size: clamp(16px, 2.2vw, 26px);
+  color: var(--t2); letter-spacing: 0.01em;
+  margin-bottom: 20px; line-height: 1.3;
+}
+
+.hero-body {
+  font-size: 15px; font-weight: 300; line-height: 1.7;
+  color: var(--t2); max-width: 440px; margin-bottom: 28px;
+}
+
+.hero-btns { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+.btn-gold {
+  padding: 14px 32px; border-radius: 14px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: #000; font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800; font-size: 17px; letter-spacing: 0.06em; text-transform: uppercase;
+  border: none; cursor: pointer;
+  box-shadow: 0 4px 28px rgba(212,175,55,0.32);
+  transition: all .2s;
+}
+.btn-gold:hover { transform: translateY(-2px); box-shadow: 0 6px 36px rgba(212,175,55,0.48); }
+
+.btn-ghost {
+  padding: 14px 32px; border-radius: 14px;
+  background: var(--g2); color: var(--t1);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: 17px; letter-spacing: 0.06em; text-transform: uppercase;
+  border: 1px solid var(--gb2); cursor: pointer;
+  backdrop-filter: blur(12px); transition: all .2s;
+}
+.btn-ghost:hover { background: var(--g3); }
+
+/* FOUNDED PILL */
+.founded-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px; border-radius: 999px;
+  background: rgba(212,175,55,0.10);
+  border: 1px solid rgba(212,175,55,0.22);
+  margin-top: 20px;
+}
+.founded-pill span { font-size: 12px; font-weight: 500; color: var(--gold); letter-spacing: 0.04em; }
+.founded-pill .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 6px var(--gold); }
+
+/* ── PHONE MOCKUP ── */
+.phone-wrap {
+  display: flex; justify-content: center; align-items: flex-start;
+  position: relative;
+}
+.phone-halo {
+  position: absolute; inset: -50px; border-radius: 80px;
+  background: radial-gradient(ellipse at center, rgba(212,175,55,0.07) 0%, transparent 70%);
+  pointer-events: none;
+  animation: halo 5s ease-in-out infinite;
+}
+@keyframes halo { 0%,100%{opacity:.6;} 50%{opacity:1;} }
+
+.phone {
+  width: 260px;
+  background: #16161E;
+  border-radius: 52px;
+  border: 1.5px solid rgba(255,255,255,0.11);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.9),
+    0 50px 100px rgba(0,0,0,0.75),
+    inset 0 1px 0 rgba(255,255,255,0.07);
+  overflow: hidden;
+  animation: levitate 7s ease-in-out infinite;
+}
+@keyframes levitate {
+  0%,100% { transform: translateY(0) rotate(-0.5deg); }
+  50% { transform: translateY(-14px) rotate(0.5deg); }
+}
+.phone-island {
+  width: 115px; height: 35px; background: #000;
+  border-radius: 0 0 22px 22px; margin: 0 auto;
+  position: relative; z-index: 5;
+}
+
+/* APP SCREENS */
+.screens { height: 480px; position: relative; overflow: hidden; background: var(--void); }
+.screen { position: absolute; inset: 0; opacity: 0; transition: opacity .75s ease; display: flex; flex-direction: column; }
+.screen.on { opacity: 1; }
+
+/* SCREEN: HOME */
+.sh {
+  background: linear-gradient(180deg, #08080E 0%, var(--void) 100%);
+  padding: 14px; overflow: hidden; flex: 1; position: relative;
+}
+.sh-bloom {
+  position: absolute; top: 35%; left: 50%; transform: translate(-50%,-50%);
+  width: 260px; height: 260px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.sh-greet-label { font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--t3); margin-bottom: 2px; }
+.sh-greet-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 34px; letter-spacing: -.01em; line-height: 1; }
+.sh-greet-score { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--t2); margin-top: 4px; }
+.sh-greet-score b { color: var(--gold); }
+.sh-greet { margin-bottom: 16px; }
+
+.sh-start {
+  width: 100%; height: 66px; border-radius: 18px;
+  background: linear-gradient(135deg, #C49A20, #F0CE60);
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 28px rgba(212,175,55,0.32);
+  position: relative; overflow: hidden;
+}
+.sh-start::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.14) 0%, transparent 55%);
+}
+.sh-start-text { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 19px; letter-spacing: .08em; text-transform: uppercase; color: #000; }
+.sh-start-sub { font-size: 9px; font-weight: 600; color: rgba(0,0,0,.5); letter-spacing: .06em; margin-top: 1px; }
+.sh-conn-dot { width: 7px; height: 7px; border-radius: 50%; background: #00C853; box-shadow: 0 0 7px #00C853; flex-shrink: 0; }
+
+.sh-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.sh-card {
+  flex: 1; background: var(--g2); border: 1px solid var(--gb); border-radius: 14px; padding: 10px;
+  position: relative; overflow: hidden;
+}
+.sh-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.10), transparent); }
+.sh-card-l { font-size: 8.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--t3); margin-bottom: 3px; }
+.sh-card-v { font-family: 'DM Mono', monospace; font-size: 21px; font-weight: 500; color: var(--t1); line-height: 1; }
+.sh-card-v.g { color: var(--gold); }
+.sh-card-u { font-size: 9px; color: var(--t3); }
+
+.sh-last {
+  background: var(--g1); border: 1px solid var(--gb); border-radius: 16px; padding: 14px;
+  position: relative; overflow: hidden;
+}
+.sh-last::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent); }
+.sh-last-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.sh-last-lbl { font-size: 9px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--t3); }
+.sh-last-badge {
+  font-size: 8px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--gold); background: rgba(212,175,55,0.12);
+  padding: 3px 8px; border-radius: 7px;
+}
+.sh-last-nums { display: flex; gap: 18px; }
+.sh-last-nlbl { font-size: 8px; color: var(--t3); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 2px; }
+.sh-last-nval { font-family: 'DM Mono', monospace; font-size: 24px; font-weight: 400; color: var(--t1); line-height: 1; }
+.sh-last-nval.g { color: var(--gold); }
+.sh-last-nu { font-size: 10px; color: var(--t3); }
+
+/* SCREEN: RESULTS */
+.sr {
+  background: var(--void);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 20px 18px; position: relative; overflow: hidden; flex: 1;
+}
+.sr-bloom {
+  position: absolute; top: 25%; left: 50%; transform: translateX(-50%);
+  width: 320px; height: 320px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(212,175,55,0.09) 0%, transparent 65%);
+  pointer-events: none;
+}
+.sr-crown { font-size: 40px; margin-bottom: 8px; filter: drop-shadow(0 0 14px rgba(212,175,55,.5)); }
+.sr-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800; font-size: 13px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 6px;
+}
+.sr-big {
+  font-family: 'DM Mono', monospace; font-size: 86px; font-weight: 400;
+  color: var(--t1); line-height: 1; letter-spacing: -.02em; margin-bottom: 4px;
+}
+.sr-unit { font-size: 12px; color: var(--t3); letter-spacing: .08em; margin-bottom: 18px; font-family: 'DM Mono', monospace; }
+
+.sr-banner {
+  width: 100%; background: linear-gradient(135deg, rgba(212,175,55,.14), rgba(212,175,55,.05));
+  border: 1px solid rgba(212,175,55,.24); border-radius: 16px;
+  padding: 14px 16px; display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+}
+.sr-banner-icon { font-size: 22px; }
+.sr-banner h3 { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 15px; letter-spacing: .02em; color: var(--t1); }
+.sr-banner p { font-size: 10px; color: var(--t2); margin-top: 2px; }
+
+.sr-card {
+  width: 100%; background: var(--g2); border: 1px solid var(--gb2);
+  border-radius: 18px; padding: 14px; margin-bottom: 12px;
+  position: relative; overflow: hidden;
+}
+.sr-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent); }
+.sr-row { display: flex; justify-content: space-between; align-items: center; }
+.sr-rl { font-size: 12px; color: var(--t3); }
+.sr-rv { font-family: 'DM Mono', monospace; font-size: 15px; color: var(--t1); }
+.sr-rv.g { color: var(--gold); }
+.sr-div { height: 1px; background: var(--gb); margin: 9px 0; }
+
+.sr-btns { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+.sr-btn-p { width: 100%; height: 50px; border-radius: 14px; background: linear-gradient(135deg, var(--gold), var(--gold2)); border: none; color: #000; font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 17px; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+.sr-btn-s { width: 100%; height: 44px; border-radius: 14px; background: var(--g2); border: 1px solid var(--gb); color: var(--t1); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: .04em; cursor: pointer; }
+
+/* SCREEN: SOCIAL FEED */
+.sf { background: var(--void); padding: 12px; overflow: hidden; flex: 1; }
+.sf-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.sf-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 28px; letter-spacing: -.01em; }
+.chips { display: flex; gap: 6px; margin-bottom: 10px; overflow-x: auto; }
+.chip {
+  padding: 5px 12px; border-radius: 999px; white-space: nowrap;
+  font-size: 11px; font-weight: 600; letter-spacing: .04em;
+  background: var(--g2); border: 1px solid var(--gb); color: var(--t2);
+}
+.chip.on { background: rgba(212,175,55,.14); border-color: rgba(212,175,55,.28); color: var(--gold); }
+
+.fi {
+  background: var(--g1); border: 1px solid var(--gb);
+  border-radius: 17px; padding: 12px; margin-bottom: 8px;
+  position: relative; overflow: hidden;
+}
+.fi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent); }
+.fi.gg { border-color: rgba(212,175,55,.22); background: rgba(212,175,55,.025); }
+.fi.rr { border-color: rgba(255,59,48,.28); background: rgba(255,59,48,.04); }
+
+.fi-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.fi-av {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  border: 1px solid var(--gb); overflow: hidden;
+}
+.fi-av svg { width: 100%; height: 100%; }
+.fi-name { font-size: 13px; font-weight: 600; }
+.fi-t { font-family: 'DM Mono', monospace; font-size: 9.5px; color: var(--t3); margin-left: auto; }
+
+.fi-stats { display: flex; gap: 14px; }
+.fi-sv { font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 400; color: var(--t1); line-height: 1; }
+.fi-sv.g { color: var(--gold); }
+.fi-su { font-size: 9px; color: var(--t3); }
+.fi-bdg {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 8px;
+  font-size: 9.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  margin-top: 6px;
+}
+.fi-bdg.rec { background: rgba(212,175,55,.14); color: var(--gold); }
+.fi-bdg.sos { background: rgba(255,59,48,.14); color: var(--red); }
+.fi-sos-txt { font-size: 12px; color: var(--t1); font-weight: 500; margin-bottom: 7px; }
+.fi-replies { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px; }
+.fi-rep { padding: 4px 9px; border-radius: 9px; font-size: 10px; font-weight: 500; background: var(--g2); border: 1px solid var(--gb); color: var(--t2); }
+
+/* TAB BAR */
+.tabbar {
+  height: 70px; background: rgba(6,6,10,.88); backdrop-filter: blur(20px);
+  border-top: 1px solid var(--gb);
+  display: flex; align-items: center; justify-content: space-around;
+  padding: 0 8px 6px; flex-shrink: 0;
+}
+.tab { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; padding: 6px 0; }
+.tab-ic { font-size: 19px; }
+.tab-lb { font-size: 9px; font-weight: 600; color: var(--t3); letter-spacing: .03em; }
+.tab.on .tab-lb { color: var(--gold); }
+.tab.on .tab-ic { filter: drop-shadow(0 0 5px rgba(212,175,55,.5)); }
+
+.dots-row { display: flex; justify-content: center; gap: 5px; padding: 6px; background: var(--void); }
+.dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,.14); transition: all .3s; }
+.dot.on { background: var(--gold); width: 16px; border-radius: 3px; }
+
+/* ── TICKER ── */
+.ticker-wrap {
+  border-top: 1px solid var(--gb); border-bottom: 1px solid var(--gb);
+  padding: 24px 0; background: var(--base); overflow: hidden;
+}
+.ticker-inner { display: flex; width: max-content; animation: tick 28s linear infinite; }
+@keyframes tick { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.tick-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 36px; border-right: 1px solid var(--gb); white-space: nowrap;
+}
+.tick-n { font-family: 'DM Mono', monospace; font-size: 24px; color: var(--gold); }
+.tick-l { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 14px; letter-spacing: .1em; text-transform: uppercase; color: var(--t2); }
+
+/* ── SECTION HEADERS ── */
+.sec-eyebrow {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: 12px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.sec-eyebrow::before { content: ''; width: 20px; height: 2px; background: var(--gold); }
+
+.sec-h2 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900; font-size: clamp(52px, 7vw, 88px);
+  line-height: .9; letter-spacing: -.01em;
+  margin-bottom: 48px;
+}
+.sec-h2 em { font-style: italic; color: var(--gold); }
+
+/* ── PRODUCT ORBIT (3D SECTION) ── */
+#orbit-section {
+  height: 400vh;
+  position: relative;
+}
+#orbit-sticky {
+  position: sticky; top: 0; height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.orbit-hotspot {
+  position: absolute;
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.orbit-hotspot.visible { opacity: 1; }
+.orbit-hs-1 { right: 4%; top: 40%; text-align: right; max-width: 320px; }
+.orbit-hs-2 { left: 4%; top: 35%; text-align: left; max-width: 320px; }
+.orbit-hs-3 { left: 4%; top: 30%; text-align: left; max-width: 320px; }
+
+.hs-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green);
+  margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.hs-label::before {
+  content: ''; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--green); box-shadow: 0 0 8px var(--green);
+}
+.hs-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800; font-size: 28px; text-transform: uppercase; line-height: 1;
+  margin-bottom: 8px;
+}
+.hs-body { font-size: 14px; color: var(--t2); max-width: 280px; line-height: 1.6; }
+
+/* ── FLAT SECTIONS ── */
+
+/* FEATURES BENTO */
+.feat-sec { padding: 80px 60px; background: var(--base); }
+.bento {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: auto auto; gap: 12px;
+}
+.fc {
+  background: var(--g1); border: 1px solid var(--gb); border-radius: 24px; padding: 28px;
+  transition: all .3s; position: relative; overflow: hidden;
+}
+.fc::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.09), transparent); }
+.fc:hover { background: var(--g2); border-color: rgba(212,175,55,.18); transform: translateY(-2px); }
+.fc.w2 { grid-column: span 2; }
+.fc.t2 { grid-row: span 2; }
+
+.fc-icon { width: 46px; height: 46px; border-radius: 13px; background: var(--g3); border: 1px solid var(--gb2); display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 16px; }
+.fc-n { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--t3); margin-bottom: 8px; letter-spacing: .06em; }
+.fc-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: .01em; margin-bottom: 8px; }
+.fc-desc { font-size: 14px; font-weight: 300; line-height: 1.65; color: var(--t2); }
+.fc-tag {
+  display: inline-block; margin-top: 14px;
+  padding: 4px 11px; border-radius: 8px;
+  font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  background: rgba(212,175,55,.11); color: var(--gold);
+  border: 1px solid rgba(212,175,55,.2);
+}
+.score-preview {
+  margin-top: 20px; padding: 16px;
+  background: var(--g2); border: 1px solid var(--gb); border-radius: 14px;
+}
+.score-num { font-family: 'DM Mono', monospace; font-size: 40px; color: var(--gold); line-height: 1; }
+.score-sub { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--t3); margin-top: 4px; }
+
+/* NOTIFICATIONS */
+.notif-sec { padding: 80px 60px; }
+.notif-stage { max-width: 520px; margin: 48px auto 0; display: flex; flex-direction: column; gap: 10px; }
+.nc {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 16px; border-radius: 20px;
+  background: rgba(22,22,30,.92);
+  border: 1px solid var(--gb);
+  backdrop-filter: blur(20px);
+  opacity: 0; transform: translateX(18px);
+  transition: opacity .5s cubic-bezier(.34,1.2,.64,1), transform .5s cubic-bezier(.34,1.2,.64,1);
+}
+.nc.visible { opacity: 1; transform: translateX(0); }
+.nc.ng { border-color: rgba(212,175,55,.22); }
+.nc.nr { border-color: rgba(255,59,48,.22); background: rgba(28,12,12,.92); }
+.nc-icon { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; background: var(--elevated); border: 1px solid var(--gb); display: flex; align-items: center; justify-content: center; font-size: 17px; }
+.nc-meta { flex: 1; }
+.nc-app { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--t3); margin-bottom: 2px; }
+.nc-app.g { color: var(--gold); }
+.nc-app.r { color: var(--red); }
+.nc-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 16px; letter-spacing: .02em; margin-bottom: 2px; }
+.nc-body { font-size: 13px; font-weight: 300; color: var(--t2); line-height: 1.4; }
+.nc-t { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--t3); flex-shrink: 0; }
+
+/* TESTIMONIALS */
+.testi-sec { padding: 80px 60px; background: var(--base); }
+.testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 48px; }
+.tc {
+  background: var(--g1); border: 1px solid var(--gb); border-radius: 24px; padding: 28px;
+  position: relative; overflow: hidden; transition: all .3s;
+}
+.tc::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.09), transparent); }
+.tc:hover { background: var(--g2); transform: translateY(-2px); }
+
+.tc-top { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+.tc-avatar {
+  width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+  overflow: hidden;
+  border: 2px solid var(--gb2);
+}
+.tc-avatar svg { width: 100%; height: 100%; }
+.tc-info h4 { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: .01em; }
+.tc-info p { font-size: 12px; color: var(--t3); margin-top: 2px; }
+.tc-stars { color: var(--gold); font-size: 13px; letter-spacing: 2px; margin-top: 2px; }
+
+.tc-text { font-size: 14px; font-weight: 300; line-height: 1.7; color: var(--t2); font-style: italic; }
+.tc-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-top: 14px; padding: 4px 10px; border-radius: 8px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  background: rgba(212,175,55,.10); color: var(--gold);
+  border: 1px solid rgba(212,175,55,.18);
+}
+
+/* FOUNDERS */
+.founders-sec { padding: 60px 60px; background: var(--base); }
+.founders-layout {
+  display: flex; align-items: center; gap: 40px; max-width: 820px; margin-top: 36px;
+}
+.founders-photo {
+  width: 400px; flex-shrink: 0; border-radius: 20px; overflow: hidden;
+  border: 1px solid var(--gb);
+}
+.founders-photo img { width: 100%; height: auto; display: block; }
+.founders-list { display: flex; flex-direction: column; gap: 20px; }
+.founder-item { position: relative; }
+.founder-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 22px; letter-spacing: .01em; }
+.founder-title { font-size: 12px; color: var(--t3); margin-top: 3px; }
+.founder-badge {
+  display: inline-block; margin-top: 6px; padding: 3px 9px; border-radius: 7px;
+  font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  background: rgba(212,175,55,.12); color: var(--gold);
+  border: 1px solid rgba(212,175,55,.2);
+}
+@media (max-width: 768px) {
+  .founders-layout { flex-direction: column; }
+  .founders-photo { width: 100%; max-width: 400px; }
+}
+
+/* ORIGIN */
+.origin-sec { padding: 80px 60px; }
+.origin-inner { max-width: 720px; margin: 0 auto; }
+.origin-quote {
+  background: var(--g2); border: 1px solid var(--gb); border-radius: 20px; padding: 28px;
+  margin-bottom: 16px; position: relative; overflow: hidden;
+}
+.origin-quote::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent); }
+.oq-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
+.oq-text { font-size: 16px; font-weight: 300; font-style: italic; line-height: 1.7; color: var(--t2); }
+.oq-attr { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--t3); margin-top: 10px; }
+
+.origin-reddit {
+  background: rgba(212,175,55,.05); border: 1px solid rgba(212,175,55,.15);
+  border-radius: 20px; padding: 24px; margin-bottom: 32px;
+}
+.or-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--t3); margin-bottom: 10px; }
+.or-text { font-size: 15px; font-weight: 400; font-style: italic; color: var(--t2); }
+.or-attr { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--t3); margin-top: 8px; }
+
+.origin-close { font-size: 17px; font-weight: 300; line-height: 1.7; color: var(--t2); font-style: italic; text-align: center; }
+
+/* PRESS */
+.press-sec {
+  padding: 48px 60px;
+  border-top: 1px solid var(--gb); border-bottom: 1px solid var(--gb);
+}
+.press-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--t3); text-align: center; margin-bottom: 28px; }
+.press-logos { display: flex; justify-content: center; align-items: center; gap: 48px; flex-wrap: wrap; }
+.pl { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 20px; letter-spacing: .06em; color: rgba(255,255,255,.16); transition: color .3s; cursor: default; }
+.pl:hover { color: rgba(255,255,255,.4); }
+.press-quote { margin-top: 24px; text-align: center; font-size: 14px; font-style: italic; color: var(--t3); }
+.press-quote span { color: var(--gold); }
+
+/* CTA */
+.cta-sec { padding: 120px 60px; text-align: center; position: relative; overflow: hidden; }
+.cta-bg-text {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 900;
+  font-size: 22vw; color: rgba(212,175,55,.025);
+  white-space: nowrap; pointer-events: none; letter-spacing: -.02em;
+}
+.cta-h2 {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 900;
+  font-size: clamp(56px, 9vw, 100px); line-height: .9; letter-spacing: -.01em;
+  margin-bottom: 16px;
+}
+.cta-h2 em { font-style: italic; color: var(--gold); }
+.cta-sub { font-size: 17px; font-weight: 300; color: var(--t2); margin-bottom: 48px; }
+
+.cta-form {
+  display: flex; max-width: 440px; margin: 0 auto 20px;
+  border: 1px solid var(--gb2); border-radius: 16px; overflow: hidden;
+  background: var(--g2); backdrop-filter: blur(12px);
+}
+.cta-input {
+  flex: 1; padding: 16px 20px; background: transparent; border: none; outline: none;
+  color: var(--t1); font-family: 'Barlow', sans-serif; font-size: 15px;
+}
+.cta-input::placeholder { color: var(--t3); }
+.cta-submit {
+  padding: 12px 24px; border: none; border-radius: 12px; margin: 4px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: #000; font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900; font-size: 16px; letter-spacing: .06em; text-transform: uppercase; cursor: pointer;
+}
+.cta-fine { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--t3); letter-spacing: .06em; }
+.cta-fine strong { color: var(--gold); }
+
+.store-row { display: flex; justify-content: center; gap: 12px; margin-top: 40px; }
+.store-btn {
+  display: flex; align-items: center; gap: 10px; padding: 12px 22px;
+  border-radius: 14px; background: var(--g2); border: 1px solid var(--gb2);
+  cursor: pointer; transition: all .2s;
+}
+.store-btn:hover { background: var(--g3); }
+.store-ic { font-size: 22px; }
+.store-sm { font-size: 10px; color: var(--t3); letter-spacing: .04em; }
+.store-lg { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: .03em; }
+
+/* FOOTER */
+footer {
+  padding: 40px 60px;
+  border-top: 1px solid var(--gb);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.foot-brand { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 20px; letter-spacing: .06em; }
+.foot-brand span { color: var(--gold); }
+.foot-copy { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--t3); }
+.foot-egg { font-family: 'DM Mono', monospace; font-size: 10px; color: #1E1E28; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  /* Nav */
+  nav { padding: 0 16px; }
+  .nav-links { display: none; }
+  .nav-cta { padding: 7px 16px; font-size: 13px; }
+
+  /* Hero */
+  .phone-wrap { display: none; }
+  .hero-headline { font-size: clamp(52px, 14vw, 120px); }
+  #hero { grid-template-columns: 1fr; padding: 80px 20px 40px !important; text-align: center; }
+  #hero .eyebrow { justify-content: center; }
+  .hero-btns { justify-content: center; }
+  .hero-body { margin: 0 auto 28px; }
+
+  /* Orbit hotspots */
+  .orbit-hotspot { display: none; }
+
+  /* Bento grid */
+  .bento { grid-template-columns: 1fr; }
+  .fc.w2 { grid-column: span 1; }
+  .fc.t2 { grid-row: span 1; }
+
+  /* Testimonials + Founders grids */
+  .testi-grid { grid-template-columns: 1fr; }
+  .founders-grid { grid-template-columns: 1fr; }
+
+  /* Section padding — class-based sections */
+  .feat-sec, .notif-sec, .testi-sec, .founders-sec, .origin-sec, .cta-sec, .press-sec { padding: 60px 20px !important; }
+
+  /* Section padding — inline-styled sections need !important */
+  #hardware { padding: 60px 20px !important; }
+  .throne-pro-sec { padding: 60px 20px !important; }
+
+  /* Hardware + Throne Pro grids stack */
+  .hw-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
+  .throne-pro-grid { grid-template-columns: 1fr !important; gap: 28px !important; }
+  .throne-pro-grid > div:first-child { position: static !important; }
+
+  /* Spec card headers stack vertically */
+  .spec-header { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
+
+  /* Section headings tighter on mobile */
+  .sec-h2 { margin-bottom: 32px; }
+
+  /* Founders */
+  .founders-layout { gap: 24px; }
+  .founders-photo { width: 100% !important; max-width: 400px; }
+
+  /* CTA form stacks */
+  .cta-form { flex-direction: column; border-radius: 16px; }
+  .cta-submit { width: 100%; border-radius: 12px; margin: 4px; }
+  .cta-sec .cta-h2 { font-size: clamp(40px, 10vw, 100px); }
+
+  /* Store buttons stack */
+  .store-row { flex-direction: column; align-items: center; }
+
+  /* Press logos */
+  .press-logos { gap: 24px; }
+
+  /* Footer */
+  footer { flex-direction: column; text-align: center; gap: 12px; padding: 40px 20px !important; }
+
+  /* Notification cards */
+  .notif-stage { padding: 0 4px; }
+
+  /* Ticker items tighter */
+  .tick-item { padding: 0 20px; }
+  .tick-n { font-size: 20px; }
+}
+
+/* Stack 2-col grids on anything under 900px — tablets + phones */
+@media (max-width: 900px) {
+  #hardware { padding: 60px 20px !important; }
+  .hw-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
+  .throne-pro-sec { padding: 60px 20px !important; }
+  .throne-pro-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+  .throne-pro-grid > div:first-child { position: static !important; }
+  .spec-header { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
+  .press-logos { gap: 24px; }
+  .press-sec { padding: 40px 20px !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-inner">
+    <div class="loader-crown">&#x1F451;</div>
+    <div class="loader-text">Loading throne...</div>
+  </div>
+</div>
+
+<!-- 3D CANVAS -->
+<canvas id="c"></canvas>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-orb">U</div>
+    <div class="nav-wordmark">U·DUMP</div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#feed">App</a></li>
+    <li><a href="#founders">Team</a></li>
+    <li><a href="#cta">Pre-Order</a></li>
+  </ul>
+  <button class="nav-cta" onclick="document.getElementById('cta').scrollIntoView({behavior:'smooth'})">Claim Your Throne</button>
+</nav>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- HERO SECTION — phone + text over 3D    -->
+<!-- ═══════════════════════════════════════ -->
+<section id="hero" class="above-canvas">
+
+  <!-- HERO TEXT (LEFT) -->
+  <div id="hero-text">
+    <div class="eyebrow">Introducing U·Dump 2.0</div>
+    <div class="hero-headline">
+      <span class="line-u">U·</span>
+      <span class="line-dump">DUMP</span>
+    </div>
+    <div class="hero-kicker">The throne has waited long enough.</div>
+    <p class="hero-body">The world's first luxury smart toilet seat. Competitive weight analytics, GPS throne-claiming, and social bowel accountability. Rebuilt from scratch. Finished without asking permission.</p>
+    <div class="hero-btns">
+      <button class="btn-gold" onclick="document.getElementById('cta').scrollIntoView({behavior:'smooth'})">Pre-Order — $89</button>
+      <button class="btn-ghost" onclick="document.getElementById('origin').scrollIntoView({behavior:'smooth'})">Our Story</button>
+    </div>
+    <div class="founded-pill">
+      <div class="dot"></div>
+      <span>Originally Founded 2016 · Finally Shipped 2026</span>
+    </div>
+  </div>
+
+  <!-- PHONE MOCKUP (RIGHT) -->
+  <div class="phone-wrap">
+    <div style="position:relative;">
+      <div class="phone-halo"></div>
+      <div class="phone">
+        <div class="phone-island"></div>
+        <div class="screens" id="appScreens">
+
+          <!-- SCREEN 0: HOME -->
+          <div class="screen on" id="s0">
+            <div class="sh">
+              <div class="sh-bloom"></div>
+              <div class="sh-greet">
+                <div class="sh-greet-label">Good morning</div>
+                <div class="sh-greet-name">Aaron.</div>
+                <div class="sh-greet-score">Dump Score&#8482; <b>9.2</b> · &#8593; from yesterday</div>
+              </div>
+              <div class="sh-start">
+                <div class="sh-conn-dot"></div>
+                <div>
+                  <div class="sh-start-text">BEGIN SESSION</div>
+                  <div class="sh-start-sub">Seat connected · Bluetooth</div>
+                </div>
+              </div>
+              <div class="sh-row">
+                <div class="sh-card">
+                  <div class="sh-card-l">Today</div>
+                  <div class="sh-card-v">2 <span class="sh-card-u">dumps</span></div>
+                </div>
+                <div class="sh-card">
+                  <div class="sh-card-l">Weight</div>
+                  <div class="sh-card-v g">4.4 <span class="sh-card-u">lbs</span></div>
+                </div>
+                <div class="sh-card">
+                  <div class="sh-card-l">Streak</div>
+                  <div class="sh-card-v">&#x1F525;<span class="sh-card-u" style="font-size:13px">14d</span></div>
+                </div>
+              </div>
+              <div class="sh-last">
+                <div class="sh-last-top">
+                  <div class="sh-last-lbl">Last Session · 3:32 PM</div>
+                  <div class="sh-last-badge">&#x1F451; Record</div>
+                </div>
+                <div class="sh-last-nums">
+                  <div>
+                    <div class="sh-last-nlbl">Duration</div>
+                    <div class="sh-last-nval">45<span class="sh-last-nu"> min</span></div>
+                  </div>
+                  <div>
+                    <div class="sh-last-nlbl">Weight</div>
+                    <div class="sh-last-nval g">2.4<span class="sh-last-nu"> lbs</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="tabbar">
+              <div class="tab on"><div class="tab-ic">&#x1F451;</div><div class="tab-lb">Home</div></div>
+              <div class="tab"><div class="tab-ic">&#x1F4CA;</div><div class="tab-lb">Activity</div></div>
+              <div class="tab"><div class="tab-ic">&#x1F465;</div><div class="tab-lb">Social</div></div>
+              <div class="tab"><div class="tab-ic">&#x1F4CD;</div><div class="tab-lb">Thrones</div></div>
+            </div>
+          </div>
+
+          <!-- SCREEN 1: RESULTS -->
+          <div class="screen" id="s1">
+            <div class="sr">
+              <div class="sr-bloom"></div>
+              <div class="sr-crown">&#x1F451;</div>
+              <div class="sr-label">Throne Claimed</div>
+              <div class="sr-big">3.1</div>
+              <div class="sr-unit">POUNDS · 53 MINUTES</div>
+              <div class="sr-banner">
+                <div class="sr-banner-icon">&#x1F451;</div>
+                <div>
+                  <h3>New King: Bobby's Throne</h3>
+                  <p>Bobby's record was 2.4 lbs · Dethroned</p>
+                </div>
+              </div>
+              <div class="sr-card">
+                <div class="sr-row"><span class="sr-rl">Duration</span><span class="sr-rv mono">53 min</span></div>
+                <div class="sr-div"></div>
+                <div class="sr-row"><span class="sr-rl">Weight Delta</span><span class="sr-rv g mono">3.1 lbs</span></div>
+                <div class="sr-div"></div>
+                <div class="sr-row"><span class="sr-rl">Location</span><span class="sr-rv" style="font-size:12px;">Bobby's House</span></div>
+              </div>
+              <div class="sr-btns">
+                <button class="sr-btn-p">CLAIM THE THRONE</button>
+                <button class="sr-btn-s">Share · Done</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- SCREEN 2: SOCIAL FEED -->
+          <div class="screen" id="s2">
+            <div class="sf">
+              <div class="sf-head">
+                <div class="sf-title">Feed</div>
+                <div>&#x1F514;</div>
+              </div>
+              <div class="chips">
+                <div class="chip on">All</div>
+                <div class="chip">Records</div>
+                <div class="chip">Thrones</div>
+                <div class="chip">Alerts</div>
+              </div>
+
+              <!-- Garret SOS -->
+              <div class="fi rr">
+                <div class="fi-top">
+                  <div class="fi-av"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" fill="#1E1218"/><circle cx="20" cy="16" r="8" fill="#3D2030"/><ellipse cx="20" cy="36" rx="13" ry="9" fill="#3D2030"/></svg></div>
+                  <div class="fi-name">Garret</div>
+                  <div class="fi-t">1h 52m ago</div>
+                </div>
+                <div class="fi-sos-txt">&#x1F6A8; Exceeding 2 hours on the toilet</div>
+                <div class="fi-bdg sos">WELFARE CHECK RECOMMENDED</div>
+                <div class="fi-replies">
+                  <div class="fi-rep">You okay?</div>
+                  <div class="fi-rep">Need help?</div>
+                  <div class="fi-rep">&#x1F451;</div>
+                </div>
+              </div>
+
+              <!-- Nick record -->
+              <div class="fi gg">
+                <div class="fi-top">
+                  <div class="fi-av"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" fill="#0E1A10"/><circle cx="20" cy="16" r="8" fill="#1E3A22"/><ellipse cx="20" cy="36" rx="13" ry="9" fill="#1E3A22"/></svg></div>
+                  <div class="fi-name">Nick</div>
+                  <div style="margin-left:auto;"><div class="fi-bdg rec">&#x1F3C6; RECORD</div></div>
+                  <div class="fi-t">9:55 AM</div>
+                </div>
+                <div class="fi-stats">
+                  <div><div class="fi-sv g">4.1</div><div class="fi-su">lbs</div></div>
+                  <div><div class="fi-sv">16</div><div class="fi-su">min</div></div>
+                </div>
+              </div>
+
+              <!-- Jake regular -->
+              <div class="fi">
+                <div class="fi-top">
+                  <div class="fi-av"><svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" fill="#0E1420"/><circle cx="20" cy="16" r="8" fill="#1A2A40"/><ellipse cx="20" cy="36" rx="13" ry="9" fill="#1A2A40"/></svg></div>
+                  <div class="fi-name">Jake</div>
+                  <div class="fi-t">1:35 AM</div>
+                </div>
+                <div class="fi-stats">
+                  <div><div class="fi-sv">29</div><div class="fi-su">min</div></div>
+                  <div><div class="fi-sv">2.4</div><div class="fi-su">lbs</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="tabbar">
+              <div class="tab"><div class="tab-ic">&#x1F451;</div><div class="tab-lb">Home</div></div>
+              <div class="tab"><div class="tab-ic">&#x1F4CA;</div><div class="tab-lb">Activity</div></div>
+              <div class="tab on"><div class="tab-ic">&#x1F465;</div><div class="tab-lb">Social</div></div>
+              <div class="tab"><div class="tab-ic">&#x1F4CD;</div><div class="tab-lb">Thrones</div></div>
+            </div>
+          </div>
+
+        </div><!-- /screens -->
+        <div class="dots-row">
+          <div class="dot on" id="d0"></div>
+          <div class="dot" id="d1"></div>
+          <div class="dot" id="d2"></div>
+        </div>
+      </div><!-- /phone -->
+    </div>
+  </div>
+
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap above-canvas">
+  <div class="ticker-inner" id="ticker">
+    <div class="tick-item"><span class="tick-n">847K</span><span class="tick-l">Sessions Logged</span></div>
+    <div class="tick-item"><span class="tick-n">12,441</span><span class="tick-l">Thrones Claimed</span></div>
+    <div class="tick-item"><span class="tick-n">9.2</span><span class="tick-l">Avg Dump Score&#8482;</span></div>
+    <div class="tick-item"><span class="tick-n">2016</span><span class="tick-l">Founded (Finally)</span></div>
+    <div class="tick-item"><span class="tick-n">4.1 lbs</span><span class="tick-l">Record — Nick</span></div>
+    <div class="tick-item"><span class="tick-n">1h 52m</span><span class="tick-l">Longest Session — Garret</span></div>
+    <div class="tick-item"><span class="tick-n">Bobby's</span><span class="tick-l">Most Contested Throne</span></div>
+    <div class="tick-item"><span class="tick-n">847K</span><span class="tick-l">Sessions Logged</span></div>
+    <div class="tick-item"><span class="tick-n">12,441</span><span class="tick-l">Thrones Claimed</span></div>
+    <div class="tick-item"><span class="tick-n">9.2</span><span class="tick-l">Avg Dump Score&#8482;</span></div>
+    <div class="tick-item"><span class="tick-n">2016</span><span class="tick-l">Founded (Finally)</span></div>
+    <div class="tick-item"><span class="tick-n">4.1 lbs</span><span class="tick-l">Record — Nick</span></div>
+    <div class="tick-item"><span class="tick-n">1h 52m</span><span class="tick-l">Longest Session — Garret</span></div>
+    <div class="tick-item"><span class="tick-n">Bobby's</span><span class="tick-l">Most Contested Throne</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- PRODUCT ORBIT — 3D camera orbits       -->
+<!-- ═══════════════════════════════════════ -->
+<div id="orbit-section" class="canvas-bg">
+  <div id="orbit-sticky">
+    <!-- Hotspot 1: Right side — seat surface (load cells) -->
+    <div class="orbit-hotspot orbit-hs-1" id="hs1">
+      <div class="hs-label">The Seat</div>
+      <div class="hs-title">Dual Load Cell<br>Weigh System</div>
+      <div class="hs-body">Two precision sensors embedded in the seat ring measure your exact contribution. Before. After. The math does itself. The bragging rights don't.</div>
+    </div>
+    <!-- Hotspot 2: Left side — rim profile (BLE + GPS) -->
+    <div class="orbit-hotspot orbit-hs-2" id="hs2">
+      <div class="hs-label">The Rim</div>
+      <div class="hs-title">Bluetooth 5.0<br>+ GPS Module</div>
+      <div class="hs-body">Integrated BLE syncs every session to your phone instantly. GPS-verified location means when you claim a throne at someone else's house, there's proof.</div>
+    </div>
+    <!-- Hotspot 3: Top — full seat overview (Dump Score) -->
+    <div class="orbit-hotspot orbit-hs-3" id="hs3">
+      <div class="hs-label">The Brain</div>
+      <div class="hs-title">Dump Score&#8482;<br>Engine</div>
+      <div class="hs-body">All sensor data feeds a proprietary algorithm. Weight, duration, consistency, throne activity — distilled into one number that defines your legacy.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- EVERYTHING BELOW IS FLAT (no 3D)       -->
+<!-- ═══════════════════════════════════════ -->
+
+<!-- HARDWARE SECTION -->
+<section style="padding:100px 60px;background:var(--void);position:relative;overflow:hidden;" class="above-canvas" id="hardware" >
+  <!-- ambient blooms -->
+  <div style="position:absolute;top:30%;left:10%;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(48,209,88,0.04) 0%,transparent 65%);pointer-events:none;"></div>
+  <div style="position:absolute;bottom:10%;right:10%;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.05) 0%,transparent 65%);pointer-events:none;"></div>
+
+  <div class="eyebrow" style="justify-content:flex-start;">The Physical Product</div>
+
+  <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:clamp(60px,9vw,110px);line-height:0.88;letter-spacing:-0.01em;margin-bottom:28px;max-width:900px;">
+    Smarter than<br>your <em style="font-style:italic;color:var(--gold);">smart home.</em>
+  </div>
+  <p style="font-size:18px;font-weight:300;line-height:1.7;color:var(--t2);max-width:520px;margin-bottom:72px;">The U·Dump Sensor Kit attaches to any standard toilet seat in under 10 minutes. No plumbing. No drilling. No grossness. Just load cells, Bluetooth, and competitive glory.</p>
+
+  <!-- HARDWARE LAYOUT: diagram left, specs right -->
+  <div class="hw-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+
+    <!-- SENSOR RING DIAGRAM -->
+    <div style="background:var(--g1);border:1px solid var(--gb);border-radius:28px;padding:40px;display:flex;flex-direction:column;align-items:center;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.10),transparent);"></div>
+
+      <!-- SVG toilet seat diagram -->
+      <svg viewBox="0 0 320 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:320px;margin-bottom:24px;">
+        <ellipse cx="160" cy="140" rx="130" ry="110" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="2"/>
+        <ellipse cx="160" cy="140" rx="90" ry="74" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" stroke-dasharray="6,4"/>
+        <path d="M 80 100 Q 80 50 160 50 Q 240 50 240 100 L 255 160 Q 260 220 160 230 Q 60 220 65 160 Z"
+              fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.14)" stroke-width="1.5"/>
+        <rect x="140" y="42" width="40" height="16" rx="8" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+        <circle cx="160" cy="62" r="8" fill="#30D158" opacity="0.9"/>
+        <circle cx="160" cy="62" r="14" fill="rgba(48,209,88,0.15)"/>
+        <circle cx="72" cy="150" r="8" fill="#30D158" opacity="0.9"/>
+        <circle cx="72" cy="150" r="14" fill="rgba(48,209,88,0.15)"/>
+        <circle cx="248" cy="150" r="8" fill="#30D158" opacity="0.9"/>
+        <circle cx="248" cy="150" r="14" fill="rgba(48,209,88,0.15)"/>
+        <circle cx="160" cy="222" r="8" fill="#30D158" opacity="0.9"/>
+        <circle cx="160" cy="222" r="14" fill="rgba(48,209,88,0.15)"/>
+        <line x1="160" y1="70" x2="160" y2="120" stroke="rgba(48,209,88,0.2)" stroke-width="1" stroke-dasharray="4,3"/>
+        <line x1="80" y1="150" x2="130" y2="148" stroke="rgba(48,209,88,0.2)" stroke-width="1" stroke-dasharray="4,3"/>
+        <line x1="240" y1="150" x2="190" y2="148" stroke="rgba(48,209,88,0.2)" stroke-width="1" stroke-dasharray="4,3"/>
+        <line x1="160" y1="214" x2="160" y2="166" stroke="rgba(48,209,88,0.2)" stroke-width="1" stroke-dasharray="4,3"/>
+        <circle cx="160" cy="144" r="18" fill="rgba(212,175,55,0.08)" stroke="rgba(212,175,55,0.25)" stroke-width="1"/>
+        <circle cx="160" cy="144" r="6" fill="rgba(212,175,55,0.5)"/>
+      </svg>
+
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;letter-spacing:0.04em;margin-bottom:6px;">U·Dump Sensor Ring</div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--t3);letter-spacing:0.08em;">4x load cells &nbsp;·&nbsp; BLE 5.0 &nbsp;·&nbsp; 6-month battery</div>
+
+      <!-- tech spec pills row -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:20px;">
+        <div style="padding:5px 12px;border-radius:999px;background:rgba(48,209,88,0.10);border:1px solid rgba(48,209,88,0.2);font-size:11px;font-weight:600;color:#30D158;font-family:'DM Mono',monospace;">&#9679; LIVE</div>
+        <div style="padding:5px 12px;border-radius:999px;background:var(--g2);border:1px solid var(--gb);font-size:11px;font-weight:600;color:var(--t2);font-family:'DM Mono',monospace;">IP54</div>
+        <div style="padding:5px 12px;border-radius:999px;background:var(--g2);border:1px solid var(--gb);font-size:11px;font-weight:600;color:var(--t2);font-family:'DM Mono',monospace;">USB-C</div>
+        <div style="padding:5px 12px;border-radius:999px;background:var(--g2);border:1px solid var(--gb);font-size:11px;font-weight:600;color:var(--t2);font-family:'DM Mono',monospace;">&#177;0.1 lb</div>
+      </div>
+    </div>
+
+    <!-- SPEC CARDS -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+      <!-- Load Cell -->
+      <div style="background:var(--g1);border:1px solid var(--gb);border-radius:20px;padding:24px;position:relative;overflow:hidden;transition:all .3s;">
+        <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.10),transparent);"></div>
+        <div class="spec-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;border-radius:12px;background:var(--g3);border:1px solid var(--gb2);display:flex;align-items:center;justify-content:center;font-size:18px;">&#x2696;&#xFE0F;</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;letter-spacing:.01em;">Load Cell Array</div>
+          </div>
+          <div style="padding:4px 10px;border-radius:8px;background:rgba(48,209,88,0.12);border:1px solid rgba(48,209,88,0.22);font-family:'DM Mono',monospace;font-size:10px;font-weight:600;color:#30D158;white-space:nowrap;">&#177;0.1 lb precision</div>
+        </div>
+        <p style="font-size:14px;font-weight:300;line-height:1.65;color:var(--t2);">Four HX711-based load cells sit inside a slim ABS ring that fits between your toilet seat and bowl. No tools required — standard wing-nut mounting. Weighs you before, weighs you after. The math handles itself.</p>
+      </div>
+
+      <!-- BLE / Processor -->
+      <div style="background:var(--g1);border:1px solid var(--gb);border-radius:20px;padding:24px;position:relative;overflow:hidden;transition:all .3s;">
+        <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.10),transparent);"></div>
+        <div class="spec-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;border-radius:12px;background:var(--g3);border:1px solid var(--gb2);display:flex;align-items:center;justify-content:center;font-size:18px;">&#x1F4E1;</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;letter-spacing:.01em;">BLE 5.0 + ESP32</div>
+          </div>
+          <div style="padding:4px 10px;border-radius:8px;background:rgba(10,132,255,0.12);border:1px solid rgba(10,132,255,0.22);font-family:'DM Mono',monospace;font-size:10px;font-weight:600;color:#0A84FF;white-space:nowrap;">30ft range</div>
+        </div>
+        <p style="font-size:14px;font-weight:300;line-height:1.65;color:var(--t2);">The brain lives inside the ring itself — an ESP32 microcontroller paired with BLE 5.0. No hub. No dongle. No Wi-Fi password required. Communicates directly to your phone. Your data goes straight to the leaderboard. Where it belongs.</p>
+      </div>
+
+      <!-- Battery -->
+      <div style="background:var(--g1);border:1px solid var(--gb);border-radius:20px;padding:24px;position:relative;overflow:hidden;transition:all .3s;">
+        <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.10),transparent);"></div>
+        <div class="spec-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;border-radius:12px;background:var(--g3);border:1px solid var(--gb2);display:flex;align-items:center;justify-content:center;font-size:18px;">&#x1F50B;</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;letter-spacing:.01em;">Battery Module</div>
+          </div>
+          <div style="padding:4px 10px;border-radius:8px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.22);font-family:'DM Mono',monospace;font-size:10px;font-weight:600;color:var(--gold);white-space:nowrap;">6-month life</div>
+        </div>
+        <p style="font-size:14px;font-weight:300;line-height:1.65;color:var(--t2);">Rechargeable lithium cell array. Six months per charge. Magnetic USB-C — just snap the cable to the bottom of the ring. No disassembly. No excuses. IP54 splash-rated because obviously.</p>
+      </div>
+
+      <!-- The gold kicker card -->
+      <div style="background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(212,175,55,0.03));border:1px solid rgba(212,175,55,0.18);border-radius:20px;padding:24px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.20),transparent);"></div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:clamp(22px,3vw,32px);line-height:1;letter-spacing:-0.01em;margin-bottom:10px;">
+          The most advanced technology ever<br>deployed <em style="font-style:italic;color:var(--gold);">inside a toilet seat.</em>
+        </div>
+        <p style="font-size:14px;font-weight:300;line-height:1.65;color:var(--t2);">That is an objectively true statement. We checked. No one else has done this. You're welcome.</p>
+        <div style="display:flex;gap:20px;margin-top:16px;flex-wrap:wrap;">
+          <div style="text-align:center;">
+            <div style="font-family:'DM Mono',monospace;font-size:24px;color:var(--gold);line-height:1;">10</div>
+            <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-top:2px;">Min install</div>
+          </div>
+          <div style="width:1px;background:var(--gb);"></div>
+          <div style="text-align:center;">
+            <div style="font-family:'DM Mono',monospace;font-size:24px;color:var(--gold);line-height:1;">0</div>
+            <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-top:2px;">Tools needed</div>
+          </div>
+          <div style="width:1px;background:var(--gb);"></div>
+          <div style="text-align:center;">
+            <div style="font-family:'DM Mono',monospace;font-size:24px;color:var(--gold);line-height:1;">&#8734;</div>
+            <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-top:2px;">Bragging rights</div>
+          </div>
+          <div style="width:1px;background:var(--gb);"></div>
+          <div style="text-align:center;">
+            <div style="font-family:'DM Mono',monospace;font-size:24px;color:var(--gold);line-height:1;">$0</div>
+            <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-top:2px;">Subscription</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- U·THRONE PRO UPGRADE -->
+<section style="padding:80px 60px;background:var(--base);position:relative;border-top:1px solid var(--gb);" class="above-canvas throne-pro-sec">
+  <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);"></div>
+  <div style="position:absolute;top:20%;right:5%;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(10,132,255,0.04) 0%,transparent 65%);pointer-events:none;"></div>
+  <div style="position:absolute;bottom:10%;left:5%;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.04) 0%,transparent 65%);pointer-events:none;"></div>
+
+  <!-- OPTIONAL UPGRADE LABEL -->
+  <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:rgba(10,132,255,0.10);border:1px solid rgba(10,132,255,0.22);margin-bottom:20px;">
+    <div style="width:5px;height:5px;border-radius:50%;background:#0A84FF;box-shadow:0 0 6px #0A84FF;"></div>
+    <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#0A84FF;">Optional Upgrade</span>
+  </div>
+
+  <div class="throne-pro-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;">
+    <div style="position:sticky;top:100px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:clamp(52px,7vw,88px);line-height:0.88;letter-spacing:-0.01em;margin-bottom:20px;">
+        U·THRONE<br><em style="font-style:italic;color:#0A84FF;">PRO</em>
+      </div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:22px;color:var(--t2);margin-bottom:16px;line-height:1.2;">
+        The heated, hydrating, bass-thumping<br>smart bidet attachment.<br><em style="font-style:italic;color:var(--t3);">Nobody asked for this.</em>
+      </div>
+      <p style="font-size:15px;font-weight:300;line-height:1.7;color:var(--t2);margin-bottom:28px;">We built the most advanced toilet seat sensor in history. Then we asked ourselves: what if we kept going? The U·Throne Pro adds Bluetooth audio, precision heated water, seat warming, and a vibration motor — all synced to your session data. Your body deserves the best environment in which to perform.</p>
+
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px;">
+        <div style="padding:8px 16px;border-radius:12px;background:rgba(10,132,255,0.10);border:1px solid rgba(10,132,255,0.20);font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:#0A84FF;">&#x1F50A; Bluetooth 5.0 Speaker</div>
+        <div style="padding:8px 16px;border-radius:12px;background:rgba(255,159,10,0.10);border:1px solid rgba(255,159,10,0.20);font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:#FF9F0A;">&#x1F321;&#xFE0F; Heated Seat + Water</div>
+        <div style="padding:8px 16px;border-radius:12px;background:rgba(48,209,88,0.10);border:1px solid rgba(48,209,88,0.20);font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:#30D158;">&#x1F4A7; Precision Bidet</div>
+        <div style="padding:8px 16px;border-radius:12px;background:rgba(212,175,55,0.10);border:1px solid rgba(212,175,55,0.20);font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:var(--gold);">&#x1F4F3; Victory Vibration</div>
+      </div>
+
+      <div style="display:flex;gap:16px;align-items:center;">
+        <button class="btn-gold" style="background:linear-gradient(135deg,#0060D0,#0A84FF);box-shadow:0 4px 28px rgba(10,132,255,0.28);" onclick="document.getElementById('cta').scrollIntoView({behavior:'smooth'})">Add to Order — +$149</button>
+        <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--t3);">One-time · No subscription</span>
+      </div>
+    </div>
+
+    <!-- SPEC CARDS RIGHT SIDE -->
+    <div style="display:flex;flex-direction:column;gap:12px;">
+
+      <!-- Spatial Audio -->
+      <div style="background:var(--g1);border:1px solid var(--gb);border-radius:20px;padding:22px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(10,132,255,0.15),transparent);"></div>
+        <div class="spec-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;border-radius:12px;background:rgba(10,132,255,0.12);border:1px solid rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;">&#x1F50A;</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:19px;">Spatial Audio System</div>
+          </div>
+          <div style="padding:4px 10px;border-radius:8px;background:rgba(10,132,255,0.12);border:1px solid rgba(10,132,255,0.2);font-family:'DM Mono',monospace;font-size:10px;color:#0A84FF;white-space:nowrap;">5W driver</div>
+        </div>
+        <p style="font-size:13px;font-weight:300;line-height:1.6;color:var(--t2);">A 5-watt waterproof speaker built into the seat housing. Syncs to your phone via Bluetooth. Plays your Dump Playlist&#8482; automatically when a session begins. Plays the U·Dump victory fanfare when you break a record. Cannot be turned off during record-breaking sessions. This is by design.</p>
+      </div>
+
+      <!-- Thermal Comfort -->
+      <div style="background:var(--g1);border:1px solid var(--gb);border-radius:20px;padding:22px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,159,10,0.15),transparent);"></div>
+        <div class="spec-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,159,10,0.12);border:1px solid rgba(255,159,10,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;">&#x1F321;&#xFE0F;</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:19px;">Thermal Comfort Suite</div>
+          </div>
+          <div style="padding:4px 10px;border-radius:8px;background:rgba(255,159,10,0.12);border:1px solid rgba(255,159,10,0.2);font-family:'DM Mono',monospace;font-size:10px;color:#FF9F0A;white-space:nowrap;">5 heat levels</div>
+        </div>
+        <p style="font-size:13px;font-weight:300;line-height:1.6;color:var(--t2);">Heated seat surface (37°C–42°C) with five precision levels. Heated water bidet with adjustable pressure, angle, and temperature. Pre-warms 30 seconds before your scheduled sessions based on historical Dump Score&#8482; patterns. Your body knows when it's time. So does the seat.</p>
+      </div>
+
+      <!-- Victory Vibration -->
+      <div style="background:var(--g1);border:1px solid var(--gb);border-radius:20px;padding:22px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);"></div>
+        <div class="spec-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;border-radius:12px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;">&#x1F4F3;</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:19px;">Victory Vibration Engine</div>
+          </div>
+          <div style="padding:4px 10px;border-radius:8px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.2);font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);white-space:nowrap;">haptic feedback</div>
+        </div>
+        <p style="font-size:13px;font-weight:300;line-height:1.6;color:var(--t2);">Dual eccentric motor array delivers haptic feedback events timed to in-app achievements. Subtle pulse on session start. Escalating rumble when approaching a personal record. Full celebration mode on throne claims. Your friends feel nothing. You feel everything. That is the point.</p>
+      </div>
+
+      <!-- DumpMind AI Coach -->
+      <div style="background:var(--g1);border:1px solid var(--gb);border-radius:20px;padding:22px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);"></div>
+        <div class="spec-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;border-radius:12px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;">&#x1F916;</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:19px;">DumpMind&#8482; AI Coach</div>
+          </div>
+          <div style="padding:4px 10px;border-radius:8px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.2);font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);white-space:nowrap;">Pro exclusive</div>
+        </div>
+        <p style="font-size:13px;font-weight:300;line-height:1.6;color:var(--t2);margin-bottom:14px;">Encouraging real-time AI feedback delivered through the speaker during your session. DumpMind&#8482; monitors your duration, weight trajectory, and historical data to provide live, personalized, deeply sincere motivational commentary. Because everyone deserves a coach.</p>
+
+        <!-- AI MESSAGE BUBBLES -->
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:flex-start;gap:8px;">
+            <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#000;flex-shrink:0;margin-top:2px;">AI</div>
+            <div style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.15);border-radius:0 14px 14px 14px;padding:9px 13px;font-size:12px;font-weight:300;color:var(--t1);line-height:1.5;font-style:italic;">"You're at 12 minutes. Statistically, this is when champions are made. Keep going."</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;">
+            <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#000;flex-shrink:0;margin-top:2px;">AI</div>
+            <div style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.15);border-radius:0 14px 14px 14px;padding:9px 13px;font-size:12px;font-weight:300;color:var(--t1);line-height:1.5;font-style:italic;">"That's a personal record pace. Your body is doing something incredible right now."</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;">
+            <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#000;flex-shrink:0;margin-top:2px;">AI</div>
+            <div style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.15);border-radius:0 14px 14px 14px;padding:9px 13px;font-size:12px;font-weight:300;color:var(--t1);line-height:1.5;font-style:italic;">"2.8 lbs. That is not nothing. I want you to sit with that — figuratively and literally."</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;">
+            <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#000;flex-shrink:0;margin-top:2px;">AI</div>
+            <div style="background:rgba(48,209,88,0.08);border:1px solid rgba(48,209,88,0.2);border-radius:0 14px 14px 14px;padding:9px 13px;font-size:12px;font-weight:600;color:#30D158;line-height:1.5;">"NEW PERSONAL RECORD. I am so proud of you. Bobby could never."</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- THE KICKER -->
+      <div style="background:rgba(10,132,255,0.05);border:1px solid rgba(10,132,255,0.15);border-radius:20px;padding:20px 22px;display:flex;align-items:center;gap:16px;">
+        <div style="font-size:28px;flex-shrink:0;">&#x1F914;</div>
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:17px;margin-bottom:4px;">Do you need this?</div>
+          <p style="font-size:13px;font-weight:300;color:var(--t2);line-height:1.5;">No. The base U·Dump already does things no toilet seat has ever done. But the Pro exists because we had the technology, the audacity, and frankly a lot of extra time. Bobby voted against it. That alone made us ship it.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES BENTO -->
+<section class="feat-sec above-canvas" id="features">
+  <div class="sec-eyebrow">What It Does</div>
+  <div class="sec-h2">Engineered for<br>the <em>Throne.</em></div>
+  <div class="bento">
+    <div class="fc w2">
+      <div class="fc-icon">&#x2696;&#xFE0F;</div>
+      <div class="fc-n">01</div>
+      <div class="fc-title">Precision Weigh-In System</div>
+      <p class="fc-desc">Dual load cells capture your exact weight before and after every session. The mathematics are simple. The bragging rights are not.</p>
+    </div>
+    <div class="fc">
+      <div class="fc-icon">&#x1F451;</div>
+      <div class="fc-n">02</div>
+      <div class="fc-title">GPS Throne Claiming</div>
+      <p class="fc-desc">Visit a friend's toilet. Out-dump them. Their bathroom is now yours. GPS-verified dominance. Bobby has been dethroned 7 times.</p>
+      <div class="fc-tag">Location-based</div>
+    </div>
+    <div class="fc t2">
+      <div class="fc-icon">&#x1F4CA;</div>
+      <div class="fc-n">03</div>
+      <div class="fc-title">Dump Score&#8482;</div>
+      <p class="fc-desc">A proprietary composite metric — weight, duration, consistency, throne activity — distilled into one number. Like a credit score, but more honest about how you've been spending your time.</p>
+      <div class="score-preview">
+        <div class="score-num">9.2</div>
+        <div class="score-sub">Aaron's current score · Top 8% globally</div>
+      </div>
+    </div>
+    <div class="fc">
+      <div class="fc-icon">&#x1F6A8;</div>
+      <div class="fc-n">04</div>
+      <div class="fc-title">The 60-Minute Alert</div>
+      <p class="fc-desc">If a friend exceeds one hour, their entire contact list is notified. Ask Garret how this went. He says three stars.</p>
+    </div>
+    <div class="fc">
+      <div class="fc-icon">&#x1F3C6;</div>
+      <div class="fc-n">05</div>
+      <div class="fc-title">Hall of Stench</div>
+      <p class="fc-desc">Global leaderboard. All-time records. Your name immortalized somewhere you'll never bring up at Thanksgiving.</p>
+    </div>
+    <div class="fc">
+      <div class="fc-icon">&#x1F691;</div>
+      <div class="fc-n">06</div>
+      <div class="fc-title">Medical Help Button</div>
+      <p class="fc-desc">One tap. GPS shared. Emergency contacts notified. We built this as a joke. Our lawyers made us keep it. We are proud of both decisions.</p>
+    </div>
+  </div>
+</section>
+
+<!-- NOTIFICATIONS -->
+<section class="notif-sec above-canvas" id="feed">
+  <div class="sec-eyebrow" style="justify-content:center;">Push Notifications</div>
+  <div class="sec-h2" style="text-align:center;">Your friends<br>will <em>know.</em></div>
+  <div class="notif-stage">
+    <div class="nc ng">
+      <div class="nc-icon">&#x1F451;</div>
+      <div class="nc-meta">
+        <div class="nc-app g">U·DUMP</div>
+        <div class="nc-title">THRONE CLAIMED</div>
+        <div class="nc-body">Aaron is now King of Bobby's Throne · 3.1 lbs · 53 min</div>
+      </div>
+      <div class="nc-t">now</div>
+    </div>
+    <div class="nc ng">
+      <div class="nc-icon">&#x1F3C6;</div>
+      <div class="nc-meta">
+        <div class="nc-app g">U·DUMP</div>
+        <div class="nc-title">NEW PERSONAL RECORD</div>
+        <div class="nc-body">Nick — 4.1 lbs. The people have been informed.</div>
+      </div>
+      <div class="nc-t">8m</div>
+    </div>
+    <div class="nc nr">
+      <div class="nc-icon">&#x1F6A8;</div>
+      <div class="nc-meta">
+        <div class="nc-app r">U·DUMP — URGENT</div>
+        <div class="nc-title">HELP!</div>
+        <div class="nc-body">Garret has exceeded 2 hours on the toilet. Please respond.</div>
+      </div>
+      <div class="nc-t">1h</div>
+    </div>
+    <div class="nc">
+      <div class="nc-icon">&#x1F4CD;</div>
+      <div class="nc-meta">
+        <div class="nc-app">U·DUMP</div>
+        <div class="nc-title">YOUR THRONE HAS FALLEN</div>
+        <div class="nc-body">Jake dethroned Bobby at Johnson's Throne · 2.8 lbs. Reclaim it.</div>
+      </div>
+      <div class="nc-t">3h</div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testi-sec above-canvas" id="testimonials">
+  <div class="sec-eyebrow">Verified Users</div>
+  <div class="sec-h2">The people<br>have <em>spoken.</em></div>
+  <div class="testi-grid">
+
+    <!-- Sharon -->
+    <div class="tc">
+      <div class="tc-top">
+        <div class="tc-avatar">
+          <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+            <rect width="52" height="52" fill="#2A1820"/>
+            <circle cx="26" cy="20" r="11" fill="#5A3040"/>
+            <ellipse cx="26" cy="48" rx="18" ry="12" fill="#5A3040"/>
+            <circle cx="26" cy="20" r="8" fill="#8A6070"/>
+            <ellipse cx="26" cy="48" rx="14" ry="9" fill="#8A6070"/>
+          </svg>
+        </div>
+        <div class="tc-info">
+          <h4>Sharon</h4>
+          <p>Age 54 · Retired Teacher</p>
+          <div class="tc-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        </div>
+      </div>
+      <p class="tc-text">"Thanks to U·Dump I am taking even bigger dumps than ever before. My life has been transformed in ways I cannot fully explain to my physician."</p>
+      <div class="tc-badge">&#x1F451; Throne Holder · 3 Locations</div>
+    </div>
+
+    <!-- Shelden -->
+    <div class="tc" style="border-color:rgba(212,175,55,.2);">
+      <div class="tc-top">
+        <div class="tc-avatar" style="border-color:rgba(212,175,55,.35);">
+          <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+            <rect width="52" height="52" fill="#101820"/>
+            <circle cx="26" cy="20" r="11" fill="#1A3040"/>
+            <ellipse cx="26" cy="48" rx="18" ry="12" fill="#1A3040"/>
+            <circle cx="26" cy="20" r="8" fill="#2A5060"/>
+            <ellipse cx="26" cy="48" rx="14" ry="9" fill="#2A5060"/>
+          </svg>
+        </div>
+        <div class="tc-info">
+          <h4>Shelden</h4>
+          <p>Co-Founder, U·Dump Inc.</p>
+          <div class="tc-stars" style="color:var(--gold);">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        </div>
+      </div>
+      <p class="tc-text">"We saw the vision in 2016. Most people laughed. Eight years later, I am holding three thrones and Aaron's leaderboard stats are a personal insult."</p>
+      <div class="tc-badge" style="background:rgba(212,175,55,.18);">&#x1F3C6; Co-Founder · All-Time #2</div>
+    </div>
+
+    <!-- Garret -->
+    <div class="tc">
+      <div class="tc-top">
+        <div class="tc-avatar">
+          <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+            <rect width="52" height="52" fill="#181010"/>
+            <circle cx="26" cy="20" r="11" fill="#382020"/>
+            <ellipse cx="26" cy="48" rx="18" ry="12" fill="#382020"/>
+            <circle cx="26" cy="20" r="8" fill="#603030"/>
+            <ellipse cx="26" cy="48" rx="14" ry="9" fill="#603030"/>
+          </svg>
+        </div>
+        <div class="tc-info">
+          <h4>Garret</h4>
+          <p>Loyal User · 3 Years</p>
+          <div class="tc-stars">&#9733;&#9733;&#9733;<span style="color:var(--t3)">&#9733;&#9733;</span></div>
+        </div>
+      </div>
+      <p class="tc-text">"My friends called my girlfriend. I was fine. I was reading. Three stars because the notification said 'HELP' which felt accusatory given the circumstances."</p>
+      <div class="tc-badge">&#x23F1; Avg Session: 1hr 23min</div>
+    </div>
+
+    <!-- Nick -->
+    <div class="tc" style="border-color:rgba(212,175,55,.2);">
+      <div class="tc-top">
+        <div class="tc-avatar" style="border-color:rgba(212,175,55,.35);">
+          <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+            <rect width="52" height="52" fill="#0E180E"/>
+            <circle cx="26" cy="20" r="11" fill="#1A3020"/>
+            <ellipse cx="26" cy="48" rx="18" ry="12" fill="#1A3020"/>
+            <circle cx="26" cy="20" r="8" fill="#2A5030"/>
+            <ellipse cx="26" cy="48" rx="14" ry="9" fill="#2A5030"/>
+          </svg>
+        </div>
+        <div class="tc-info">
+          <h4>Nick</h4>
+          <p>Current Record Holder</p>
+          <div class="tc-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        </div>
+      </div>
+      <p class="tc-text">"4.1 lbs in 16 minutes. I don't want to talk about how or why. I do want everyone to know the record stands."</p>
+      <div class="tc-badge" style="background:rgba(212,175,55,.18);">&#x1F3C6; Global Record · 4.1 lbs</div>
+    </div>
+
+    <!-- Jake -->
+    <div class="tc">
+      <div class="tc-top">
+        <div class="tc-avatar">
+          <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+            <rect width="52" height="52" fill="#101018"/>
+            <circle cx="26" cy="20" r="11" fill="#20203A"/>
+            <ellipse cx="26" cy="48" rx="18" ry="12" fill="#20203A"/>
+            <circle cx="26" cy="20" r="8" fill="#30306A"/>
+            <ellipse cx="26" cy="48" rx="14" ry="9" fill="#30306A"/>
+          </svg>
+        </div>
+        <div class="tc-info">
+          <h4>Jake</h4>
+          <p>Active Competitor</p>
+          <div class="tc-stars">&#9733;&#9733;&#9733;&#9733;<span style="color:var(--t3)">&#9733;</span></div>
+        </div>
+      </div>
+      <p class="tc-text">"I dethroned Bobby twice in one week. He hasn't spoken to me at poker since. Worth it."</p>
+      <div class="tc-badge">&#x1F4CD; 7 Thrones Claimed</div>
+    </div>
+
+    <!-- Bobby — ALWAYS LAST -->
+    <div class="tc" style="border-color:rgba(255,59,48,.22);background:rgba(255,59,48,.03);">
+      <div class="tc-top">
+        <div class="tc-avatar" style="border-color:rgba(255,59,48,.4);">
+          <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+            <rect width="52" height="52" fill="#180C08"/>
+            <circle cx="26" cy="20" r="11" fill="#3A1A10"/>
+            <ellipse cx="26" cy="48" rx="18" ry="12" fill="#3A1A10"/>
+            <circle cx="26" cy="20" r="8" fill="#6A3020"/>
+            <ellipse cx="26" cy="48" rx="14" ry="9" fill="#6A3020"/>
+          </svg>
+        </div>
+        <div class="tc-info">
+          <h4>Bobby</h4>
+          <p>Original Visionary · Most Dethroned</p>
+          <div class="tc-stars"><span style="color:var(--red);">&#9733;</span><span style="color:var(--t3);">&#9733;&#9733;&#9733;&#9733;</span></div>
+        </div>
+      </div>
+      <p class="tc-text">"This was MY idea. I came up with this in 2016. I made the video. I built the prototype. And now I am ranked LAST on my OWN leaderboard, my bathroom throne has been claimed by Jake, and I am listed as a 'verified user' and not a founder. One star. The app won't let me go lower. Do not buy this. My dad is a lawyer and he will sue you."</p>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:12px;">
+        <div class="tc-badge" style="background:rgba(255,59,48,.10);color:var(--red);border-color:rgba(255,59,48,.2);">&#x1F451; Dethroned 9x · Last on Leaderboard</div>
+        <div class="tc-badge" style="background:rgba(255,59,48,.10);color:var(--red);border-color:rgba(255,59,48,.2);">&#x1F6BD; Home Throne: Contested</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOUNDERS -->
+<section class="founders-sec above-canvas" id="founders">
+  <div class="sec-eyebrow">The Team</div>
+  <div class="sec-h2" style="margin-bottom:8px;">Built from<br><em>nothing.</em></div>
+  <p style="font-size:16px;font-weight:300;color:var(--t2);margin-bottom:0;max-width:620px;">Three guys. No funding. No AI. No help from anyone. They struggled. It was hard. They built the whole thing from the ground up anyway — before the tools existed to make it easy — and they have absolutely zero interest in hearing that it couldn't be done.</p>
+  <div class="founders-layout">
+    <div class="founders-photo">
+      <img src="founders.png" alt="Aaron, Nick, and Shelden — the U-DUMP founding team" />
+    </div>
+    <div class="founders-list">
+      <div class="founder-item">
+        <div class="founder-name">Aaron</div>
+        <div class="founder-title">Co-Founder &amp; CEO</div>
+        <div class="founder-badge">Since 2016</div>
+      </div>
+      <div class="founder-item">
+        <div class="founder-name">Nick</div>
+        <div class="founder-title">Co-Founder &amp; CTO</div>
+        <div class="founder-badge">Equity: Pending Review</div>
+      </div>
+      <div class="founder-item">
+        <div class="founder-name">Shelden</div>
+        <div class="founder-title">Co-Founder &amp; Chief Pipeline Engineer</div>
+        <div class="founder-badge">Since 2016</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ORIGIN STORY -->
+<section class="origin-sec above-canvas" id="origin">
+  <div class="origin-inner">
+    <div class="sec-eyebrow" style="justify-content:center;">The Origin Story</div>
+    <div class="sec-h2" style="text-align:center;">A vision too bold<br>for <em>2016.</em></div>
+    <div class="origin-quote">
+      <div class="oq-label">Original Kickstarter Script · 2016</div>
+      <p class="oq-text">"There is one room that's been neglected every time, and that's the bathroom. With a country obsessed with weight loss and an overall healthy lifestyle — what goes in is just as important as what goes out."</p>
+      <div class="oq-attr">— Aaron, Shelden &amp; Nick · U·Dump Kickstarter Video, 2016</div>
+    </div>
+    <div class="origin-reddit">
+      <div class="or-label">Reddit · r/Entrepreneur · 24,000 views · 8 years ago</div>
+      <p class="or-text">"This is the best shitty Kickstarter I've ever seen."</p>
+      <div class="or-attr">— MustardForBreakfast (Top Comment)</div>
+    </div>
+    <p class="origin-close">U·Dump 2.0 is the completion of that vision.<br>Rebuilt from the ground up. <em>Finished without asking permission.</em></p>
+  </div>
+</section>
+
+<!-- PRESS -->
+<section class="press-sec above-canvas">
+  <div class="press-label">As seen across the internet and beyond</div>
+  <div class="press-logos">
+    <div class="pl">Forbes</div>
+    <div class="pl">CNBC</div>
+    <div class="pl">WSJ</div>
+    <div class="pl">TechCrunch</div>
+    <div class="pl">Bloomberg</div>
+    <div class="pl">The Verge</div>
+    <div class="pl">NYT</div>
+    <div class="pl">Vice</div>
+    <div class="pl">BuzzFeed</div>
+    <div class="pl">Your Mom</div>
+  </div>
+  <div class="press-quote">"<span>The best shitty Kickstarter we've ever seen.</span>" — MustardForBreakfast, Reddit, 2016 · Now viral in 14 countries</div>
+</section>
+
+<!-- CTA -->
+<section class="cta-sec above-canvas" id="cta">
+  <div class="cta-bg-text">DUMP</div>
+  <div class="sec-eyebrow" style="justify-content:center;margin-bottom:16px;">Now Accepting Pre-Orders</div>
+  <div class="cta-h2">Claim<br>What's <em>Yours.</em></div>
+  <p class="cta-sub">The window that opened in 2016 never actually closed.</p>
+  <div class="cta-form">
+    <input class="cta-input" type="email" placeholder="your@email.com">
+    <button class="cta-submit" id="ctaBtn">Reserve</button>
+  </div>
+  <div class="cta-fine">Early backer: <strong>$89 USD</strong> · Hardware + App · One-time purchase · No subscription. Ever. · Ships Q3 2026</div>
+  <div class="store-row">
+    <div class="store-btn">
+      <div class="store-ic">&#x1F4F1;</div>
+      <div><div class="store-sm">Download on</div><div class="store-lg">App Store</div></div>
+    </div>
+    <div class="store-btn">
+      <div class="store-ic">&#x1F916;</div>
+      <div><div class="store-sm">Get it on</div><div class="store-lg">Google Play</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="above-canvas">
+  <div class="foot-brand"><span>U·</span>DUMP</div>
+  <div class="foot-copy">&#169; 2026 U·Dump Inc. · Aaron, Shelden &amp; Nick · Originally conceived 2016</div>
+  <div class="foot-egg">Built without asking permission · &#x1F451;</div>
+</footer>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SCRIPTS                                -->
+<!-- ═══════════════════════════════════════ -->
+
+<!-- Phone screen cycling (vanilla JS, no GSAP) -->
+<script>
+  let c = 0;
+  const ss = document.querySelectorAll('.screen');
+  const dd = [document.getElementById('d0'), document.getElementById('d1'), document.getElementById('d2')];
+  setInterval(() => {
+    ss[c].classList.remove('on'); dd[c].classList.remove('on');
+    c = (c + 1) % ss.length;
+    ss[c].classList.add('on'); dd[c].classList.add('on');
+  }, 3800);
+
+  document.getElementById('ctaBtn').addEventListener('click', () => {
+    const i = document.querySelector('.cta-input');
+    if (i.value) { i.value = ''; i.placeholder = "You're on the list. The throne awaits."; i.style.color = 'var(--gold)'; }
+  });
+</script>
+
+<!-- Three.js + GSAP scroll logic -->
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+gsap.registerPlugin(ScrollTrigger);
+
+// ── RENDERER ──
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 2.8;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setClearColor(0x06060A, 1);
+
+// ── SCENE ──
+const scene = new THREE.Scene();
+// NO fog — keep the toilet bright and visible
+
+// ── CAMERA ──
+const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 0.85, 2.4);
+camera.lookAt(0, 1.1, 0);
+
+// ── LIGHTS (GOLD LUXURY — EVEN DISTRIBUTION, NO HOTSPOTS) ──
+// High ambient so nothing is ever dark
+const ambient = new THREE.AmbientLight(0xffffff, 3.0);
+scene.add(ambient);
+
+// Hemisphere: warm gold sky, cool ground — lifts everything
+const hemi = new THREE.HemisphereLight(0xF0CE60, 0x3a3a42, 2.5);
+scene.add(hemi);
+
+// Strong white key from above-front-right
+const keyLight = new THREE.DirectionalLight(0xffffff, 5.0);
+keyLight.position.set(3, 6, 4);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.setScalar(2048);
+scene.add(keyLight);
+
+// Gold key from front-left
+const goldKey = new THREE.DirectionalLight(0xF0CE60, 5.0);
+goldKey.position.set(-4, 3, 4);
+scene.add(goldKey);
+
+// Gold key from front-right
+const goldKey2 = new THREE.DirectionalLight(0xF0CE60, 4.0);
+goldKey2.position.set(4, 2, 3);
+scene.add(goldKey2);
+
+// Gold rim from behind for edge glow
+const goldRim = new THREE.DirectionalLight(0xF0CE60, 3.0);
+goldRim.position.set(0, 3, -4);
+scene.add(goldRim);
+
+// Warm fill from below — no dark underside
+const warmFill = new THREE.DirectionalLight(0xFFE0B2, 3.0);
+warmFill.position.set(0, -3, 2);
+scene.add(warmFill);
+
+// Extra front fill — directly at the camera angle
+const frontFill = new THREE.DirectionalLight(0xFFF0D0, 3.0);
+frontFill.position.set(0, 1.5, 5);
+scene.add(frontFill);
+
+// ── ENVIRONMENT MAP FOR REFLECTIONS ──
+const pmremGenerator = new THREE.PMREMGenerator(renderer);
+const envScene = new THREE.Scene();
+// Bright env map = mirror-like gold reflections
+const envLight1 = new THREE.DirectionalLight(0xF0CE60, 20);
+envLight1.position.set(1, 1, 1);
+envScene.add(envLight1);
+const envLight2 = new THREE.DirectionalLight(0xFFFFFF, 15);
+envLight2.position.set(-1, 0.5, -1);
+envScene.add(envLight2);
+const envLight3 = new THREE.DirectionalLight(0xF0CE60, 18);
+envLight3.position.set(0, -1, 0.5);
+envScene.add(envLight3);
+const envLight4 = new THREE.DirectionalLight(0xFFE0B2, 12);
+envLight4.position.set(0.5, 1, -0.5);
+envScene.add(envLight4);
+const envLight5 = new THREE.DirectionalLight(0xFFFFFF, 15);
+envLight5.position.set(0, 1, 1);
+envScene.add(envLight5);
+const envMap = pmremGenerator.fromScene(envScene).texture;
+scene.environment = envMap;
+
+// ── WAYPOINTS ──
+// Hero: camera at rim level, close, wide-angle tilted up
+const W = {
+  hero:  { p: new THREE.Vector3(0,    0.85,  2.4), l: new THREE.Vector3(0, 1.1, 0) },
+  // Orbit: sweep around the toilet seat, each stop focuses on a seat feature
+  prod1: { p: new THREE.Vector3(2.5,  1.4,  2.5), l: new THREE.Vector3(0, 0.5, 0) },  // front-right — see the seat surface (load cells)
+  prod2: { p: new THREE.Vector3(3.5,  1.0, -1.0), l: new THREE.Vector3(0, 0.6, 0) },  // side — see the rim profile (GPS module)
+  prod3: { p: new THREE.Vector3(-2.0, 2.5,  1.5), l: new THREE.Vector3(0, 0.4, 0) },  // above-left — see the whole seat (Dump Score overview)
+};
+
+// Camera state
+const camPos = W.hero.p.clone();
+const camLook = W.hero.l.clone();
+let targetPos = W.hero.p.clone();
+let targetLook = W.hero.l.clone();
+let inOrbit = false; // true when scrolling through orbit section
+
+// ── MODEL ──
+let model = null;
+let modelLoaded = false;
+
+const loader = new GLTFLoader();
+loader.load('./golden_toilet.glb', (gltf) => {
+  model = gltf.scene;
+
+  // Normalize: center and scale to fit
+  const box = new THREE.Box3().setFromObject(model);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  const s = 2.8 / Math.max(size.x, size.y, size.z);
+  model.scale.setScalar(s);
+  model.position.set(-center.x * s, -box.min.y * s, -center.z * s);
+
+  // Gold material enhancement
+  model.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+      if (child.material) {
+        const mat = child.material;
+        mat.metalness = 1.0;
+        mat.roughness = 0.15;
+        mat.envMapIntensity = 3.5;
+        mat.needsUpdate = true;
+      }
+    }
+  });
+
+  scene.add(model);
+  modelLoaded = true;
+  modelBaseY = model.position.y; // cache for idle float
+
+  // Hide loader
+  setTimeout(() => {
+    document.getElementById('loader').classList.add('gone');
+  }, 400);
+
+}, undefined, (err) => {
+  console.error('GLB load error:', err);
+  document.getElementById('loader').classList.add('gone');
+});
+
+// Fallback: hide loader after 4s regardless
+setTimeout(() => {
+  document.getElementById('loader').classList.add('gone');
+}, 4000);
+
+// ── HERO FADE-OUT ON SCROLL ──
+ScrollTrigger.create({
+  trigger: '#hero',
+  start: 'top top',
+  end: 'bottom top',
+  scrub: true,
+  onUpdate: (self) => {
+    const p = self.progress;
+    const heroEl = document.getElementById('hero');
+    heroEl.style.opacity = 1 - p;
+    heroEl.style.transform = `translateY(${-40 * p}px)`;
+  }
+});
+
+// ── ORBIT SCROLL TRIGGERS ──
+const hs1 = document.getElementById('hs1');
+const hs2 = document.getElementById('hs2');
+const hs3 = document.getElementById('hs3');
+
+ScrollTrigger.create({
+  trigger: '#orbit-section',
+  start: 'top top',
+  end: 'bottom bottom',
+  scrub: 1,
+  onEnter: () => { inOrbit = true; },
+  onEnterBack: () => { inOrbit = true; },
+  onLeave: () => { inOrbit = false; },
+  onLeaveBack: () => { inOrbit = false; },
+  onUpdate: (self) => {
+    const p = self.progress;
+    // Hide all hotspots first
+    hs1.classList.remove('visible');
+    hs2.classList.remove('visible');
+    hs3.classList.remove('visible');
+
+    // Smoothly interpolate between waypoints
+    if (p < 0.33) {
+      // Hero → prod1 (sweep to front-right)
+      const t = p / 0.33;
+      targetPos.lerpVectors(W.hero.p, W.prod1.p, t);
+      targetLook.lerpVectors(W.hero.l, W.prod1.l, t);
+      if (t > 0.4) hs1.classList.add('visible');
+    } else if (p < 0.66) {
+      // prod1 → prod2 (sweep around to side)
+      const t = (p - 0.33) / 0.33;
+      targetPos.lerpVectors(W.prod1.p, W.prod2.p, t);
+      targetLook.lerpVectors(W.prod1.l, W.prod2.l, t);
+      hs2.classList.add('visible');
+    } else {
+      // prod2 → prod3 (sweep behind and above)
+      const t = (p - 0.66) / 0.34;
+      targetPos.lerpVectors(W.prod2.p, W.prod3.p, t);
+      targetLook.lerpVectors(W.prod2.l, W.prod3.l, t);
+      hs3.classList.add('visible');
+    }
+  },
+  onLeave: () => {
+    hs1.classList.remove('visible');
+    hs2.classList.remove('visible');
+    hs3.classList.remove('visible');
+  }
+});
+
+// ── 3D-TO-FLAT TRANSITION: fade canvas out after orbit section ──
+ScrollTrigger.create({
+  trigger: '#orbit-section',
+  start: 'bottom -10%',
+  end: 'bottom 20%',
+  scrub: true,
+  onUpdate: (self) => {
+    const p = self.progress;
+    canvas.style.opacity = 1 - p;
+  },
+  onLeave: () => {
+    canvas.style.opacity = '0';
+    canvas.style.pointerEvents = 'none';
+  },
+  onEnterBack: () => {
+    canvas.style.opacity = '1';
+    canvas.style.pointerEvents = 'none'; // always none
+  }
+});
+
+// ── NOTIFICATION SLIDE-IN via IntersectionObserver (flat section) ──
+const notifCards = document.querySelectorAll('.nc');
+const notifObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) {
+      const idx = Array.from(notifCards).indexOf(entry.target);
+      setTimeout(() => {
+        entry.target.classList.add('visible');
+      }, idx * 150);
+      notifObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.2 });
+
+notifCards.forEach((nc) => notifObserver.observe(nc));
+
+// ── RENDER LOOP ──
+const clock = new THREE.Clock();
+
+let modelBaseY = 0; // cached once after model loads
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  const t = clock.getElapsedTime();
+
+  if (inOrbit) {
+    // Smooth lerp when scrolling through orbit section
+    camPos.lerp(targetPos, 0.06);
+    camLook.lerp(targetLook, 0.06);
+  } else {
+    // Hero: set camera directly — no lerp, no jitter
+    camPos.copy(targetPos);
+    camLook.copy(targetLook);
+  }
+
+  camera.position.copy(camPos);
+  camera.lookAt(camLook);
+
+  // Gentle model idle (subtle float) — NO bounding box recalc
+  if (model) {
+    model.position.y = modelBaseY + Math.sin(t * 0.8) * 0.02;
+  }
+
+  renderer.render(scene, camera);
+}
+animate();
+
+// ── RESIZE ──
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ── TEMPORARY: Camera debug controls ──
+// Arrow keys: move camera. Hold Shift for Y axis. Press P to print position.
+const debugStep = 0.2;
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowUp')    { if (e.shiftKey) W.hero.p.y += debugStep; else W.hero.p.z -= debugStep; }
+  if (e.key === 'ArrowDown')  { if (e.shiftKey) W.hero.p.y -= debugStep; else W.hero.p.z += debugStep; }
+  if (e.key === 'ArrowLeft')  W.hero.p.x -= debugStep;
+  if (e.key === 'ArrowRight') W.hero.p.x += debugStep;
+  if (e.key === 'w') W.hero.l.y += 0.1;
+  if (e.key === 's') W.hero.l.y -= 0.1;
+  if (e.key === '+' || e.key === '=') { const sc = model?.scale.x; if (model && sc) model.scale.setScalar(sc * 1.1); }
+  if (e.key === '-') { const sc = model?.scale.x; if (model && sc) model.scale.setScalar(sc * 0.9); }
+  if (e.key === 'p' || e.key === 'P') {
+    const p = W.hero.p, l = W.hero.l;
+    const sc = model ? model.scale.x.toFixed(3) : '?';
+    const msg = `Camera: (${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)}) → Look: (${l.x.toFixed(1)}, ${l.y.toFixed(1)}, ${l.z.toFixed(1)}) | Scale: ${sc}`;
+    console.log(msg);
+    // Show on screen too
+    let dbg = document.getElementById('cam-debug');
+    if (!dbg) { dbg = document.createElement('div'); dbg.id = 'cam-debug'; dbg.style.cssText = 'position:fixed;bottom:20px;left:20px;z-index:9999;background:rgba(0,0,0,0.85);color:#F0CE60;padding:12px 16px;border-radius:8px;font-family:monospace;font-size:13px;pointer-events:none;'; document.body.appendChild(dbg); }
+    dbg.textContent = msg;
+  }
+  // Update camera immediately
+  targetPos.copy(W.hero.p);
+  targetLook.copy(W.hero.l);
+});
+</script>
+</body>
+</html>

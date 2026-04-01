@@ -205,12 +205,13 @@ nav {
   position: relative;
 }
 .phone-halo {
-  position: absolute; inset: -50px; border-radius: 80px;
-  background: radial-gradient(ellipse at center, rgba(212,175,55,0.07) 0%, transparent 70%);
+  position: absolute; inset: -100px; border-radius: 100px;
+  background: radial-gradient(ellipse at center, rgba(212,175,55,0.25) 0%, rgba(212,175,55,0.08) 40%, transparent 70%);
   pointer-events: none;
   animation: halo 5s ease-in-out infinite;
+  filter: blur(20px);
 }
-@keyframes halo { 0%,100%{opacity:.6;} 50%{opacity:1;} }
+@keyframes halo { 0%,100%{opacity:.5;} 50%{opacity:1;} }
 
 .phone {
   width: 260px;
@@ -1690,8 +1691,8 @@ const scene = new THREE.Scene();
 
 // ── CAMERA ──
 const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0, 1.5, 1.6);
-camera.lookAt(0, 1.4, 0);
+camera.position.set(0, 1.5, 1.4);
+camera.lookAt(0, 1.8, 0);
 
 // ── LIGHTS (GOLD LUXURY — EVEN DISTRIBUTION, NO HOTSPOTS) ──
 // High ambient so nothing is ever dark
@@ -1757,9 +1758,9 @@ const envMap = pmremGenerator.fromScene(envScene).texture;
 scene.environment = envMap;
 
 // ── WAYPOINTS ──
-// Hero: camera at rim level, tight and close, slight upward tilt
+// Hero: camera at rim level, tight, dramatic upward tilt
 const W = {
-  hero:  { p: new THREE.Vector3(0,    1.5,  1.6), l: new THREE.Vector3(0, 1.4, 0) },
+  hero:  { p: new THREE.Vector3(0,    1.5,  1.4), l: new THREE.Vector3(0, 1.8, 0) },
   // Orbit: sweep around the toilet seat, each stop focuses on a seat feature
   prod1: { p: new THREE.Vector3(2.5,  1.4,  2.5), l: new THREE.Vector3(0, 0.5, 0) },  // front-right — see the seat surface (load cells)
   prod2: { p: new THREE.Vector3(3.5,  1.0, -1.0), l: new THREE.Vector3(0, 0.6, 0) },  // side — see the rim profile (GPS module)

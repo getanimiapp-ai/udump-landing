@@ -725,6 +725,7 @@ footer {
   /* Hardware + Throne Pro grids stack */
   .hw-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
   .throne-pro-grid { grid-template-columns: 1fr !important; gap: 28px !important; }
+  .throne-pro-grid > div:first-child { position: static !important; }
 
   /* Spec card headers stack vertically */
   .spec-header { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
@@ -764,6 +765,7 @@ footer {
   .hw-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
   .throne-pro-sec { padding: 60px 20px !important; }
   .throne-pro-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+  .throne-pro-grid > div:first-child { position: static !important; }
   .spec-header { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
   .press-logos { gap: 24px; }
   .press-sec { padding: 40px 20px !important; }
@@ -1173,7 +1175,7 @@ footer {
 </section>
 
 <!-- U·THRONE PRO UPGRADE -->
-<section style="padding:80px 60px;background:var(--base);position:relative;overflow:hidden;border-top:1px solid var(--gb);" class="above-canvas throne-pro-sec">
+<section style="padding:80px 60px;background:var(--base);position:relative;border-top:1px solid var(--gb);" class="above-canvas throne-pro-sec">
   <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);"></div>
   <div style="position:absolute;top:20%;right:5%;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(10,132,255,0.04) 0%,transparent 65%);pointer-events:none;"></div>
   <div style="position:absolute;bottom:10%;left:5%;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.04) 0%,transparent 65%);pointer-events:none;"></div>
@@ -1184,8 +1186,8 @@ footer {
     <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#0A84FF;">Optional Upgrade</span>
   </div>
 
-  <div class="throne-pro-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;">
-    <div>
+  <div class="throne-pro-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;">
+    <div style="position:sticky;top:100px;">
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:clamp(52px,7vw,88px);line-height:0.88;letter-spacing:-0.01em;margin-bottom:20px;">
         U·THRONE<br><em style="font-style:italic;color:#0A84FF;">PRO</em>
       </div>
@@ -1539,7 +1541,7 @@ footer {
   <p style="font-size:16px;font-weight:300;color:var(--t2);margin-bottom:0;max-width:620px;">Three guys. No funding. No AI. No help from anyone. They struggled. It was hard. They built the whole thing from the ground up anyway — before the tools existed to make it easy — and they have absolutely zero interest in hearing that it couldn't be done.</p>
   <div class="founders-layout">
     <div class="founders-photo">
-      <img src="founders.png" alt="Aaron, Shelden, and Bobby — the U-DUMP founding team" />
+      <img src="founders.png" alt="Aaron, Nick, and Shelden — the U-DUMP founding team" />
     </div>
     <div class="founders-list">
       <div class="founder-item">
@@ -1548,14 +1550,14 @@ footer {
         <div class="founder-badge">Since 2016</div>
       </div>
       <div class="founder-item">
-        <div class="founder-name">Shelden</div>
-        <div class="founder-title">Co-Founder &amp; Chief Throne Officer</div>
-        <div class="founder-badge">Since 2016</div>
+        <div class="founder-name">Nick</div>
+        <div class="founder-title">Co-Founder &amp; CTO</div>
+        <div class="founder-badge">Equity: Pending Review</div>
       </div>
       <div class="founder-item">
-        <div class="founder-name">Bobby</div>
-        <div class="founder-title">Co-Founder &amp; VP of Excuses</div>
-        <div class="founder-badge">Equity: Pending Review</div>
+        <div class="founder-name">Shelden</div>
+        <div class="founder-title">Co-Founder &amp; Chief Pipeline Engineer</div>
+        <div class="founder-badge">Since 2016</div>
       </div>
     </div>
   </div>
@@ -1673,9 +1675,9 @@ const scene = new THREE.Scene();
 // NO fog — keep the toilet bright and visible
 
 // ── CAMERA ──
-const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0, 2.6, 3.2);
-camera.lookAt(0, 0.5, 0);
+const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 0.85, 2.4);
+camera.lookAt(0, 1.1, 0);
 
 // ── LIGHTS (GOLD LUXURY — EVEN DISTRIBUTION, NO HOTSPOTS) ──
 // High ambient so nothing is ever dark
@@ -1741,9 +1743,9 @@ const envMap = pmremGenerator.fromScene(envScene).texture;
 scene.environment = envMap;
 
 // ── WAYPOINTS ──
-// Hero: camera above and in front, looking down at the toilet
+// Hero: camera at rim level, close, wide-angle tilted up
 const W = {
-  hero:  { p: new THREE.Vector3(0,    2.6,  3.2), l: new THREE.Vector3(0, 0.5, 0) },
+  hero:  { p: new THREE.Vector3(0,    0.85,  2.4), l: new THREE.Vector3(0, 1.1, 0) },
   // Orbit: sweep around the toilet seat, each stop focuses on a seat feature
   prod1: { p: new THREE.Vector3(2.5,  1.4,  2.5), l: new THREE.Vector3(0, 0.5, 0) },  // front-right — see the seat surface (load cells)
   prod2: { p: new THREE.Vector3(3.5,  1.0, -1.0), l: new THREE.Vector3(0, 0.6, 0) },  // side — see the rim profile (GPS module)
